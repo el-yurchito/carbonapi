@@ -33,14 +33,30 @@ func (f *aliasByBase64) Do(e parser.Expr, from, until int32, values map[parser.M
 		return nil, err
 	}
 
+	field, err := e.GetIntArg(1)
+	if err != nil {
+		return nil, err
+	}
+
 	var results []*types.MetricData
 
 	for _, a := range args {
-		r := *a
-		decoded, err := base64.StdEncoding.DecodeString(r.Name)
-		if err == nil {
-			r.Name = string(decoded)
+                metric := helper.ExtractMetric(a.Name)
+                nodes := strings.Split(metric, ".")
+
+		var name []string
+		for i, n := range nodes {
+			if i == field{
+				decoded, err := base64.StdEncoding.DecodeString(n)
+				if err == nil {
+					n = string(decoded)
+				}
+			}
+			name = append(name, n)
 		}
+
+		r := *a
+		r.Name = strings.Join(name, ".")
 		results = append(results, &r)
 	}
 
