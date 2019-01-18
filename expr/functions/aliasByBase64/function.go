@@ -7,8 +7,8 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 
 	"encoding/base64"
+	"strings"
 )
-
 
 type aliasByBase64 struct {
 	interfaces.FunctionBase
@@ -34,35 +34,37 @@ func (f *aliasByBase64) Do(e parser.Expr, from, until int32, values map[parser.M
 	}
 
 	field, err := e.GetIntArg(1)
-	if err != nil {
-		return nil, err
-	}
+	withoutFieldArg := err != nil
 
 	var results []*types.MetricData
 
 	for _, a := range args {
-                metric := helper.ExtractMetric(a.Name)
-                nodes := strings.Split(metric, ".")
-
-		var name []string
-		for i, n := range nodes {
-			if i == field{
-				decoded, err := base64.StdEncoding.DecodeString(n)
-				if err == nil {
-					n = string(decoded)
-				}
+		r := *a
+		if withoutFieldArg {
+			decoded, err := base64.StdEncoding.DecodeString(r.Name)
+			if err == nil {
+				r.Name = string(decoded)
 			}
-			name = append(name, n)
+		} else {
+			metric := helper.ExtractMetric(r.Name)
+			var name []string
+			for i, n := range strings.Split(metric, ".") {
+				if i == field {
+					decoded, err := base64.StdEncoding.DecodeString(n)
+					if err == nil {
+						n = string(decoded)
+					}
+				}
+				name = append(name, n)
+			}
+			r.Name = strings.Join(name, ".")
 		}
 
-		r := *a
-		r.Name = strings.Join(name, ".")
 		results = append(results, &r)
 	}
 
 	return results, nil
 }
-
 
 func (f *aliasByBase64) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
@@ -77,6 +79,11 @@ func (f *aliasByBase64) Description() map[string]types.FunctionDescription {
 					Name:     "seriesList",
 					Required: true,
 					Type:     types.SeriesList,
+				},
+				{
+					Name:     "nodeNum",
+					Required: false,
+					Type:     types.NodeOrTag,
 				},
 			},
 		},

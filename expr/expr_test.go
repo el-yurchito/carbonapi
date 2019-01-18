@@ -514,7 +514,7 @@ func TestEvalExpression(t *testing.T) {
 		},
 		{
 			parser.NewExpr("aliasByBase64",
-				"metric1", parser.ArgValue("1"),
+				"metric1", 1,
 			),
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {types.MakeMetricData("metric1.aGVsbG8=", []float64{1, 2, 3, 4, 5}, 1, now32)},
