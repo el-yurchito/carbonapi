@@ -5,7 +5,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"strings"
+	"regexp"
 )
 
 type aboveSeries struct {
@@ -38,7 +38,6 @@ func (f *aboveSeries) Do(e parser.Expr, from, until int32, values map[parser.Met
 	}
 
 	rename := true
-
 	search, err := e.GetStringArg(2)
 	if err != nil {
 		rename = false
@@ -49,13 +48,20 @@ func (f *aboveSeries) Do(e parser.Expr, from, until int32, values map[parser.Met
 		rename = false
 	}
 
-	var results []*types.MetricData
+	var rre *regexp.Regexp
+	if rename {
+		rre, err = regexp.Compile(search)
+		if err != nil {
+			return nil, err
+		}
+	}
 
+	var results []*types.MetricData
 	for _, a := range args {
 		if helper.MaxValue(a.Values) > max {
 			r := *a
 			if rename {
-				r.Name = strings.Replace(r.GetName(), search, replace, 1)
+				r.Name = rre.ReplaceAllString(r.Name, replace)
 			}
 			results = append(results, &r)
 		}

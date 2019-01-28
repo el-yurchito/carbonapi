@@ -38,6 +38,22 @@ func TestDiffSeries(t *testing.T) {
 			[]*types.MetricData{types.MakeMetricData("metricBog",
 				[]float64{3, 4, 5, 6, 7, 8}, 1, now32)},
 		},
+		{
+			parser.NewExpr("aboveSeries",
+				"metric1", 7, parser.ArgValue(".*Ko.ik$"), parser.ArgValue("Bog"),
+			),
+			map[parser.MetricRequest][]*types.MetricData{
+				{"metric1", 0, 1}: {
+					types.MakeMetricData("metricSobaka", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
+					types.MakeMetricData("metricKotik", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
+					types.MakeMetricData("metricHomyak", []float64{4, 4, 5, 5, 6, 8}, 1, now32),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData("Bog", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
+				types.MakeMetricData("metricHomyak", []float64{4, 4, 5, 5, 6, 8}, 1, now32),
+			},
+		},
 	}
 
 	for _, tt := range tests {
