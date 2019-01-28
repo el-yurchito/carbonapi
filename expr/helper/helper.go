@@ -411,6 +411,20 @@ func MaxValue(f64s []float64, absent []bool) float64 {
 	return m
 }
 
+// MaxValue returns maximum from the list
+func MaxValue2(f64s []float64) float64 {
+	m := math.Inf(-1)
+	for _, v := range f64s {
+		if math.IsNaN(v) {
+			continue
+		}
+		if v > m {
+			m = v
+		}
+	}
+	return m
+}
+
 // MinValue returns minimal from the list
 func MinValue(f64s []float64, absent []bool) float64 {
 	m := math.Inf(1)

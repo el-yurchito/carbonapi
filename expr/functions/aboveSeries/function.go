@@ -1,11 +1,12 @@
 package aboveSeries
 
 import (
+	"regexp"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"regexp"
 )
 
 type aboveSeries struct {
@@ -58,7 +59,7 @@ func (f *aboveSeries) Do(e parser.Expr, from, until int32, values map[parser.Met
 
 	var results []*types.MetricData
 	for _, a := range args {
-		if helper.MaxValue(a.Values) > max {
+		if helper.MaxValue2(a.Values) > max {
 			r := *a
 			if rename {
 				r.Name = rre.ReplaceAllString(r.Name, replace)
@@ -74,7 +75,7 @@ func (f *aboveSeries) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
 		"aboveSeries": {
 			Name:        "aboveSeries",
-			Description: "Takes a seriesList and compares the maximum of each series against the given value. If the series maximum is greater than value, the regular expression search and replace is applied against the series name to plot a related metric e.g. given useSeriesAbove(ganglia.metric1.reqs,10,’reqs’,’time’), the response time metric will be plotted only when the maximum value of the corresponding request/s metric is > 10",
+			Description: "Takes a seriesList and compares the maximum of each series against the given value. If the series maximum is greater than value, the     regular expression search and replace is applied against the series name to plot a related metric e.g. given useSeriesAbove, the response time metric will be plotted only when the maximum value of the corresponding request/s metric is > 10",
 			Function:    "aboveSeries(seriesList, value, search, replace)",
 			Group:       "Filter Series",
 			Module:      "graphite.render.functions",
