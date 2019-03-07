@@ -30,7 +30,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 // seriesByTag("name=cpu")|groupByTags("average","dc","os")
-func (f *groupByTags) Do(e parser.Expr, from, until int64, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+func (f *groupByTags) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
