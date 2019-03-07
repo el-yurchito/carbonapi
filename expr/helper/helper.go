@@ -228,6 +228,8 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 	return []*types.MetricData{&r}, nil
 }
 
+var AvailableSummarizers = []string{"sum", "total", "avg", "average", "avg_zero", "max", "min", "last", "range", "median", "multiply", "diff", "count", "stddev"}
+
 // SummarizeValues summarizes values
 func SummarizeValues(f string, values []float64) float64 {
 	rv := 0.0
@@ -310,6 +312,35 @@ func SummarizeValues(f string, values []float64) float64 {
 	}
 
 	return rv
+}
+
+// ExtractTags extracts all graphite-style tags out of metric name
+// E.x. cpu.usage_idle;cpu=cpu-total;host=test => {"name": "cpu.usage_idle", "cpu": "cpu-total", "host": "test"}
+func ExtractTags(s string) map[string]string {
+        result := make(map[string]string)
+        idx := strings.IndexRune(s, ';')
+        if idx < 0 {
+                result["name"] = s
+                return result
+        }
+
+        result["name"] = s[:idx]
+
+        newS := s[idx+1:]
+        for {
+                idx := strings.IndexRune(newS, ';')
+                if idx < 0 {
+                        kv := strings.Split(newS, "=")
+                        result[kv[0]] = kv[1]
+                        break
+                }
+
+                kv := strings.Split(newS[:idx], "=")
+                result[kv[0]] = kv[1]
+                newS = newS[idx+1:]
+        }
+
+        return result
 }
 
 // ExtractMetric extracts metric out of function list
@@ -430,6 +461,20 @@ func MinValue(f64s []float64, absent []bool) float64 {
 	m := math.Inf(1)
 	for i, v := range f64s {
 		if absent[i] {
+			continue
+		}
+		if v < m {
+			m = v
+		}
+	}
+	return m
+}
+
+// MinValue returns minimal from the list
+func MinValue2(f64s []float64) float64 {
+	m := math.Inf(1)
+	for _, v := range f64s {
+		if math.IsNaN(v) {
 			continue
 		}
 		if v < m {
