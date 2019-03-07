@@ -19,6 +19,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/averageSeriesWithWildcards"
 	"github.com/go-graphite/carbonapi/expr/functions/baselines"
 	"github.com/go-graphite/carbonapi/expr/functions/below"
+	"github.com/go-graphite/carbonapi/expr/functions/belowSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/cactiStyle"
 	"github.com/go-graphite/carbonapi/expr/functions/cairo"
 	"github.com/go-graphite/carbonapi/expr/functions/changed"
@@ -34,11 +35,11 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/exclude"
 	"github.com/go-graphite/carbonapi/expr/functions/fallbackSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/fft"
-	"github.com/go-graphite/carbonapi/expr/functions/weightedAverageByFilteredCount"
 	"github.com/go-graphite/carbonapi/expr/functions/graphiteWeb"
 	"github.com/go-graphite/carbonapi/expr/functions/grep"
 	"github.com/go-graphite/carbonapi/expr/functions/group"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByNode"
+	"github.com/go-graphite/carbonapi/expr/functions/groupByTags"
 	"github.com/go-graphite/carbonapi/expr/functions/highest"
 	"github.com/go-graphite/carbonapi/expr/functions/hitcount"
 	"github.com/go-graphite/carbonapi/expr/functions/holtWintersAberration"
@@ -97,6 +98,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/timeStack"
 	"github.com/go-graphite/carbonapi/expr/functions/transformNull"
 	"github.com/go-graphite/carbonapi/expr/functions/tukey"
+	"github.com/go-graphite/carbonapi/expr/functions/weightedAverageByFilteredCount"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
 )
@@ -140,6 +142,8 @@ func New(configs map[string]string) {
 
 	funcs = append(funcs, initFunc{name: "below", order: below.GetOrder(), f: below.New})
 
+	funcs = append(funcs, initFunc{name: "belowSeries", order: belowSeries.GetOrder(), f: aboveSeries.New})
+
 	funcs = append(funcs, initFunc{name: "cactiStyle", order: cactiStyle.GetOrder(), f: cactiStyle.New})
 
 	funcs = append(funcs, initFunc{name: "cairo", order: cairo.GetOrder(), f: cairo.New})
@@ -177,6 +181,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "group", order: group.GetOrder(), f: group.New})
 
 	funcs = append(funcs, initFunc{name: "groupByNode", order: groupByNode.GetOrder(), f: groupByNode.New})
+
+	funcs = append(funcs, initFunc{name: "groupByTags", order: groupByTags.GetOrder(), f: groupByTags.New})
 
 	funcs = append(funcs, initFunc{name: "highest", order: highest.GetOrder(), f: highest.New})
 
