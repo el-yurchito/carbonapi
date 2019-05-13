@@ -261,7 +261,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		var target = targets[targetIdx]
 		for k, v := range config.rewriter {
 			if strings.Contains(target, k) {
-				target = strings.Replace(target, k, v, 1)
+				target = strings.Replace(target, k, v, -1)
 			}
 		}
 		targetIdx++
