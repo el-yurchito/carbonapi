@@ -48,6 +48,13 @@ var (
 	ErrUnknownTimeUnits = errors.New("unknown time units")
 )
 
+// NodeOrTag structure contains either Node (=integer) or Tag (=string)
+// They are distinguished by "IsTag" = true in case it's tag.
+type NodeOrTag struct {
+	IsTag bool
+	Value interface{}
+}
+
 // Expr defines an interface to talk with expressions
 type Expr interface {
 	// IsName checks if Expression is 'Series Name' expression
@@ -129,6 +136,10 @@ type Expr interface {
 	GetBoolArgDefault(n int, b bool) (bool, error)
 	// GetBoolNamedOrPosArgDefault returns specific positioned bool-typed argument or replace it with default if none found.
 	GetBoolNamedOrPosArgDefault(k string, n int, b bool) (bool, error)
+
+
+        // GetNodeOrTagArgs returns n-th argument as slice of NodeOrTag structures.
+	GetNodeOrTagArgs(n int) ([]NodeOrTag, error)
 
 	toExpr() interface{}
 }

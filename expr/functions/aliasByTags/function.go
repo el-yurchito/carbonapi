@@ -1,6 +1,7 @@
 package aliasByTags
 
 import (
+	"fmt"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -44,11 +45,13 @@ func metricToTagMap(s string) map[string]string {
 func (f *aliasByTags) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
+		fmt.Println("getSeriesArg missing argument")
 		return nil, err
 	}
 
-	tags, err := e.GetStringArgs(1)
+	tags, err := e.GetNodeOrTagArgs(1)
 	if err != nil {
+		fmt.Println("GetNodeOrTagArgs missing argument")
 		return nil, err
 	}
 
@@ -56,27 +59,30 @@ func (f *aliasByTags) Do(e parser.Expr, from, until int32, values map[parser.Met
 
 	for _, a := range args {
 		var matched []string
-		var name string
 		metricTags := metricToTagMap(a.Name)
+		nodes := strings.Split(metricTags["name"], ".")
 		for _, tag := range tags {
-			if value, ok := metricTags[tag]; ok {
-				if tag == NAME {
-					name = value
-				} else {
-					matched = append(matched, strings.Join([]string{tag, value}, "="))
+			if tag.IsTag {
+				tagStr := tag.Value.(string)
+				matched = append(matched, metricTags[tagStr])
+			} else {
+				f := tag.Value.(int)
+				if f < 0 {
+					f += len(nodes)
 				}
+				if f >= len(nodes) || f < 0 {
+					continue
+				}
+				matched = append(matched, nodes[f])
 			}
-		}
-		if len(name) > 0 {
-			matched = append([]string{name}, matched...)
 		}
 		r := *a
 		if len(matched) > 0 {
-			r.Name = strings.Join(matched, ";")
+			r.Name = strings.Join(matched, ".")
 		}
+		r.Name = strings.Split(r.Name, ",")[0]
 		results = append(results, &r)
 	}
-
 	return results, nil
 }
 
@@ -97,9 +103,9 @@ func (f *aliasByTags) Description() map[string]types.FunctionDescription {
 				},
 				{
 					Multiple: true,
-					Name:     "nodes",
+					Name:     "tags",
 					Required: true,
-					Type:     types.Tag,
+					Type:     types.NodeOrTag,
 				},
 			},
 		},
