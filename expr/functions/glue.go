@@ -94,6 +94,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/summarize"
 	"github.com/go-graphite/carbonapi/expr/functions/timeFunction"
 	"github.com/go-graphite/carbonapi/expr/functions/timeShift"
+	"github.com/go-graphite/carbonapi/expr/functions/timeShiftByMetric"
 	"github.com/go-graphite/carbonapi/expr/functions/timeSlice"
 	"github.com/go-graphite/carbonapi/expr/functions/timeStack"
 	"github.com/go-graphite/carbonapi/expr/functions/transformNull"
@@ -110,7 +111,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 92)
+	funcs := make([]initFunc, 0, 96)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -142,7 +143,7 @@ func New(configs map[string]string) {
 
 	funcs = append(funcs, initFunc{name: "below", order: below.GetOrder(), f: below.New})
 
-	funcs = append(funcs, initFunc{name: "belowSeries", order: belowSeries.GetOrder(), f: aboveSeries.New})
+	funcs = append(funcs, initFunc{name: "belowSeries", order: belowSeries.GetOrder(), f: belowSeries.New})
 
 	funcs = append(funcs, initFunc{name: "cactiStyle", order: cactiStyle.GetOrder(), f: cactiStyle.New})
 
@@ -291,6 +292,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "timeFunction", order: timeFunction.GetOrder(), f: timeFunction.New})
 
 	funcs = append(funcs, initFunc{name: "timeShift", order: timeShift.GetOrder(), f: timeShift.New})
+
+	funcs = append(funcs, initFunc{name: "timeShiftByMetric", order: timeShiftByMetric.GetOrder(), f: timeShiftByMetric.New})
 
 	funcs = append(funcs, initFunc{name: "timeSlice", order: timeSlice.GetOrder(), f: timeSlice.New})
 
