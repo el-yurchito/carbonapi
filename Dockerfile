@@ -5,6 +5,7 @@ COPY . .
 
 RUN apt-get update
 RUN apt-get install -y make gcc git
+RUN make test-nocairo
 RUN make nocairo
 
 
