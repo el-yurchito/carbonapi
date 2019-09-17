@@ -1230,7 +1230,7 @@ func TestEvalExpression(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			th.TestEvalExpr(t, &tt, true)
 		})
 	}
 }
@@ -1670,10 +1670,10 @@ func TestEvalMultipleReturns(t *testing.T) {
 		},
 		{
 			parser.NewExpr("diffSeriesLists",
-					"metric[12]",
-					"metric2",
-					"true",
-				),
+				"metric[12]",
+				"metric2",
+				"true",
+			),
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric[12]", 0, 1}: {
 					types.MakeMetricData("metric1", []float64{1, 2, 3, 4, 5}, 1, now32),

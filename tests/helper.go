@@ -274,7 +274,7 @@ type EvalTestItem struct {
 	Want []*types.MetricData
 }
 
-func TestEvalExpr(t *testing.T, tt *EvalTestItem) {
+func TestEvalExpr(t *testing.T, tt *EvalTestItem, strictOrder bool) {
 	evaluator := metadata.GetEvaluator()
 	originalMetrics := DeepClone(tt.M)
 	testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
@@ -290,21 +290,61 @@ func TestEvalExpr(t *testing.T, tt *EvalTestItem) {
 	}
 	DeepEqual(t, testName, originalMetrics, tt.M)
 
-	for i, want := range tt.Want {
-		actual := g[i]
-		if actual == nil {
+	compareMetricData(t, tt, g, tt.Want, strictOrder)
+}
+
+// compareMetricData compares actual and wanted metric data in the way specified by strictOrder
+// if strictOrder is true then data will be compared following the order given
+// if strictOrder is false then data will be compared as "set by set",
+// i.e. ["aaa", "bbb"] and ["bbb", "aaa"] will be considered equal
+func compareMetricData(t *testing.T, tt *EvalTestItem, actual, wanted []*types.MetricData, strictOrder bool) {
+	if len(actual) != len(wanted) {
+		panic(fmt.Errorf("invalid compareMetricData call: lengths of actual and wanted must be equal"))
+	}
+
+	for _, v := range actual {
+		if v == nil {
 			t.Errorf("returned no value %v", tt.E.RawArgs())
 			return
 		}
-		if actual.StepTime == 0 {
-			t.Errorf("missing Step for %+v", g)
-		}
-		if actual.Name != want.Name {
-			t.Errorf("bad Name for %s metric %d: got %s, Want %s", testName, i, actual.Name, want.Name)
-		}
-		if !NearlyEqualMetrics(actual, want) {
-			t.Errorf("different values for %s metric %s: got %v, Want %v", testName, actual.Name, actual.Values, want.Values)
+	}
+	for i, v := range wanted {
+		if v == nil {
+			t.Errorf("not specified Want row #%d", i)
 			return
+		}
+	}
+
+	testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
+	actualMap := make(map[string][]*types.MetricData)
+	wantedMap := make(map[string][]*types.MetricData)
+
+	// grouping actual and wanted by keys - metric's name
+	if !strictOrder {
+		for i := 0; i < len(actual); i++ {
+			groupKey := actual[i].Name
+			actualMap[groupKey] = append(actualMap[groupKey], actual[i])
+			wantedMap[groupKey] = append(wantedMap[groupKey], wanted[i])
+		}
+	} else {
+		actualMap["__key__"] = actual
+		wantedMap["__key__"] = wanted
+	}
+
+	// compare grouped test data sets
+	for key, metricsActual := range actualMap {
+		metricsWanted := wantedMap[key]
+		for i := 0; i < len(metricsActual); i++ {
+			if metricsActual[i].StepTime == 0 {
+				t.Errorf("missing Step for %+v", actual)
+			}
+			if metricsActual[i].Name != metricsWanted[i].Name {
+				t.Errorf("bad Name for %s metric: got %s, Want %s", testName, metricsActual[i].Name, metricsWanted[i].Name)
+			}
+			if !NearlyEqualMetrics(metricsActual[i], metricsWanted[i]) {
+				t.Errorf("different values for %s metric %s: got %v, Want %v", testName, metricsActual[i].Name, metricsActual[i].Values, metricsWanted[i].Values)
+				return
+			}
 		}
 	}
 }
