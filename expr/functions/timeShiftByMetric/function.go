@@ -63,7 +63,8 @@ func (f *timeShiftByMetric) Description() map[string]types.FunctionDescription {
 // timeShiftByMetric(seriesList, markSource, versionRankIndex)
 func (f *timeShiftByMetric) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) (resultData []*types.MetricData, resultError error) {
 	sugar := zapwriter.Logger("functionDo").With(zap.String("function", "timeShiftByMetric")).Sugar()
-	sugar.Info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+	// logging error if any
 	defer func() {
 		if r := recover(); r != nil {
 			sugar.Warnf("Unhandled error: %v", r)
