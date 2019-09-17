@@ -30,9 +30,9 @@ func TestDiffSeries(t *testing.T) {
 			),
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {
-					types.MakeMetricData("metricSobaka", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
+					types.MakeMetricData("metricSobaka", []float64{8, 8, 8, 8, 8, 8}, 1, now32),
 					types.MakeMetricData("metricKotik", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
-					types.MakeMetricData("metricHomyak", []float64{4, 4, 5, 5, 6, 6}, 1, now32),
+					types.MakeMetricData("metricHomyak", []float64{9, 9, 10, 10, 11, 11}, 1, now32),
 				},
 			},
 			[]*types.MetricData{types.MakeMetricData("metricBog",
@@ -44,14 +44,14 @@ func TestDiffSeries(t *testing.T) {
 			),
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1", 0, 1}: {
-					types.MakeMetricData("metricSobaka", []float64{0, 0, 0, 0, 0, 0}, 1, now32),
+					types.MakeMetricData("metricSobaka", []float64{8, 8, 8, 8, 8, 8}, 1, now32),
 					types.MakeMetricData("metricKotik", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
-					types.MakeMetricData("metricHomyak", []float64{4, 4, 5, 5, 6, 8}, 1, now32),
+					types.MakeMetricData("metricHomyak", []float64{9, 9, 10, 10, 11, 6}, 1, now32),
 				},
 			},
 			[]*types.MetricData{
 				types.MakeMetricData("Bog", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
-				types.MakeMetricData("metricHomyak", []float64{4, 4, 5, 5, 6, 8}, 1, now32),
+				types.MakeMetricData("metricHomyak", []float64{9, 9, 10, 10, 11, 6}, 1, now32),
 			},
 		},
 	}
