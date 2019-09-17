@@ -32,7 +32,7 @@ func TestAliasByTags(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1.foo.bar.baz;foo=bar", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz;foo=bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData("foo=bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
+			[]*types.MetricData{types.MakeMetricData("bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
 		},
 		{
 			parser.NewExpr("aliasByTags",
@@ -41,14 +41,14 @@ func TestAliasByTags(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"metric1;foo=bar", 0, 1}: {types.MakeMetricData("metric1;foo=bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
-			[]*types.MetricData{types.MakeMetricData("metric1;foo=bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
+			[]*types.MetricData{types.MakeMetricData("bar.metric1", []float64{1, 2, 3, 4, 5}, 1, now32)},
 		},
 	}
 
 	for _, tt := range tests {
 		testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			th.TestEvalExpr(t, &tt, true)
 		})
 	}
 

@@ -101,6 +101,6 @@ func TestEvalExpressionGraph(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		th.TestEvalExpr(t, &tt)
+		th.TestEvalExpr(t, &tt, true)
 	}
 }

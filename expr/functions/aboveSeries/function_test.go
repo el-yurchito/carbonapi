@@ -21,7 +21,7 @@ func init() {
 }
 
 func TestDiffSeries(t *testing.T) {
-	now32 := int64(time.Now().Unix())
+	now32 := int32(time.Now().Unix())
 
 	tests := []th.EvalTestItem{
 		{
@@ -59,7 +59,7 @@ func TestDiffSeries(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			th.TestEvalExpr(t, &tt, true)
 		})
 	}
 

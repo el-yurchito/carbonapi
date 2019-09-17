@@ -16,6 +16,9 @@ nocairo:
 test:
 	PKG_CONFIG_PATH="$(EXTRA_PKG_CONFIG_PATH)" $(GO) test -tags cairo ./... -race
 
+test-nocairo:
+	$(GO) test -race -ldflags '-X main.BuildVersion=$(VERSION)' ./...
+
 vet:
 	$(GO) vet
 

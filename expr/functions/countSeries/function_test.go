@@ -42,7 +42,7 @@ func TestCountSeries(t *testing.T) {
 	for _, tt := range tests {
 		testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
 		t.Run(testName, func(t *testing.T) {
-			th.TestEvalExpr(t, &tt)
+			th.TestEvalExpr(t, &tt, true)
 		})
 	}
 
