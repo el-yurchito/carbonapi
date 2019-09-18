@@ -16,6 +16,7 @@ type callParams struct {
 }
 
 type versionInfo struct {
+	mark         string
 	position     int
 	versionMajor int
 	versionMinor int
@@ -23,16 +24,16 @@ type versionInfo struct {
 
 type versionInfos []versionInfo
 
-// HighestVersions returns slice of markVersionInfo containing the highest version
-// for each major version with limit (-1 means no limit)
-func (data versionInfos) HighestVersions(limit int) versionInfos {
+// HighestVersions returns slice of markVersionInfo
+// containing the highest version for each major version
+func (data versionInfos) HighestVersions() versionInfos {
 	qty := 0
 	result := make(versionInfos, 0, len(data))
 
 	sort.Sort(sort.Reverse(data))
-	for i := 0; (i < len(data)) && (qty < limit || limit == -1); i++ {
-		if (qty == 0) || (result[qty-1].versionMajor != data[i].versionMajor) {
-			result = append(result, data[i])
+	for _, current := range data {
+		if qty == 0 || result[qty-1].versionMajor != current.versionMajor {
+			result = append(result, current)
 			qty++
 		}
 	}

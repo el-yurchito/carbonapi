@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"runtime/debug"
-	"strconv"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -14,6 +13,8 @@ import (
 	"github.com/lomik/zapwriter"
 	"go.uber.org/zap"
 )
+
+type offsetByVersion map[string]int32
 
 type timeShiftByMetric struct {
 	interfaces.FunctionBase
@@ -88,30 +89,58 @@ func (f *timeShiftByMetric) Do(e parser.Expr, from, until int32, values map[pars
 		return nil, err
 	}
 
-	result := f.applyShift(params, int32(latestMarks[0].position-latestMarks[1].position)*params.stepTime, latestMarks[1].versionMajor)
+	result := f.applyShift(params, f.calculateOffsets(params, latestMarks))
 	return result, nil
 }
 
-// applyShift shifts timeline of those metrics which major version matches top second mark
-func (f *timeShiftByMetric) applyShift(params *callParams, offset int32, version int) []*types.MetricData {
-	result := make([]*types.MetricData, len(params.metrics))
-	for i, metric := range params.metrics {
+// applyShift shifts timeline of those metrics which major version is less than top major version
+func (f *timeShiftByMetric) applyShift(params *callParams, offsets offsetByVersion) []*types.MetricData {
+	result := make([]*types.MetricData, 0, len(params.metrics))
+	for _, metric := range params.metrics {
+		var offset *int32
+		var possibleVersion string
+
 		name := metric.Name
 		nameSplit := strings.Split(name, ".")
-		r := *metric
-		r.Name = fmt.Sprintf("timeShiftByMetric(%s)", r.Name)
 
-		// checking whether shift is applicable to this metric
-		if params.versionRank < len(nameSplit) {
-			metricVersion, err := strconv.Atoi(nameSplit[params.versionRank])
-			if err == nil && metricVersion == version {
-				// shift top-second-version metric to the right
-				r.StartTime += offset
-				r.StopTime += offset
-			}
+		// make sure that there is desired rank at all
+		if params.versionRank >= len(nameSplit) {
+			continue
+		} else {
+			possibleVersion = nameSplit[params.versionRank]
 		}
 
-		result[i] = &r
+		if possibleOffset, ok := offsets[possibleVersion]; !ok {
+			for key, value := range offsets {
+				if strings.HasPrefix(key, possibleVersion) {
+					offset = &value
+					offsets[possibleVersion] = value
+				}
+			}
+		} else {
+			offset = &possibleOffset
+		}
+
+		// checking if it is some version after all, otherwise this series will be omitted
+		if offset != nil {
+			r := *metric
+			r.Name = fmt.Sprintf("timeShiftByMetric(%s)", r.Name)
+			r.StopTime += *offset
+			r.StartTime += *offset
+
+			result = append(result, &r)
+		}
+	}
+
+	return result
+}
+
+func (f *timeShiftByMetric) calculateOffsets(params *callParams, versions versionInfos) offsetByVersion {
+	result := make(offsetByVersion)
+	topPosition := versions[0].position
+
+	for _, version := range versions {
+		result[version.mark] = int32(topPosition-version.position) * params.stepTime
 	}
 
 	return result
@@ -176,9 +205,9 @@ func (f *timeShiftByMetric) extractCallParams(e parser.Expr, from, until int32, 
 }
 
 // locateLatestMarks gets the series with marks those look like "65_4"
-// and looks for the 2 latest ones by _major_ versions
-// e.g. among set [64_2, 64_3, 64_4, 65_0, 65_1] it locates 64_4 and 65_1
-// returns 2 located elements (the highest one and the second one after it)
+// and looks for the latest ones by _major_ versions
+// e.g. among set [63_0, 64_0, 64_1, 64_2, 65_0, 65_1] it locates 63_0, 64_4 and 65_1
+// returns located elements
 func (f *timeShiftByMetric) locateLatestMarks(params *callParams) (versionInfos, error) {
 	re := regexp.MustCompile(`(\d+)_(\d+)`)
 	versions := make(versionInfos, 0, len(params.marks))
@@ -208,6 +237,7 @@ func (f *timeShiftByMetric) locateLatestMarks(params *callParams) (versionInfos,
 		} else {
 			// collecting all marks found
 			versions = append(versions, versionInfo{
+				mark:         markVersion,
 				position:     position,
 				versionMajor: mustAtoi(submatch[1]),
 				versionMinor: mustAtoi(submatch[2]),
@@ -215,8 +245,8 @@ func (f *timeShiftByMetric) locateLatestMarks(params *callParams) (versionInfos,
 		}
 	}
 
-	// obtain 2 top versions
-	result := versions.HighestVersions(2)
+	// obtain top versions for each major version
+	result := versions.HighestVersions()
 	if len(result) < 2 {
 		return nil, fmt.Errorf("bad data: could not find 2 marks, only %d found", len(result))
 	} else {
