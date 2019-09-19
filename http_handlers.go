@@ -213,7 +213,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 	// normalize from and until values
 	qtz := r.FormValue("tz")
-	from32 := date.DateParamToEpoch(from, qtz, timeNow().Add(-24 * time.Hour).Unix(), config.defaultTimeZone)
+	from32 := date.DateParamToEpoch(from, qtz, timeNow().Add(-24*time.Hour).Unix(), config.defaultTimeZone)
 	until32 := date.DateParamToEpoch(until, qtz, timeNow().Unix(), config.defaultTimeZone)
 
 	accessLogDetails.UseCache = useCache
@@ -251,23 +251,31 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var metrics []string
 	var results []*types.MetricData
+
 	errors := make(map[string]string)
+	metricDisplayNames := make(map[string]string)
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
 
-	var metrics []string
-	var targetIdx = 0
-	for targetIdx < len(targets) {
-		var target = targets[targetIdx]
+	// it's important to use for ... i < len ... here instead of for ... range ...
+	// because slice's size may change during iteration
+	for i := 0; i < len(targets); i++ {
+		prefixOriginal := ""
+		prefixReplaced := ""
+		target := targets[i]
+		targetOriginal := target
 		for k, v := range config.rewriter {
 			if strings.Contains(target, k) {
-				target = strings.Replace(target, k, v, -1)
+				// save original prefix and it's replacement to restore it in the output for user
+				prefixOriginal = k
+				prefixReplaced = v
+				target = strings.Replace(target, prefixOriginal, prefixReplaced, -1)
+				break
 			}
 		}
-		targetIdx++
 
 		exp, e, err := parser.ParseExpr(target)
-
 		if err != nil || e != "" {
 			msg := buildParseErrorString(target, e, err)
 			http.Error(w, msg, http.StatusBadRequest)
@@ -278,7 +286,14 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, m := range exp.Metrics() {
-			metrics = append(metrics, m.Metric)
+			var metricName string
+			if m.Metric == target {
+				metricName = targetOriginal
+			} else {
+				metricName = m.Metric
+			}
+
+			metrics = append(metrics, metricName)
 			mfetch := m
 			mfetch.From += from32
 			mfetch.Until += until32
@@ -340,7 +355,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 				r, err := config.zipper.Render(ctx, m.Metric, mfetch.From, mfetch.Until)
 				if err != nil {
-					errors[target] = err.Error()
+					errors[targetOriginal] = err.Error()
 					config.limiter.Leave()
 					continue
 				}
@@ -392,14 +407,29 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			expr.SortMetrics(metricMap[mfetch], mfetch)
+
+			// prepare metric data backward replacements
+			if prefixOriginal != "" {
+				for _, metricDataList := range metricMap {
+					if metricDataList == nil {
+						continue
+					}
+
+					// replacement map for specific series lists
+					for _, metricData := range metricDataList {
+						metricName := metricData.Name
+						if _, ok := metricDisplayNames[metricName]; !ok {
+							metricDisplayNames[metricName] = prefixOriginal + strings.TrimPrefix(metricName, prefixReplaced)
+						}
+					}
+				}
+			}
 		}
 		accessLogDetails.Metrics = metrics
 
-		var rewritten bool
-		var newTargets []string
-		rewritten, newTargets, err = expr.RewriteExpr(exp, from32, until32, metricMap)
+		rewritten, newTargets, err := expr.RewriteExpr(exp, from32, until32, metricMap)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
-			errors[target] = err.Error()
+			errors[targetOriginal] = err.Error()
 			accessLogDetails.Reason = err.Error()
 			logAsError = true
 			return
@@ -416,20 +446,28 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 						)
 					}
 				}()
-				exprs, err := expr.EvalExpr(exp, from32, until32, metricMap)
+
+				expressions, err := expr.EvalExpr(exp, from32, until32, metricMap)
 				if err != nil && err != parser.ErrSeriesDoesNotExist {
-					errors[target] = err.Error()
+					errors[targetOriginal] = err.Error()
 					accessLogDetails.Reason = err.Error()
 					logAsError = true
 					return
 				}
-				results = append(results, exprs...)
+
+				// backward replacement for metric names being replaced earlier
+				for _, expression := range expressions {
+					for nameReplaced, nameOriginal := range metricDisplayNames {
+						expression.Name = strings.Replace(expression.Name, nameReplaced, nameOriginal, -1)
+					}
+				}
+
+				results = append(results, expressions...)
 			}()
 		}
 	}
 
 	var body []byte
-
 	switch format {
 	case jsonFormat:
 		if maxDataPoints, _ := strconv.Atoi(r.FormValue("maxDataPoints")); maxDataPoints != 0 {
