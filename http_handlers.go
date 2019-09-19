@@ -255,7 +255,6 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	var results []*types.MetricData
 
 	errors := make(map[string]string)
-	metricDisplayNames := make(map[string]string)
 	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
 
 	// it's important to use for ... i < len ... here instead of for ... range ...
@@ -408,19 +407,11 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 			expr.SortMetrics(metricMap[mfetch], mfetch)
 
-			// prepare metric data backward replacements
+			// backward replacement metric data name
 			if prefixOriginal != "" {
 				for _, metricDataList := range metricMap {
-					if metricDataList == nil {
-						continue
-					}
-
-					// replacement map for specific series lists
 					for _, metricData := range metricDataList {
-						metricName := metricData.Name
-						if _, ok := metricDisplayNames[metricName]; !ok {
-							metricDisplayNames[metricName] = prefixOriginal + strings.TrimPrefix(metricName, prefixReplaced)
-						}
+						metricData.Name = prefixOriginal + strings.TrimPrefix(metricData.Name, prefixReplaced)
 					}
 				}
 			}
@@ -453,13 +444,6 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 					accessLogDetails.Reason = err.Error()
 					logAsError = true
 					return
-				}
-
-				// backward replacement for metric names being replaced earlier
-				for _, expression := range expressions {
-					for nameReplaced, nameOriginal := range metricDisplayNames {
-						expression.Name = strings.Replace(expression.Name, nameReplaced, nameOriginal, -1)
-					}
 				}
 
 				results = append(results, expressions...)
