@@ -42,6 +42,7 @@ func TestWeightedAverageByFilteredCount(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("weightedAverageByFilteredCount(app, 0)",
 				[]float64{26, 150}, 1, now32)},
+			nil,
 		},
 
 		{
@@ -60,6 +61,7 @@ func TestWeightedAverageByFilteredCount(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("weightedAverageByFilteredCount(app, 0)",
 				[]float64{26, 220}, 1, now32)},
+			nil,
 		},
 
 		{
@@ -78,6 +80,7 @@ func TestWeightedAverageByFilteredCount(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("weightedAverageByFilteredCount(app, 10)",
 				[]float64{20, math.NaN()}, 1, now32)},
+			nil,
 		},
 
 		{
@@ -98,6 +101,7 @@ func TestWeightedAverageByFilteredCount(t *testing.T) {
 				types.MakeMetricData("weightedAverageByFilteredCount(app.metric1, 0)", []float64{30, 20}, 1, now32),
 				types.MakeMetricData("weightedAverageByFilteredCount(app.metric2, 0)", []float64{20, 220}, 1, now32),
 			},
+			nil,
 		},
 	}
 

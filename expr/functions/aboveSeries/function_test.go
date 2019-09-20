@@ -37,6 +37,7 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricBog",
 				[]float64{3, 4, 5, 6, 7, 8}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("aboveSeries",
@@ -53,6 +54,7 @@ func TestDiffSeries(t *testing.T) {
 				types.MakeMetricData("Bog", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
 				types.MakeMetricData("metricHomyak", []float64{4, 4, 5, 5, 6, 8}, 1, now32),
 			},
+			nil,
 		},
 	}
 

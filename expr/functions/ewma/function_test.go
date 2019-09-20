@@ -37,6 +37,7 @@ func TestEWMA(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("ewma(metric1,0.9)", []float64{0, 0.9, 0.99, 0.999, math.NaN(), 0.9999, 0.99999}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("exponentialWeightedMovingAverage",
@@ -49,6 +50,7 @@ func TestEWMA(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("ewma(metric1,0.9)", []float64{0, 0.9, 0.99, 0.999, math.NaN(), 0.9999, 0.99999}, 1, now32),
 			},
+			nil,
 		},
 	}
 

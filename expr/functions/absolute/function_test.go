@@ -34,6 +34,7 @@ func TestAbsolute(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("absolute(metric1)",
 				[]float64{0, 1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 	}
 

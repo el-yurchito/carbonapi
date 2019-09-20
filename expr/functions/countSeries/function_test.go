@@ -36,6 +36,7 @@ func TestCountSeries(t *testing.T) {
 				{"metric3", 0, 1}: {types.MakeMetricData("metric3", []float64{3, math.NaN(), 5, 6, math.NaN(), math.NaN()}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("countSeries(metric1,metric2,metric3)", []float64{3, 3, 3, 3, 3, 3}, 1, now32)},
+			nil,
 		},
 	}
 

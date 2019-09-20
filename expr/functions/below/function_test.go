@@ -40,6 +40,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricB",
 				[]float64{3, 4, 5, 6, 7, 8}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("currentBelow",
@@ -55,6 +56,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricA",
 				[]float64{0, 0, 0, 0, 0, math.NaN()}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("averageAbove",
@@ -72,6 +74,7 @@ func TestBelow(t *testing.T) {
 				types.MakeMetricData("metricB", []float64{3, 4, 5, 6, 7, 8}, 1, now32),
 				types.MakeMetricData("metricC", []float64{4, 4, 5, 5, 6, 6}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("averageBelow",
@@ -87,6 +90,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricA",
 				[]float64{0, 0, 0, 0, 0, 0}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("maximumAbove",
@@ -102,6 +106,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricB",
 				[]float64{3, 4, 5, 6, 7, 8}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("maximumBelow",
@@ -117,6 +122,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricA",
 				[]float64{0, 0, 0, 0, 0, 0}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("minimumAbove",
@@ -132,6 +138,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricC",
 				[]float64{2, 4, 4, 5, 5, 6}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("minimumBelow",
@@ -147,6 +154,7 @@ func TestBelow(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricC",
 				[]float64{-2, 4, 4, 5, 5, 6}, 1, now32)},
+			nil,
 		},
 	}
 

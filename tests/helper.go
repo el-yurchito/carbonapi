@@ -269,35 +269,69 @@ func TestMultiReturnEvalExpr(t *testing.T, tt *MultiReturnEvalTestItem) {
 }
 
 type EvalTestItem struct {
-	E    parser.Expr
-	M    map[parser.MetricRequest][]*types.MetricData
-	Want []*types.MetricData
+	E         parser.Expr
+	M         map[parser.MetricRequest][]*types.MetricData
+	Want      []*types.MetricData
+	WantError error
 }
 
 func TestEvalExpr(t *testing.T, tt *EvalTestItem, strictOrder bool) {
+	if (tt.Want == nil) == (tt.WantError == nil) {
+		t.Fatalf("Improperly configured: can neither set both nor unset both Want and WantError")
+	}
+
 	evaluator := metadata.GetEvaluator()
 	originalMetrics := DeepClone(tt.M)
 	testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
-	g, err := evaluator.EvalExpr(tt.E, 0, 1, tt.M)
-	if err != nil {
-		t.Errorf("failed to eval %s: %+v", testName, err)
-		return
-	}
-	if len(g) != len(tt.Want) {
-		t.Errorf("%s returned a different number of metrics, actual %v, Want %v", testName, len(g), len(tt.Want))
-		return
+	actual, err := evaluator.EvalExpr(tt.E, 0, 1, tt.M)
 
+	if err == nil {
+		if tt.WantError != nil {
+			t.Fatalf("%s expected error %s but didn't cause any", testName, tt.WantError.Error())
+		}
+		if len(actual) != len(tt.Want) {
+			t.Fatalf("%s returned a different number of metrics, actual %v, Want %v", testName, len(actual), len(tt.Want))
+		}
+		DeepEqual(t, testName, originalMetrics, tt.M)
+		compareMetricDataSets(t, tt, actual, tt.Want, strictOrder)
+	} else if tt.WantError == nil {
+		t.Fatalf("failed to eval %s: %+v", testName, err)
+	} else if err.Error() != tt.WantError.Error() {
+		t.Fatalf("%s caused unexpected error: expected:\n%s\nbut was actually:\n%s", testName, tt.WantError.Error(), err.Error())
 	}
-	DeepEqual(t, testName, originalMetrics, tt.M)
-
-	compareMetricData(t, tt, g, tt.Want, strictOrder)
 }
 
-// compareMetricData compares actual and wanted metric data in the way specified by strictOrder
+// compareMetricData compares single actual and wanted MetricData objects and returns comparision result
+// errorCode == 0 is considered as ok, no errorMessages is provided in this case
+// errorCode == 1 is considered as non-fatal failure; errorMessages will be logged, the test case will be considered failed but will continue execution
+// errorCode == 2 is considered as fatal failure; errorMessages will be logged, the test case will be considered failed and will stop immediately
+func compareMetricData(actual, wanted *types.MetricData) (int, []string) {
+	errorCode := 0
+	errorMessages := make([]string, 0, 3)
+
+	if actual.StepTime == 0 {
+		errorCode = 1
+		errorMessages = append(errorMessages, fmt.Sprintf("Missing StepTime for %v", actual))
+	}
+
+	if actual.Name != wanted.Name {
+		errorCode = 1
+		errorMessages = append(errorMessages, fmt.Sprintf("Bad Name for metric: got %s, Want %s", actual.Name, wanted.Name))
+	}
+
+	if !NearlyEqualMetrics(actual, wanted) {
+		errorCode = 2
+		errorMessages = append(errorMessages, fmt.Sprintf("different values for metric %s: got %v, Want %v", actual.Name, actual.Values, wanted.Values))
+	}
+
+	return errorCode, errorMessages
+}
+
+// compareMetricDataSets compares actual and wanted metric data in the way specified by strictOrder
 // if strictOrder is true then data will be compared following the order given
 // if strictOrder is false then data will be compared as "set by set",
 // i.e. ["aaa", "bbb"] and ["bbb", "aaa"] will be considered equal
-func compareMetricData(t *testing.T, tt *EvalTestItem, actual, wanted []*types.MetricData, strictOrder bool) {
+func compareMetricDataSets(t *testing.T, tt *EvalTestItem, actual, wanted []*types.MetricData, strictOrder bool) {
 	if len(actual) != len(wanted) {
 		panic(fmt.Errorf("invalid compareMetricData call: lengths of actual and wanted must be equal"))
 	}
@@ -315,34 +349,44 @@ func compareMetricData(t *testing.T, tt *EvalTestItem, actual, wanted []*types.M
 		}
 	}
 
-	testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
-	actualMap := make(map[string][]*types.MetricData)
-	wantedMap := make(map[string][]*types.MetricData)
-
-	// grouping actual and wanted by keys - metric's name
-	if !strictOrder {
-		for i := 0; i < len(actual); i++ {
-			groupKey := actual[i].Name
-			actualMap[groupKey] = append(actualMap[groupKey], actual[i])
-			wantedMap[groupKey] = append(wantedMap[groupKey], wanted[i])
-		}
-	} else {
-		actualMap["__key__"] = actual
-		wantedMap["__key__"] = wanted
+	// metric data with their initial position
+	type MetricDataOrdered struct {
+		data     *types.MetricData
+		position int
 	}
 
-	// compare grouped test data sets
-	for key, metricsActual := range actualMap {
-		metricsWanted := wantedMap[key]
-		for i := 0; i < len(metricsActual); i++ {
-			if metricsActual[i].StepTime == 0 {
-				t.Errorf("missing Step for %+v", actual)
+	// metrics grouped by name
+	// wwe assume here that each metric is presented only once
+	type MetricGroup map[string]MetricDataOrdered
+
+	mapActual := make(MetricGroup)
+	mapWanted := make(MetricGroup)
+
+	for i := 0; i < len(wanted); i++ {
+		mapActual[actual[i].Name] = MetricDataOrdered{
+			data:     actual[i],
+			position: i,
+		}
+		mapWanted[wanted[i].Name] = MetricDataOrdered{
+			data:     wanted[i],
+			position: i,
+		}
+	}
+
+	for keyWanted, metricWanted := range mapWanted {
+		if metricActual, ok := mapActual[keyWanted]; !ok {
+			t.Errorf("Metric %s is wanted but not presented", keyWanted)
+		} else if strictOrder && metricActual.position != metricWanted.position {
+			t.Errorf("Wanted metric %s is presented but has wrong position (position is %d, wanted %d)",
+				keyWanted, metricActual.position, metricWanted.position)
+		} else {
+			errorCode, errorMessages := compareMetricData(metricActual.data, metricWanted.data)
+			if errorCode != 0 {
+				for _, errorMessage := range errorMessages {
+					t.Error(errorMessage)
+				}
 			}
-			if metricsActual[i].Name != metricsWanted[i].Name {
-				t.Errorf("bad Name for %s metric: got %s, Want %s", testName, metricsActual[i].Name, metricsWanted[i].Name)
-			}
-			if !NearlyEqualMetrics(metricsActual[i], metricsWanted[i]) {
-				t.Errorf("different values for %s metric %s: got %v, Want %v", testName, metricsActual[i].Name, metricsActual[i].Values, metricsWanted[i].Values)
+			if errorCode == 2 {
 				return
 			}
 		}

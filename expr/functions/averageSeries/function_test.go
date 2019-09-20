@@ -37,6 +37,7 @@ func TestAverageSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("averageSeries(metric1,metric2,metric3)",
 				[]float64{2, math.NaN(), 3, 4, 5, 5.5}, 1, now32)},
+			nil,
 		},
 	}
 

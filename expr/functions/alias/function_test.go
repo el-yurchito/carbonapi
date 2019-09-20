@@ -34,6 +34,7 @@ func TestAlias(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("renamed",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 	}
 
