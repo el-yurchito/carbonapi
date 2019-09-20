@@ -63,10 +63,10 @@ func TestTimeShift(t *testing.T) {
 			nil,
 		},
 
+		// 1. Versions: 1_0, 1_1, 2_0.
+		// 2. Leading versions: 1_1, 2_0.
+		// 3. Version 1_1 is 4 time units behind versions 2_0.
 		th.EvalTestItem{
-			// 1. Versions: 1_0, 1_1, 2_0.
-			// 2. Leading versions: 1_1, 2_0.
-			// 3. Version 1_1 is 4 time units behind versions 2_0.
 			parser.NewExpr("timeShiftByMetric",
 				"*.metric", "apps.mark.*", 0,
 			),
