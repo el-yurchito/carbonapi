@@ -33,6 +33,7 @@ func TestAliasByTags(t *testing.T) {
 				{"metric1.foo.bar.baz;foo=bar", 0, 1}: {types.MakeMetricData("metric1.foo.bar.baz;foo=bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("aliasByTags",
@@ -42,6 +43,7 @@ func TestAliasByTags(t *testing.T) {
 				{"metric1;foo=bar", 0, 1}: {types.MakeMetricData("metric1;foo=bar", []float64{1, 2, 3, 4, 5}, 1, now32)},
 			},
 			[]*types.MetricData{types.MakeMetricData("bar.metric1", []float64{1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 	}
 

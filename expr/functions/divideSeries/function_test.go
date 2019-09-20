@@ -75,6 +75,7 @@ func TestDivideSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("divideSeries(metric1,metric2)",
 				[]float64{0.5, math.NaN(), math.NaN(), math.NaN(), math.NaN(), 2}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("divideSeries",
@@ -88,6 +89,7 @@ func TestDivideSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("divideSeries(metric[12])",
 				[]float64{0.5, math.NaN(), math.NaN(), math.NaN(), math.NaN(), 2}, 1, now32)},
+			nil,
 		},
 	}
 

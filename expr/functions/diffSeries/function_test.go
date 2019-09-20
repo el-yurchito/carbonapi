@@ -38,6 +38,7 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("diffSeries(metric1,metric2)",
 				[]float64{-1, math.NaN(), math.NaN(), 3, 4, 6}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("diffSeries",
@@ -53,6 +54,7 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("diffSeries(metric1,metric2,metric3)",
 				[]float64{1, math.NaN(), math.NaN(), 3, 4, 1}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("diffSeries",
@@ -69,6 +71,7 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("diffSeries(metric1,metric2,metric3)",
 				[]float64{1, math.NaN(), math.NaN(), 3, 4, 1}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("diffSeries",
@@ -83,6 +86,7 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("diffSeries(metric*)",
 				[]float64{-1, math.NaN(), math.NaN(), 3, 4, 6}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("diffSeries",
@@ -97,6 +101,7 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("diffSeries(metric*)",
 				[]float64{-4, -3, math.NaN(), 3, -2, math.NaN()}, 1, now32)},
+			nil,
 		},
 	}
 

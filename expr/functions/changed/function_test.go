@@ -35,6 +35,7 @@ func TestChanged(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("changed(metric1)",
 				[]float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1}, 1, now32)},
+			nil,
 		},
 	}
 

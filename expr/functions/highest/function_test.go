@@ -89,6 +89,7 @@ func TestHighest(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricC", // NOTE(dgryski): not sure if this matches graphite
 				[]float64{1, 1, 3, 3, 4, 15}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("highestCurrent",
@@ -111,6 +112,7 @@ func TestHighest(t *testing.T) {
 				//TODO(nnuss): bring lowest* functions into harmony with this side effect or get rid of it
 				//types.MakeMetricData("metric0", []float64{math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN()}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("highestAverage",
@@ -126,6 +128,7 @@ func TestHighest(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricB", // NOTE(dgryski): not sure if this matches graphite
 				[]float64{1, 5, 5, 5, 5, 5}, 1, now32)},
+			nil,
 		},
 	}
 

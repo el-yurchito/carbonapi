@@ -37,6 +37,7 @@ func TestFallbackSeries(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("fallbackmetric", []float64{0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("fallbackSeries",
@@ -51,6 +52,7 @@ func TestFallbackSeries(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("metric1", []float64{0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("fallbackSeries",
@@ -64,6 +66,7 @@ func TestFallbackSeries(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("fallbackmetric", []float64{0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("fallbackSeries",
@@ -76,6 +79,7 @@ func TestFallbackSeries(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("metric1", []float64{0.9, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9}, 1, now32),
 			},
+			nil,
 		},
 	}
 

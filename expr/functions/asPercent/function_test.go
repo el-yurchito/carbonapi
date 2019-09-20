@@ -36,6 +36,7 @@ func TestAliasByNode(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("asPercent(metric1,metric2)",
 				[]float64{50, math.NaN(), math.NaN(), math.NaN(), math.NaN(), 200}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("asPercent",
@@ -55,6 +56,7 @@ func TestAliasByNode(t *testing.T) {
 				[]float64{25, 500, 125}, 1, now32),
 				types.MakeMetricData("asPercent(metricA2,metricB2)",
 					[]float64{25, 62.5, 1000}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("asPercent",
@@ -74,6 +76,7 @@ func TestAliasByNode(t *testing.T) {
 				types.MakeMetricData("asPercent(Server1.memory.used,Server1.memory.total)", []float64{25, 500, 125}, 1, now32),
 				types.MakeMetricData("asPercent(Server2.memory.used,Server3.memory.total)", []float64{25, 62.5, 1000}, 1, now32),
 			},
+			nil,
 		},
 		{
 			parser.NewExpr("asPercent",
@@ -94,6 +97,7 @@ func TestAliasByNode(t *testing.T) {
 				types.MakeMetricData("asPercent(Server2.memory.used,MISSING)", []float64{math.NaN(), math.NaN(), math.NaN()}, 1, now32),
 				types.MakeMetricData("asPercent(MISSING,Server3.memory.total)", []float64{math.NaN(), math.NaN(), math.NaN()}, 1, now32),
 			},
+			nil,
 		},
 	}
 

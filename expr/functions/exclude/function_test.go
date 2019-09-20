@@ -40,6 +40,7 @@ func TestExclude(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metricBar", // NOTE(dgryski): not sure if this matches graphite
 				[]float64{2, 2, 2, 2, 2}, 1, now32)},
+			nil,
 		},
 	}
 

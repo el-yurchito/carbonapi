@@ -34,6 +34,7 @@ func TestAliasByNode(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("metric1.replaced.bar.baz",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("aliasSub",
@@ -44,6 +45,7 @@ func TestAliasByNode(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("100",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("aliasSub",
@@ -54,6 +56,7 @@ func TestAliasByNode(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("100",
 				[]float64{1, 2, 3, 4, 5}, 1, now32)},
+			nil,
 		},
 	}
 

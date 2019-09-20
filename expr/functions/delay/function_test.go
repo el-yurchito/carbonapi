@@ -35,6 +35,7 @@ func TestDelay(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("delay(metric1,3)",
 				[]float64{math.NaN(), math.NaN(), math.NaN(), 1, 2, 3}, 1, now32)},
+			nil,
 		},
 	}
 

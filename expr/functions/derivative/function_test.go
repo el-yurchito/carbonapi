@@ -35,6 +35,7 @@ func TestDerivative(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("derivative(metric1)",
 				[]float64{math.NaN(), 2, 2, -5, 3, math.NaN(), 4}, 1, now32)},
+			nil,
 		},
 		{
 			parser.NewExpr("derivative",
@@ -45,6 +46,7 @@ func TestDerivative(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("derivative(metric1)",
 				[]float64{math.NaN(), math.NaN(), 2, -5, 3, math.NaN(), 4}, 1, now32)},
+			nil,
 		},
 	}
 
