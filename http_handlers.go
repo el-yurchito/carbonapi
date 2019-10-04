@@ -255,7 +255,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	var results []*types.MetricData
 
 	errors := make(map[string]string)
-	metricMap := make(map[parser.MetricRequest][]*types.MetricData)
+	metricValues := make(map[parser.MetricRequest][]*types.MetricData)
 
 	// it's important to use for ... i < len ... here instead of for ... range ...
 	// because slice's size may change during iteration
@@ -297,7 +297,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			mfetch.From += from32
 			mfetch.Until += until32
 
-			if _, ok := metricMap[mfetch]; ok {
+			if _, exist := metricValues[mfetch]; exist {
 				// already fetched this metric for this request
 				continue
 			}
@@ -359,7 +359,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				config.limiter.Leave()
-				metricMap[mfetch] = r
+				metricValues[mfetch] = r
 				for i := range r {
 					size += r[i].Size()
 				}
@@ -393,7 +393,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 				for i := 0; i < leaves; i++ {
 					if r := <-rch; r.error == nil {
 						size += r.data.Size()
-						metricMap[mfetch] = append(metricMap[mfetch], r.data)
+						metricValues[mfetch] = append(metricValues[mfetch], r.data)
 					} else {
 						errors = append(errors, r.error)
 					}
@@ -405,20 +405,19 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			expr.SortMetrics(metricMap[mfetch], mfetch)
+			currentFetchedMetrics := metricValues[mfetch]
+			expr.SortMetrics(currentFetchedMetrics, mfetch)
 
-			// backward replacement metric data name
+			// backward replacement metric data names
 			if prefixOriginal != "" {
-				for _, metricDataList := range metricMap {
-					for _, metricData := range metricDataList {
-						metricData.Name = prefixOriginal + strings.TrimPrefix(metricData.Name, prefixReplaced)
-					}
+				for i := range currentFetchedMetrics {
+					currentFetchedMetrics[i].Name = prefixOriginal + strings.TrimPrefix(currentFetchedMetrics[i].Name, prefixReplaced)
 				}
 			}
 		}
 		accessLogDetails.Metrics = metrics
 
-		rewritten, newTargets, err := expr.RewriteExpr(exp, from32, until32, metricMap)
+		rewritten, newTargets, err := expr.RewriteExpr(exp, from32, until32, metricValues)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
 			errors[targetOriginal] = err.Error()
 			accessLogDetails.Reason = err.Error()
@@ -438,7 +437,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 					}
 				}()
 
-				expressions, err := expr.EvalExpr(exp, from32, until32, metricMap)
+				expressions, err := expr.EvalExpr(exp, from32, until32, metricValues)
 				if err != nil && err != parser.ErrSeriesDoesNotExist {
 					errors[targetOriginal] = err.Error()
 					accessLogDetails.Reason = err.Error()
