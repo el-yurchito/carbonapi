@@ -32,7 +32,11 @@ func (b byPartBase) Swap(i, j int) {
 
 func getPart(metric *types.MetricData, part int) string {
 	parts := strings.Split(metric.Name, ".")
-	return parts[part]
+	if part < len(parts) {
+		return parts[part]
+	} else {
+		return ""
+	}
 }
 
 // Given two indices, i and j, and a comparator function that returns whether

@@ -110,9 +110,15 @@ const (
 	contentTypeSVG        = "image/svg+xml"
 )
 
+type renderRequest struct {
+	metric      string
+	from, until int32
+}
+
 type renderResponse struct {
-	data  *types.MetricData
-	error error
+	data    []*types.MetricData
+	error   error
+	request renderRequest
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
@@ -150,7 +156,6 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		deferredAccessLogging(accessLogger, &accessLogDetails, t0, logAsError)
 	}()
 
-	size := 0
 	apiMetrics.Requests.Add(1)
 
 	err := r.ParseForm()
@@ -260,21 +265,9 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	// it's important to use for ... i < len ... here instead of for ... range ...
 	// because slice's size may change during iteration
 	for i := 0; i < len(targets); i++ {
-		prefixOriginal := ""
-		prefixReplaced := ""
 		target := targets[i]
-		targetOriginal := target
-		for k, v := range config.rewriter {
-			if strings.Contains(target, k) {
-				// save original prefix and it's replacement to restore it in the output for user
-				prefixOriginal = k
-				prefixReplaced = v
-				target = strings.Replace(target, prefixOriginal, prefixReplaced, -1)
-				break
-			}
-		}
-
 		exp, e, err := parser.ParseExpr(target)
+
 		if err != nil || e != "" {
 			msg := buildParseErrorString(target, e, err)
 			http.Error(w, msg, http.StatusBadRequest)
@@ -285,14 +278,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, m := range exp.Metrics() {
-			var metricName string
-			if m.Metric == target {
-				metricName = targetOriginal
-			} else {
-				metricName = m.Metric
-			}
-
-			metrics = append(metrics, metricName)
+			metrics = append(metrics, m.Metric)
 			mfetch := m
 			mfetch.From += from32
 			mfetch.Until += until32
@@ -345,81 +331,92 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			sendGlobs := config.AlwaysSendGlobsAsIs || (config.SendGlobsAsIs && len(glob.Matches) < config.MaxBatchSize)
 			accessLogDetails.SendGlobs = sendGlobs
 
+			// construct batch of requests for concurrent launch
+			metricReplacements := make(map[renderRequest]replacement)
+			renderRequestBatch := make([]renderRequest, 0)
 			if sendGlobs {
-				// Request is "small enough" -- send the entire thing as a render request
+				for _, pathReplacement := range config.rewriterByCommonPrefix.maybeSpawnPaths(m.Metric) {
+					newRenderRequest := renderRequest{
+						metric: pathReplacement.dst,
+						from:   mfetch.From,
+						until:  mfetch.Until,
+					}
 
-				apiMetrics.RenderRequests.Add(1)
-				config.limiter.Enter()
-				accessLogDetails.ZipperRequests++
-
-				r, err := config.zipper.Render(ctx, m.Metric, mfetch.From, mfetch.Until)
-				if err != nil {
-					errors[targetOriginal] = err.Error()
-					config.limiter.Leave()
-					continue
+					metricReplacements[newRenderRequest] = pathReplacement
+					renderRequestBatch = append(renderRequestBatch, newRenderRequest)
 				}
-				config.limiter.Leave()
-				metricValues[mfetch] = r
-				for i := range r {
-					size += r[i].Size()
-				}
-
 			} else {
-				// Request is "too large"; send render requests individually
-				// TODO(dgryski): group the render requests into batches
-				rch := make(chan renderResponse, len(glob.Matches))
-				var leaves int
-				for _, m := range glob.Matches {
-					if !m.IsLeaf {
-						continue
+				for _, match := range glob.Matches {
+					if match.IsLeaf {
+						renderRequestBatch = append(renderRequestBatch, renderRequest{
+							metric: match.Path,
+							from:   mfetch.From,
+							until:  mfetch.Until,
+						})
 					}
-					leaves++
-
-					apiMetrics.RenderRequests.Add(1)
-					config.limiter.Enter()
-					accessLogDetails.ZipperRequests++
-
-					go func(path string, from, until int32) {
-						if r, err := config.zipper.Render(ctx, path, from, until); err == nil {
-							rch <- renderResponse{r[0], nil}
-						} else {
-							rch <- renderResponse{nil, err}
-						}
-						config.limiter.Leave()
-					}(m.Path, mfetch.From, mfetch.Until)
 				}
+			}
 
-				errors := make([]error, 0)
-				for i := 0; i < leaves; i++ {
-					if r := <-rch; r.error == nil {
-						size += r.data.Size()
-						metricValues[mfetch] = append(metricValues[mfetch], r.data)
+			renderRequestQty := int64(len(renderRequestBatch))
+			renderResponseChan := make(chan renderResponse, renderRequestQty)
+
+			accessLogDetails.ZipperRequests += renderRequestQty
+			apiMetrics.RenderRequests.Add(renderRequestQty)
+
+			// launching batch concurrently
+			for _, request := range renderRequestBatch {
+				config.limiter.Enter()
+				go func(request renderRequest) {
+					defer config.limiter.Leave()
+
+					r, err := config.zipper.Render(ctx, request.metric, request.from, request.until)
+					renderResponseChan <- renderResponse{
+						data:    r,
+						error:   err,
+						request: request,
+					}
+				}(request)
+			}
+
+			// collecting batch results
+			errors := make([]error, 0, renderRequestQty)
+			for i := int64(0); i < renderRequestQty; i++ {
+				response := <-renderResponseChan
+				if response.error == nil {
+					var newMetricData []*types.MetricData
+					if sendGlobs {
+						newMetricData = response.data
 					} else {
-						errors = append(errors, r.error)
+						newMetricData = response.data[0:]
 					}
+
+					// backward replacement metric data names
+					if metricReplacement, exists := metricReplacements[response.request]; exists {
+						for i := range newMetricData {
+							newMetricData[i].Name = metricReplacement.restore(newMetricData[i].Name)
+						}
+					}
+
+					metricValues[mfetch] = append(metricValues[mfetch], newMetricData...)
+				} else {
+					errors = append(errors, response.error)
 				}
-				if len(errors) != 0 {
-					logger.Error("render error occurred while fetching data",
-						zap.Any("errors", errors),
-					)
-				}
+			}
+
+			if len(errors) != 0 {
+				logger.Error("render error occurred while fetching data",
+					zap.Any("errors", errors),
+				)
 			}
 
 			currentFetchedMetrics := metricValues[mfetch]
 			expr.SortMetrics(currentFetchedMetrics, mfetch)
-
-			// backward replacement metric data names
-			if prefixOriginal != "" {
-				for i := range currentFetchedMetrics {
-					currentFetchedMetrics[i].Name = prefixOriginal + strings.TrimPrefix(currentFetchedMetrics[i].Name, prefixReplaced)
-				}
-			}
 		}
 		accessLogDetails.Metrics = metrics
 
 		rewritten, newTargets, err := expr.RewriteExpr(exp, from32, until32, metricValues)
 		if err != nil && err != parser.ErrSeriesDoesNotExist {
-			errors[targetOriginal] = err.Error()
+			errors[target] = err.Error()
 			accessLogDetails.Reason = err.Error()
 			logAsError = true
 			return
@@ -439,7 +436,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 				expressions, err := expr.EvalExpr(exp, from32, until32, metricValues)
 				if err != nil && err != parser.ErrSeriesDoesNotExist {
-					errors[targetOriginal] = err.Error()
+					errors[target] = err.Error()
 					accessLogDetails.Reason = err.Error()
 					logAsError = true
 					return
