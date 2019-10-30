@@ -280,12 +280,13 @@ var config = struct {
 
 	// Rewriter rewrites queries before sending them to backend
 	rewriter rewriter
+	// rewriterByCommonPrefix is rewriter grouped by common prefix
+	rewriterByCommonPrefix rewriterGroup
 
 	// Limiter limits concurrent zipper requests
 	limiter util.SimpleLimiter
 
 	tagDBProxy *tagdb.Http
-
 }{
 	ExtrapolateExperiment: false,
 	Listen:                "[::]:8081",
@@ -463,6 +464,8 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 	expvar.Publish("config", expvar.Func(func() interface{} { return config }))
 
 	config.rewriter = newRewriter(config.Rewrite)
+	config.rewriterByCommonPrefix = config.rewriter.commonPrefix()
+
 	config.limiter = util.NewSimpleLimiter(config.Concurency)
 	if config.TagDB.Url != "" {
 		config.tagDBProxy, err = tagdb.NewHttp(&config.TagDB)
