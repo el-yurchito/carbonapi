@@ -1,13 +1,14 @@
 package aliasByTags
 
 import (
+	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-
-	"strings"
 )
 
 const NAME = "name"
@@ -29,17 +30,47 @@ func New(configFile string) []interfaces.FunctionMetadata {
 	return res
 }
 
-func metricToTagMap(s string) map[string]string {
-	r := make(map[string]string)
-	for _, p := range strings.Split(s, ";") {
-		if strings.Contains(p, "=") {
-			tagValue := strings.SplitN(p, "=", 2)
-			r[tagValue[0]] = tagValue[1]
-		} else {
-			r[NAME] = p
+//
+func extractTagValue(tagValue string) string {
+	buffer := bytes.Buffer{}
+	tagValueEnds := len(tagValue)
+
+	for i := 0; i < len(tagValue); i++ {
+		if tagValue[i] == '(' || tagValue[i] == ')' {
+			tagValueEnds = i
+			break
 		}
 	}
-	return r
+
+	buffer.WriteString(tagValue[:tagValueEnds])
+	return buffer.String()
+}
+
+// metricToTagMap splits metric with tags to pure metric and tag:value map separately
+func metricToTagMap(metric string) map[string]string {
+	removals := make([]string, 100) // tokens to be removed
+	result := make(map[string]string)
+
+	for _, metricPart := range strings.Split(metric, ";") {
+		tagsParts := strings.SplitN(metricPart, "=", 2)
+		if len(tagsParts) == 2 {
+			tagName := tagsParts[0]
+			tagValue := extractTagValue(tagsParts[1])
+
+			removals = append(removals, fmt.Sprintf("%s=%s", tagName, tagValue))
+			result[tagName] = tagValue
+		}
+	}
+
+	// semicolons will be removed as well
+	removals = append(removals, ";")
+	metricCleaned := fmt.Sprintf("%s", metric)
+	for _, removal := range removals {
+		metricCleaned = strings.Replace(metricCleaned, removal, "", -1)
+	}
+
+	result[NAME] = metricCleaned
+	return result
 }
 
 func (f *aliasByTags) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
