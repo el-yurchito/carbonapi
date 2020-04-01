@@ -36,7 +36,7 @@ func extractTagValue(tagValue string) string {
 	tagValueEnds := len(tagValue)
 
 	for i := 0; i < len(tagValue); i++ {
-		if tagValue[i] == '(' || tagValue[i] == ')' {
+		if tagValue[i] == '(' || tagValue[i] == ')' || tagValue[i] == ',' {
 			tagValueEnds = i
 			break
 		}
@@ -91,6 +91,7 @@ func (f *aliasByTags) Do(e parser.Expr, from, until int32, values map[parser.Met
 	for _, a := range args {
 		var matched []string
 		metricTags := metricToTagMap(a.Name)
+		fmt.Printf("!!!!!!\na.Name = %s\nmetricTags = %#v\n", a.Name, metricTags)
 		nodes := strings.Split(metricTags["name"], ".")
 		for _, tag := range tags {
 			if tag.IsTag {
