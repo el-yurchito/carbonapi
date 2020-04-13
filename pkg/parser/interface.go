@@ -127,6 +127,10 @@ type Expr interface {
 	GetIntArgs(n int) ([]int, error)
 	// GetIntArgDefault returns n-th argument as int. It will replace it with Default value if none present.
 	GetIntArgDefault(n int, d int) (int, error)
+	// GetInt32ArgDefault is special case of GetIntArgDefault for int32
+	GetInt32ArgDefault(n int, d int32) (int32, error)
+	// GetInt64ArgDefault is special case of GetIntArgDefault for int64
+	GetInt64ArgDefault(n int, d int64) (int64, error)
 	// GetIntNamedOrPosArgDefault returns specific positioned int-typed argument or replace it with default if none found.
 	GetIntNamedOrPosArgDefault(k string, n int, d int) (int, error)
 
@@ -137,8 +141,7 @@ type Expr interface {
 	// GetBoolNamedOrPosArgDefault returns specific positioned bool-typed argument or replace it with default if none found.
 	GetBoolNamedOrPosArgDefault(k string, n int, b bool) (bool, error)
 
-
-        // GetNodeOrTagArgs returns n-th argument as slice of NodeOrTag structures.
+	// GetNodeOrTagArgs returns n-th argument as slice of NodeOrTag structures.
 	GetNodeOrTagArgs(n int) ([]NodeOrTag, error)
 
 	toExpr() interface{}
