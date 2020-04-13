@@ -14,6 +14,22 @@ func (e *expr) doGetIntArg() (int, error) {
 	return int(e.val), nil
 }
 
+func (e *expr) doGetInt32Arg() (int32, error) {
+	if e.etype != EtConst {
+		return int32(0), ErrBadType
+	}
+
+	return int32(e.val), nil
+}
+
+func (e *expr) doGetInt64Arg() (int64, error) {
+	if e.etype != EtConst {
+		return int64(0), ErrBadType
+	}
+
+	return int64(e.val), nil
+}
+
 func (e *expr) getNamedArg(name string) *expr {
 	if a, ok := e.namedArgs[name]; ok {
 		return a

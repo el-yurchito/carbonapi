@@ -347,6 +347,22 @@ func (e *expr) GetIntArgDefault(n int, d int) (int, error) {
 	return e.args[n].doGetIntArg()
 }
 
+func (e *expr) GetInt32ArgDefault(n int, d int32) (int32, error) {
+	if len(e.args) <= n {
+		return d, nil
+	}
+
+	return e.args[n].doGetInt32Arg()
+}
+
+func (e *expr) GetInt64ArgDefault(n int, d int64) (int64, error) {
+	if len(e.args) <= n {
+		return d, nil
+	}
+
+	return e.args[n].doGetInt64Arg()
+}
+
 func (e *expr) GetIntNamedOrPosArgDefault(k string, n int, d int) (int, error) {
 	if a := e.getNamedArg(k); a != nil {
 		return a.doGetIntArg()
