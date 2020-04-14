@@ -27,7 +27,7 @@ func init() {
 	helper.SetEvaluator(evaluator)
 }
 
-func TestGroupByNode(t *testing.T) {
+func TestGroupByTags(t *testing.T) {
 	now32 := int32(time.Now().Unix())
 
 	tests := []th.MultiReturnEvalTestItem{
@@ -47,7 +47,7 @@ func TestGroupByNode(t *testing.T) {
 			},
 			"groupByTags",
 			map[string][]*types.MetricData{
-				"metric1.foo.dc1": {types.MakeMetricData("metric1.foo.dc1", []float64{25, 29, 33, 37, 41}, 1, now32)},
+				"dc1": {types.MakeMetricData("dc1", []float64{25, 29, 33, 37, 41}, 1, now32)},
 			},
 		},
 		{
@@ -68,10 +68,10 @@ func TestGroupByNode(t *testing.T) {
 			},
 			"groupByTags",
 			map[string][]*types.MetricData{
-				"metric1.foo.cpu1.dc1.": {types.MakeMetricData("metric1.foo.cpu1.dc1.", []float64{1, 2, 3, 4, 5}, 1, now32)},
-				"metric1.foo.cpu2.dc1.": {types.MakeMetricData("metric1.foo.cpu2.dc1.", []float64{6, 7, 8, 9, 10}, 1, now32)},
-				"metric1.foo.cpu3.dc1.": {types.MakeMetricData("metric1.foo.cpu3.dc1.", []float64{11, 12, 13, 14, 15}, 1, now32)},
-				"metric1.foo.cpu4.dc1.": {types.MakeMetricData("metric1.foo.cpu4.dc1.", []float64{7, 8, 9, 10, 11}, 1, now32)},
+				"cpu1.dc1.": {types.MakeMetricData("cpu1.dc1.", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				"cpu2.dc1.": {types.MakeMetricData("cpu2.dc1.", []float64{6, 7, 8, 9, 10}, 1, now32)},
+				"cpu3.dc1.": {types.MakeMetricData("cpu3.dc1.", []float64{11, 12, 13, 14, 15}, 1, now32)},
+				"cpu4.dc1.": {types.MakeMetricData("cpu4.dc1.", []float64{7, 8, 9, 10, 11}, 1, now32)},
 			},
 		},
 	}
