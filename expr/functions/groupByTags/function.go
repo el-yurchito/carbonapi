@@ -20,18 +20,15 @@ func GetOrder() interfaces.Order {
 }
 
 func New(configFile string) []interfaces.FunctionMetadata {
-	res := make([]interfaces.FunctionMetadata, 0)
-	f := &groupByTags{}
-	functions := []string{"groupByTags"}
-	for _, n := range functions {
-		res = append(res, interfaces.FunctionMetadata{Name: n, F: f})
-	}
-	return res
+	return []interfaces.FunctionMetadata{{
+		F:    &groupByTags{},
+		Name: "groupByTags",
+	}}
 }
 
 // seriesByTag("name=cpu")|groupByTags("average","dc","os")
 func (f *groupByTags) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
+	seriesList, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
 	}
@@ -45,59 +42,58 @@ func (f *groupByTags) Do(e parser.Expr, from, until int32, values map[parser.Met
 	if err != nil {
 		return nil, err
 	}
-
 	sort.Strings(tags)
 
-	var results []*types.MetricData
+	groupedVales := make(map[string][]*types.MetricData)
+	metricNames := make(map[string]string)
+	resultSeriesList := make([]*types.MetricData, 0, len(seriesList))
 
-	names := make(map[string]string)
-	groups := make(map[string][]*types.MetricData)
-	// name := args[1].Name
+	// group metric values by specified tags
+	for _, series := range seriesList {
+		keyBuilder := strings.Builder{}
+		metricTags := helper.ExtractTags(series.Name)
 
-	// TODO(civil): Think how to optimize it, as it's ugly
-	for _, a := range args {
-		metricTags := helper.ExtractTags(a.Name)
-		var keyBuilder strings.Builder
+		// constructing the key: it is string that looks like ".val1.val2.val3"
+		// where val1, val2 and val3 - tags' values
 		for _, tag := range tags {
-			value := metricTags[tag]
-			keyBuilder.WriteString(";" + tag + "=" + value)
+			metricTagValue := metricTags[tag]
+			keyBuilder.WriteString(types.MetricPathSep + metricTagValue)
 		}
-		key := keyBuilder.String()
-		groups[key] = append(groups[key], a)
 
-		if name, ok := names[key]; ok {
+		key := keyBuilder.String()
+		groupedVales[key] = append(groupedVales[key], series)
+
+		if name, ok := metricNames[key]; ok {
 			if name != metricTags["name"] {
-				names[key] = callback
+				metricNames[key] = callback
 			}
 		} else {
-			names[key] = metricTags["name"]
+			metricNames[key] = metricTags["name"]
 		}
 	}
 
-	for k, v := range groups {
-		k := k // k's reference is used later, so it's important to make it unique per loop
-		v := v
-
+	for key, values := range groupedVales {
 		expr := fmt.Sprintf("%s(stub)", callback)
-
-		// create a stub context to evaluate the callback in
-		nexpr, _, err := parser.ParseExpr(expr)
+		stubExpr, _, err := parser.ParseExpr(expr) // create a stub context to evaluate the callback in
 		if err != nil {
 			return nil, err
 		}
 
-		nvalues := map[parser.MetricRequest][]*types.MetricData{
-			parser.MetricRequest{"stub", from, until}: v,
+		stubValues := map[parser.MetricRequest][]*types.MetricData{
+			parser.MetricRequest{
+				Metric: "stub",
+				From:   from,
+				Until:  until,
+			}: values,
 		}
-
-		r, _ := f.Evaluator.EvalExpr(nexpr, from, until, nvalues)
-		if r != nil {
-			r[0].Name = names[k] + k
-			results = append(results, r...)
+		exprEvaluated, _ := f.Evaluator.EvalExpr(stubExpr, from, until, stubValues)
+		if exprEvaluated != nil {
+			exprEvaluated[0].Name = metricNames[key] + key
+			resultSeriesList = append(resultSeriesList, exprEvaluated...)
 		}
 	}
 
-	return results, nil
+	return resultSeriesList, nil
 }
 
 func (f *groupByTags) Description() map[string]types.FunctionDescription {
