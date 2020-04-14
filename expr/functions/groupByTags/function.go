@@ -45,31 +45,22 @@ func (f *groupByTags) Do(e parser.Expr, from, until int32, values map[parser.Met
 	sort.Strings(tags)
 
 	groupedVales := make(map[string][]*types.MetricData)
-	metricNames := make(map[string]string)
 	resultSeriesList := make([]*types.MetricData, 0, len(seriesList))
 
 	// group metric values by specified tags
 	for _, series := range seriesList {
-		keyBuilder := strings.Builder{}
+		keyParts := make([]string, len(tags))
 		metricTags := helper.ExtractTags(series.Name)
 
 		// constructing the key: it is string that looks like ".val1.val2.val3"
 		// where val1, val2 and val3 - tags' values
-		for _, tag := range tags {
+		for i, tag := range tags {
 			metricTagValue := metricTags[tag]
-			keyBuilder.WriteString(types.MetricPathSep + metricTagValue)
+			keyParts[i] = metricTagValue
 		}
 
-		key := keyBuilder.String()
+		key := strings.Join(keyParts, types.MetricPathSep)
 		groupedVales[key] = append(groupedVales[key], series)
-
-		if name, ok := metricNames[key]; ok {
-			if name != metricTags["name"] {
-				metricNames[key] = callback
-			}
-		} else {
-			metricNames[key] = metricTags["name"]
-		}
 	}
 
 	for key, values := range groupedVales {
@@ -88,7 +79,7 @@ func (f *groupByTags) Do(e parser.Expr, from, until int32, values map[parser.Met
 		}
 		exprEvaluated, _ := f.Evaluator.EvalExpr(stubExpr, from, until, stubValues)
 		if exprEvaluated != nil {
-			exprEvaluated[0].Name = metricNames[key] + key
+			exprEvaluated[0].Name = fmt.Sprintf("%s", key) // copy
 			resultSeriesList = append(resultSeriesList, exprEvaluated...)
 		}
 	}
