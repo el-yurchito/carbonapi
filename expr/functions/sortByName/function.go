@@ -17,13 +17,10 @@ func GetOrder() interfaces.Order {
 }
 
 func New(configFile string) []interfaces.FunctionMetadata {
-	res := make([]interfaces.FunctionMetadata, 0)
-	f := &sortByName{}
-	functions := []string{"sortByName"}
-	for _, n := range functions {
-		res = append(res, interfaces.FunctionMetadata{Name: n, F: f})
-	}
-	return res
+	return []interfaces.FunctionMetadata{{
+		F:    &sortByName{},
+		Name: "sortByName",
+	}}
 }
 
 // sortByName(seriesList, natural=false)
@@ -33,19 +30,30 @@ func (f *sortByName) Do(e parser.Expr, from, until int32, values map[parser.Metr
 		return nil, err
 	}
 
-	natSort, err := e.GetBoolNamedOrPosArgDefault("natural", 1, false)
+	isNaturalSort, err := e.GetBoolNamedOrPosArgDefault("natural", 1, false)
+	if err != nil {
+		return nil, err
+	}
+
+	isReverseSort, err := e.GetBoolNamedOrPosArgDefault("reverse", 2, false)
 	if err != nil {
 		return nil, err
 	}
 
 	arg := make([]*types.MetricData, len(original))
 	copy(arg, original)
-	if natSort {
-		sort.Sort(helper.ByNameNatural(arg))
+
+	var dataToSort sort.Interface
+	if isNaturalSort {
+		dataToSort = helper.ByNameNatural(arg)
 	} else {
-		sort.Sort(helper.ByName(arg))
+		dataToSort = helper.ByName(arg)
+	}
+	if isReverseSort {
+		dataToSort = sort.Reverse(dataToSort)
 	}
 
+	sort.Sort(dataToSort)
 	return arg, nil
 }
 
