@@ -47,7 +47,7 @@ func TestGroupByNode(t *testing.T) {
 			},
 			"groupByTags",
 			map[string][]*types.MetricData{
-				"metric1.foo;dc=dc1": {types.MakeMetricData("metric1.foo;dc=dc1", []float64{25, 29, 33, 37, 41}, 1, now32)},
+				"metric1.foo.dc1": {types.MakeMetricData("metric1.foo.dc1", []float64{25, 29, 33, 37, 41}, 1, now32)},
 			},
 		},
 		{
@@ -68,10 +68,10 @@ func TestGroupByNode(t *testing.T) {
 			},
 			"groupByTags",
 			map[string][]*types.MetricData{
-				"metric1.foo;cpu=cpu1;dc=dc1;rack=": {types.MakeMetricData("metric1.foo;cpu=cpu1;dc=dc1;rack=", []float64{1, 2, 3, 4, 5}, 1, now32)},
-				"metric1.foo;cpu=cpu2;dc=dc1;rack=": {types.MakeMetricData("metric1.foo;cpu=cpu2;dc=dc1;rack=", []float64{6, 7, 8, 9, 10}, 1, now32)},
-				"metric1.foo;cpu=cpu3;dc=dc1;rack=": {types.MakeMetricData("metric1.foo;cpu=cpu3;dc=dc1;rack=", []float64{11, 12, 13, 14, 15}, 1, now32)},
-				"metric1.foo;cpu=cpu4;dc=dc1;rack=": {types.MakeMetricData("metric1.foo;cpu=cpu4;dc=dc1;rack=", []float64{7, 8, 9, 10, 11}, 1, now32)},
+				"metric1.foo.cpu1.dc1.": {types.MakeMetricData("metric1.foo.cpu1.dc1.", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				"metric1.foo.cpu2.dc1.": {types.MakeMetricData("metric1.foo.cpu2.dc1.", []float64{6, 7, 8, 9, 10}, 1, now32)},
+				"metric1.foo.cpu3.dc1.": {types.MakeMetricData("metric1.foo.cpu3.dc1.", []float64{11, 12, 13, 14, 15}, 1, now32)},
+				"metric1.foo.cpu4.dc1.": {types.MakeMetricData("metric1.foo.cpu4.dc1.", []float64{7, 8, 9, 10, 11}, 1, now32)},
 			},
 		},
 	}

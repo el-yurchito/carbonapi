@@ -18,6 +18,8 @@ var (
 	ErrTooManyArguments = errors.New("too many arguments")
 )
 
+const MetricPathSep = "."
+
 // MetricData contains necessary data to represent parsed metric (ready to be send out or drawn)
 type MetricData struct {
 	pb.FetchResponse
