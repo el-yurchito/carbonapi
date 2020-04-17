@@ -68,10 +68,31 @@ func TestGroupByTags(t *testing.T) {
 			},
 			"groupByTags",
 			map[string][]*types.MetricData{
-				"cpu1.dc1.": {types.MakeMetricData("cpu1.dc1.", []float64{1, 2, 3, 4, 5}, 1, now32)},
-				"cpu2.dc1.": {types.MakeMetricData("cpu2.dc1.", []float64{6, 7, 8, 9, 10}, 1, now32)},
-				"cpu3.dc1.": {types.MakeMetricData("cpu3.dc1.", []float64{11, 12, 13, 14, 15}, 1, now32)},
-				"cpu4.dc1.": {types.MakeMetricData("cpu4.dc1.", []float64{7, 8, 9, 10, 11}, 1, now32)},
+				"dc1.cpu1.": {types.MakeMetricData("dc1.cpu1.", []float64{1, 2, 3, 4, 5}, 1, now32)},
+				"dc1.cpu2.": {types.MakeMetricData("dc1.cpu2.", []float64{6, 7, 8, 9, 10}, 1, now32)},
+				"dc1.cpu3.": {types.MakeMetricData("dc1.cpu3.", []float64{11, 12, 13, 14, 15}, 1, now32)},
+				"dc1.cpu4.": {types.MakeMetricData("dc1.cpu4.", []float64{7, 8, 9, 10, 11}, 1, now32)},
+			},
+		},
+		{
+			parser.NewExpr("groupByTags",
+				"summarize(x.y.*, 1min, sum, false)",
+				parser.ArgValue("sum"),
+				parser.ArgValue("key2"),
+				parser.ArgValue("key1"),
+			),
+			map[parser.MetricRequest][]*types.MetricData{
+				{"summarize(x.y.*, 1min, sum, false)", 0, 1}: {
+					types.MakeMetricData("summarize(x.y.z1;key1=value11;key2=value21, 1min, sum, false)", []float64{1, 1, 1}, 1, now32),
+					types.MakeMetricData("summarize(x.y.z2;key1=value12;key2=value22, 1min, sum, false)", []float64{2, 2, 2}, 1, now32),
+					types.MakeMetricData("summarize(x.y.z3;key1=value13;key2=value23, 1min, sum, false)", []float64{3, 3, 3}, 1, now32),
+				},
+			},
+			"groupByTags",
+			map[string][]*types.MetricData{
+				"value21.value11": {types.MakeMetricData("value21.value11", []float64{1, 1, 1}, 1, now32)},
+				"value22.value12": {types.MakeMetricData("value22.value12", []float64{2, 2, 2}, 1, now32)},
+				"value23.value13": {types.MakeMetricData("value23.value13", []float64{3, 3, 3}, 1, now32)},
 			},
 		},
 	}

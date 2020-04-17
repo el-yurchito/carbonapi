@@ -2,7 +2,6 @@ package groupByTags
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -42,7 +41,6 @@ func (f *groupByTags) Do(e parser.Expr, from, until int32, values map[parser.Met
 	if err != nil {
 		return nil, err
 	}
-	sort.Strings(tags)
 
 	groupedVales := make(map[string][]*types.MetricData)
 	resultSeriesList := make([]*types.MetricData, 0, len(seriesList))

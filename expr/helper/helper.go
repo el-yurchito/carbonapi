@@ -315,32 +315,37 @@ func SummarizeValues(f string, values []float64) float64 {
 }
 
 // ExtractTags extracts all graphite-style tags out of metric name
-// E.x. cpu.usage_idle;cpu=cpu-total;host=test => {"name": "cpu.usage_idle", "cpu": "cpu-total", "host": "test"}
-func ExtractTags(s string) map[string]string {
-        result := make(map[string]string)
-        idx := strings.IndexRune(s, ';')
-        if idx < 0 {
-                result["name"] = s
-                return result
-        }
+// e.g. cpu.usage_idle;cpu=cpu-total;host=test => {"name": "cpu.usage_idle", "cpu": "cpu-total", "host": "test"}
+func ExtractTags(metric string) map[string]string {
+	result := make(map[string]string)
 
-        result["name"] = s[:idx]
+	metric = ExtractMetric(metric)
+	metricRunes := []rune(metric)
 
-        newS := s[idx+1:]
-        for {
-                idx := strings.IndexRune(newS, ';')
-                if idx < 0 {
-                        kv := strings.Split(newS, "=")
-                        result[kv[0]] = kv[1]
-                        break
-                }
+	// state machine to parse tag names and values
+	isTagValue := true
+	tagName := "name"
+	token := strings.Builder{}
+	for _, char := range metricRunes {
+		if char == ';' { // new name=value pair starts, save the current one
+			result[tagName] = token.String()
+			token.Reset()
+			isTagValue = false
+		} else if char == '=' { // tag's name changes to tag's value
+			tagName = token.String()
+			token.Reset()
+			isTagValue = true
+		} else {
+			token.WriteRune(char)
+		}
+	}
 
-                kv := strings.Split(newS[:idx], "=")
-                result[kv[0]] = kv[1]
-                newS = newS[idx+1:]
-        }
+	// the last token left
+	if isTagValue {
+		result[tagName] = token.String()
+	}
 
-        return result
+	return result
 }
 
 // ExtractMetric extracts metric out of function list
