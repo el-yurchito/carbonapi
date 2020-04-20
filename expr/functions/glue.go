@@ -47,6 +47,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/holtWintersForecast"
 	"github.com/go-graphite/carbonapi/expr/functions/ifft"
 	"github.com/go-graphite/carbonapi/expr/functions/integral"
+	"github.com/go-graphite/carbonapi/expr/functions/integralWithReset"
 	"github.com/go-graphite/carbonapi/expr/functions/interpolate"
 	"github.com/go-graphite/carbonapi/expr/functions/invert"
 	"github.com/go-graphite/carbonapi/expr/functions/isNotNull"
@@ -113,7 +114,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 97)
+	funcs := make([]initFunc, 0, 99)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -200,6 +201,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "ifft", order: ifft.GetOrder(), f: ifft.New})
 
 	funcs = append(funcs, initFunc{name: "integral", order: integral.GetOrder(), f: integral.New})
+
+	funcs = append(funcs, initFunc{name: "integralWithReset", order: integralWithReset.GetOrder(), f: integralWithReset.New})
 
 	funcs = append(funcs, initFunc{name: "interpolate", order: interpolate.GetOrder(), f: interpolate.New})
 
