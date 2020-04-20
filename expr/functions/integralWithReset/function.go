@@ -62,7 +62,7 @@ func (f *integralWithReset) Do(e parser.Expr, from, until int32, values map[pars
 				r.IsAbsent[i] = true
 				continue
 			}
-			if resettingSeries.Values[i] != 0 {
+			if !resettingSeries.IsAbsent[i] && resettingSeries.Values[i] != 0 {
 				current = 0
 			} else {
 				current += v
