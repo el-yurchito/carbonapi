@@ -276,6 +276,10 @@ type EvalTestItem struct {
 }
 
 func TestEvalExpr(t *testing.T, tt *EvalTestItem, strictOrder bool) {
+	TestEvalExprWithLimits(t, tt, strictOrder, 0, 1)
+}
+
+func TestEvalExprWithLimits(t *testing.T, tt *EvalTestItem, strictOrder bool, from, until int32) {
 	if (tt.Want == nil) == (tt.WantError == nil) {
 		t.Fatalf("Improperly configured: can neither set both nor unset both Want and WantError")
 	}
@@ -283,7 +287,7 @@ func TestEvalExpr(t *testing.T, tt *EvalTestItem, strictOrder bool) {
 	evaluator := metadata.GetEvaluator()
 	originalMetrics := DeepClone(tt.M)
 	testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
-	actual, err := evaluator.EvalExpr(tt.E, 0, 1, tt.M)
+	actual, err := evaluator.EvalExpr(tt.E, from, until, tt.M)
 
 	if err == nil {
 		if tt.WantError != nil {

@@ -31,6 +31,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/derivative"
 	"github.com/go-graphite/carbonapi/expr/functions/diffSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/divideSeries"
+	"github.com/go-graphite/carbonapi/expr/functions/event"
 	"github.com/go-graphite/carbonapi/expr/functions/ewma"
 	"github.com/go-graphite/carbonapi/expr/functions/exclude"
 	"github.com/go-graphite/carbonapi/expr/functions/fallbackSeries"
@@ -114,7 +115,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 99)
+	funcs := make([]initFunc, 0, 100)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -169,6 +170,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "diffSeries", order: diffSeries.GetOrder(), f: diffSeries.New})
 
 	funcs = append(funcs, initFunc{name: "divideSeries", order: divideSeries.GetOrder(), f: divideSeries.New})
+
+	funcs = append(funcs, initFunc{name: "event", order: event.GetOrder(), f: event.New})
 
 	funcs = append(funcs, initFunc{name: "ewma", order: ewma.GetOrder(), f: ewma.New})
 
