@@ -1,10 +1,11 @@
 FROM registry.k.avito.ru/avito/golang:1.11 as builder
 
+RUN apt-get update
+RUN apt-get install -y make gcc git
+
 WORKDIR /go/src/github.com/go-graphite/carbonapi
 COPY . .
 
-RUN apt-get update
-RUN apt-get install -y make gcc git
 RUN make test-nocairo
 RUN make nocairo
 
