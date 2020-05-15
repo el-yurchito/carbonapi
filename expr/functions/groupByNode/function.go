@@ -2,11 +2,12 @@ package groupByNode
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"strings"
 )
 
 type groupByNode struct {
@@ -63,16 +64,24 @@ func (f *groupByNode) Do(e parser.Expr, from, until int32, values map[parser.Met
 	var results []*types.MetricData
 
 	groups := make(map[string][]*types.MetricData)
-	nodeList := []string{}
+	nodeList := make([]string, 0, len(args))
 
 	for _, a := range args {
-
 		metric := helper.ExtractMetric(a.Name)
 		nodes := strings.Split(metric, ".")
+
 		nodeKey := make([]string, 0, len(fields))
-		for _, f := range fields {
-			nodeKey = append(nodeKey, nodes[f])
+		for i, field := range fields {
+			if field < 0 {
+				field += len(nodes)
+			}
+			if field < 0 || field >= len(nodes) {
+				return nil, fmt.Errorf("bad node number %d for metric %s", fields[i], metric)
+			}
+
+			nodeKey = append(nodeKey, nodes[field])
 		}
+
 		node := strings.Join(nodeKey, ".")
 		if len(groups[node]) == 0 {
 			nodeList = append(nodeList, node)
@@ -90,19 +99,19 @@ func (f *groupByNode) Do(e parser.Expr, from, until int32, values map[parser.Met
 
 		// create a stub context to evaluate the callback in
 		nexpr, _, err := parser.ParseExpr(expr)
+		if err != nil {
+			return nil, err
+		}
 		// remove all stub_ prefixes we've prepended before
 		nexpr.SetRawArgs(strings.Replace(nexpr.RawArgs(), "stub_", "", 1))
 		for argIdx := range nexpr.Args() {
 			nexpr.Args()[argIdx].SetTarget(strings.Replace(nexpr.Args()[0].Target(), "stub_", "", 1))
 		}
-		if err != nil {
-			return nil, err
-		}
 
 		nvalues := values
 		if e.Target() == "groupByNode" || e.Target() == "groupByNodes" {
 			nvalues = map[parser.MetricRequest][]*types.MetricData{
-				parser.MetricRequest{k, from, until}: v,
+				parser.MetricRequest{Metric: k, From: from, Until: until}: v,
 			}
 		}
 
