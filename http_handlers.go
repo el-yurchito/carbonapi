@@ -535,8 +535,9 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for k, v := range config.rewriter {
-		if strings.Contains(query, k) {
-			query = strings.Replace(query, k, v, 1)
+		if strings.HasPrefix(query, k) {
+			query = v + strings.TrimPrefix(query, k)
+			break
 		}
 	}
 
