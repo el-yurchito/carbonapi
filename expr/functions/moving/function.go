@@ -68,7 +68,7 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 
 	var offset int
 
-	if scaleByStep {
+	if scaleByStep && len(arg) > 0 {
 		windowSize /= int(arg[0].StepTime)
 		offset = windowSize
 	}
