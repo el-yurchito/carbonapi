@@ -27,7 +27,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 // Description is auto-generated description, based on output of https://github.com/graphite-project/graphite-web
 func (f *scaleAfterTimestamp) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
-		"scale": {
+		"scaleAfterTimestamp": {
 			Description: "Takes one metric or a wildcard seriesList followed by a constant, and multiplies the datapoint\nby the constant provided at each point after the given timestamp.\n\nExample:\n\n.. code-block:: none\n\n  &target=scale(Server.instance01.threads.busy,10)\n  &target=scale(Server.instance*.threads.busy,10)",
 			Function:    "scaleAfterTimestamp(seriesList, factor, timestamp)",
 			Group:       "Transform",
