@@ -84,7 +84,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/removeEmptySeries"
 	"github.com/go-graphite/carbonapi/expr/functions/round"
 	"github.com/go-graphite/carbonapi/expr/functions/scale"
-	"github.com/go-graphite/carbonapi/expr/functions/scaleAfterTimestamp"
 	"github.com/go-graphite/carbonapi/expr/functions/scaleToSeconds"
 	"github.com/go-graphite/carbonapi/expr/functions/seriesByTag"
 	"github.com/go-graphite/carbonapi/expr/functions/seriesList"
@@ -277,8 +276,6 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "round", order: round.GetOrder(), f: round.New})
 
 	funcs = append(funcs, initFunc{name: "scale", order: scale.GetOrder(), f: scale.New})
-
-	funcs = append(funcs, initFunc{name: "scaleAfterTimestamp", order: scaleAfterTimestamp.GetOrder(), f: scaleAfterTimestamp.New})
 
 	funcs = append(funcs, initFunc{name: "scaleToSeconds", order: scaleToSeconds.GetOrder(), f: scaleToSeconds.New})
 
