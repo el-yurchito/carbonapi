@@ -230,6 +230,16 @@ func (f *baselines) Description() map[string]types.FunctionDescription {
 					Name:    "timeShiftEnd",
 					Type:    types.Integer,
 				},
+				{
+					Default: types.NewSuggestion(0.0),
+					Name:    "maxAbsentPercent",
+					Type:    types.Float,
+				},
+				{
+					Default: types.NewSuggestion(0.0),
+					Name:    "minAvg",
+					Type:    types.Float,
+				},
 			},
 		},
 	}
