@@ -87,6 +87,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/scaleToSeconds"
 	"github.com/go-graphite/carbonapi/expr/functions/seriesByTag"
 	"github.com/go-graphite/carbonapi/expr/functions/seriesList"
+	"github.com/go-graphite/carbonapi/expr/functions/slo"
 	"github.com/go-graphite/carbonapi/expr/functions/sortBy"
 	"github.com/go-graphite/carbonapi/expr/functions/sortByName"
 	"github.com/go-graphite/carbonapi/expr/functions/squareRoot"
@@ -115,7 +116,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 101)
+	funcs := make([]initFunc, 0, 102)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -282,6 +283,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "seriesByTag", order: seriesByTag.GetOrder(), f: seriesByTag.New})
 
 	funcs = append(funcs, initFunc{name: "seriesList", order: seriesList.GetOrder(), f: seriesList.New})
+
+	funcs = append(funcs, initFunc{name: "slo", order: slo.GetOrder(), f: slo.New})
 
 	funcs = append(funcs, initFunc{name: "sortBy", order: sortBy.GetOrder(), f: sortBy.New})
 
