@@ -97,7 +97,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		name := fmt.Sprintf("slo(%s, %s, %s, %v)", arg.Name, e.Args()[1].StringValue(), methodName, value)
 
 		// align series boundaries and step size according to the interval
-		start, stop := helper.AlignToBucketSize(arg.StartTime, arg.StopTime, bucketSize)
+		start, stop := arg.StartTime, arg.StopTime
 		bucketsQty := helper.GetBuckets(start, stop, bucketSize)
 
 		// result for the given series (arg)
