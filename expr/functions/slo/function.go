@@ -22,6 +22,7 @@ func GetOrder() interfaces.Order {
 func New(string) []interfaces.FunctionMetadata {
 	return []interfaces.FunctionMetadata{
 		{F: &slo{}, Name: "slo"},
+		{F: &slo{}, Name: "sloErrorBudget"},
 	}
 }
 
@@ -62,7 +63,56 @@ func (f *slo) Description() map[string]types.FunctionDescription {
 					Type:     types.String,
 				},
 				{
+					Default:  types.NewSuggestion(0.0),
 					Name:     "value",
+					Required: true,
+					Type:     types.Float,
+				},
+			},
+		},
+		"sloErrorBudget": {
+			Description: "Returns rest failure/error budget for this time interval\n\nExample:\n\n.. code-block:: none\n\n  &target=sloErrorBudget(some.data.series, \"1hour\", \"above\", 117, 9999e-4)",
+			Group:       "Transform",
+			Function:    "sloErrorBudget(seriesList, interval, method, value, objective)",
+			Module:      "graphite.render.functions",
+			Name:        "sloErrorBudget",
+			Params: []types.FunctionParam{
+				{
+					Name:     "seriesList",
+					Required: true,
+					Type:     types.SeriesList,
+				},
+				{
+					Name:     "interval",
+					Required: true,
+					Suggestions: types.NewSuggestions(
+						"10min",
+						"1h",
+						"1d",
+					),
+					Type: types.Interval,
+				},
+				{
+					Default: types.NewSuggestion("above"),
+					Name:    "method",
+					Options: []string{
+						"above",
+						"aboveOrEqual",
+						"below",
+						"belowOrEqual",
+					},
+					Required: true,
+					Type:     types.String,
+				},
+				{
+					Default:  types.NewSuggestion(0.0),
+					Name:     "value",
+					Required: true,
+					Type:     types.Float,
+				},
+				{
+					Default:  types.NewSuggestion(9999e-4),
+					Name:     "objective",
 					Required: true,
 					Type:     types.Float,
 				},
@@ -92,22 +142,46 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		return nil, err
 	}
 
+	var (
+		isErrorBudget bool
+		objective     float64
+	)
+
+	isErrorBudget = e.Target() == "sloErrorBudget"
+	if isErrorBudget {
+		objective, err = e.GetFloatArg(4)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	intervalStringValue := e.Args()[1].StringValue()
 	results := make([]*types.MetricData, 0, len(args))
+
 	for _, arg := range args {
-		name := fmt.Sprintf("slo(%s, %s, %s, %v)", arg.Name, e.Args()[1].StringValue(), methodName, value)
+		var (
+			resultName          string
+			timeStart, timeStop int32
+		)
+
+		if isErrorBudget {
+			resultName = fmt.Sprintf("sloErrorBudget(%s, %s, %s, %v, %v)", arg.Name, intervalStringValue, methodName, value, objective)
+		} else {
+			resultName = fmt.Sprintf("slo(%s, %s, %s, %v)", arg.Name, intervalStringValue, methodName, value)
+		}
 
 		// align series boundaries and step size according to the interval
-		start, stop := arg.StartTime, arg.StopTime
-		bucketsQty := helper.GetBuckets(start, stop, bucketSize)
+		timeStart, timeStop = arg.StartTime, arg.StopTime
+		bucketsQty := helper.GetBucketsQty(timeStart, timeStop, bucketSize)
 
 		// result for the given series (arg)
 		r := &types.MetricData{FetchResponse: pb.FetchResponse{
-			Name:      name,
-			Values:    make([]float64, 0, bucketsQty),
-			IsAbsent:  make([]bool, 0, bucketsQty),
+			Name:      resultName,
+			Values:    make([]float64, 0, bucketsQty+1),
+			IsAbsent:  make([]bool, 0, bucketsQty+1),
 			StepTime:  bucketSize,
-			StartTime: start,
-			StopTime:  stop,
+			StartTime: timeStart,
+			StopTime:  timeStop,
 		}}
 		// it's ok to place new element to result and modify it later since it's the pointer
 		results = append(results, r)
@@ -126,8 +200,9 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		qtyMatched := 0 // bucket matched items quantity
 		qtyNotNull := 0 // bucket not-null items quantity
 		qtyTotal := 0
-		timeBucketEnds := start + bucketSize
-		timeCurrent := start
+		timeCurrent := timeStart
+		timeBucketStarts := timeCurrent
+		timeBucketEnds := timeCurrent + bucketSize
 
 		// process full buckets
 		for i, argValue := range arg.Values {
@@ -141,13 +216,16 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 			}
 
 			timeCurrent += arg.StepTime
-			if timeCurrent >= stop {
+			if timeCurrent > timeStop {
 				break
 			}
 
 			if timeCurrent >= timeBucketEnds { // the bucket ends
-				// slo series data points
 				newIsAbsent, newValue := f.buildDataPoint(qtyMatched, qtyNotNull)
+				if isErrorBudget && !newIsAbsent {
+					newValue = (newValue - objective) * float64(bucketSize)
+				}
+
 				r.IsAbsent = append(r.IsAbsent, newIsAbsent)
 				r.Values = append(r.Values, newValue)
 
@@ -155,6 +233,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 				qtyMatched = 0
 				qtyNotNull = 0
 				qtyTotal = 0
+				timeBucketStarts = timeCurrent
 				timeBucketEnds += bucketSize
 			}
 		}
@@ -162,6 +241,10 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		// partial bucket might remain
 		if qtyTotal > 0 {
 			newIsAbsent, newValue := f.buildDataPoint(qtyMatched, qtyNotNull)
+			if isErrorBudget && !newIsAbsent {
+				newValue = (newValue - objective) * float64(timeCurrent-timeBucketStarts)
+			}
+
 			r.IsAbsent = append(r.IsAbsent, newIsAbsent)
 			r.Values = append(r.Values, newValue)
 		}
@@ -170,12 +253,15 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 	return results, nil
 }
 
-func (f *slo) buildDataPoint(bucketQtyMatched, bucketQtyNotNull int) (bool, float64) {
+func (f *slo) buildDataPoint(bucketQtyMatched, bucketQtyNotNull int) (isAbsent bool, value float64) {
 	if bucketQtyNotNull == 0 {
-		return true, 0.0
+		isAbsent = true
+		value = 0.0
 	} else {
-		return false, float64(bucketQtyMatched) / float64(bucketQtyNotNull)
+		isAbsent = false
+		value = float64(bucketQtyMatched) / float64(bucketQtyNotNull)
 	}
+	return
 }
 
 func (f *slo) buildMethod(e parser.Expr, argNumber int, value float64) (func(float64) bool, string, error) {

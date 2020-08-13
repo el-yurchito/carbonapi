@@ -5,11 +5,6 @@ import (
 	"time"
 )
 
-// GetBuckets returns amount buckets for timeSeries (defined with startTime, stopTime and step (bucket) size.
-func GetBuckets(start, stop, bucketSize int32) int32 {
-	return int32(math.Ceil(float64(stop-start) / float64(bucketSize)))
-}
-
 // AlignStartToInterval aligns start of serie to interval
 func AlignStartToInterval(start, stop, bucketSize int32) int32 {
 	for _, v := range []int32{86400, 3600, 60} {
@@ -33,4 +28,9 @@ func AlignToBucketSize(start, stop, bucketSize int32) (int32, int32) {
 	}
 
 	return start, newStop
+}
+
+// GetBucketsQty returns amount buckets for timeSeries (defined with startTime, stopTime and step (bucket) size.
+func GetBucketsQty(start, stop, bucketSize int32) int32 {
+	return int32(math.Ceil(float64(stop-start) / float64(bucketSize)))
 }

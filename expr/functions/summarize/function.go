@@ -2,12 +2,14 @@ package summarize
 
 import (
 	"fmt"
+	"math"
+
+	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"math"
 )
 
 type summarize struct {
@@ -68,8 +70,9 @@ func (f *summarize) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		start, stop = helper.AlignToBucketSize(start, stop, bucketSize)
 	}
 
-	buckets := helper.GetBuckets(start, stop, bucketSize)
+	buckets := helper.GetBucketsQty(start, stop, bucketSize)
 	results := make([]*types.MetricData, 0, len(args))
+
 	for _, arg := range args {
 
 		name := fmt.Sprintf("summarize(%s,'%s'", arg.Name, e.Args()[1].StringValue())

@@ -23,7 +23,7 @@ func init() {
 	}
 }
 
-func TestSlo_Do(t *testing.T) {
+func TestSlo(t *testing.T) {
 	nan := math.NaN()
 	now32 := int32(time.Now().Unix())
 
@@ -82,6 +82,93 @@ func TestSlo_Do(t *testing.T) {
 					// all data points are nan because interval (4 sec) is less than step time (5 sec)
 					[]float64{nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan},
 					4,
+					now32,
+				),
+			},
+			nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testName := testCase.E.Target() + "(" + testCase.E.RawArgs() + ")"
+		t.Run(testName, func(t *testing.T) {
+			th.TestEvalExpr(t, &testCase, false)
+		})
+	}
+}
+
+func TestSloErrorBudget(t *testing.T) {
+	nan := math.NaN()
+	now32 := int32(time.Now().Unix())
+
+	testCases := []th.EvalTestItem{
+		{
+			parser.NewExpr("sloErrorBudget", parser.ArgName("some.data.series"), parser.ArgValue("5sec"), parser.ArgValue("aboveOrEqual"), 2, 0.6),
+			map[parser.MetricRequest][]*types.MetricData{
+				parser.MetricRequest{
+					Metric: "some.data.series",
+					From:   0,
+					Until:  1,
+				}: {
+					types.MakeMetricData(
+						"some.data.series",
+						[]float64{
+							1, 1.5, 2, 3, 4, // 3 of 5 points are greater or equal than 2
+							nan, 0, 1, 1.5, 2.1, // 1 of 4 points is greater or equal than 2
+							1, 2, 3, 4, 5, // 4 of 5 points are greater or equal than 2
+							1, 2, 3, 4, // 3 of 4 points are greater or equal than 2
+						},
+						1,
+						now32,
+					),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData(
+					"sloErrorBudget(some.data.series, 5sec, aboveOrEqual, 2, 0.6)",
+					[]float64{
+						0,     // 3 of 5 points match, slo is 0.6, no error budget remains
+						-1.75, // 1 of 4 points match, slo is 0.6, error budget is exceeded by (0.25 - 0.6) * 5 = -1.75
+						1,     // 4 of 5 points match, slo is 0.6, amount of remained budget is (0.8 - 0.6) * 5 = 1
+						0.6,   // 3 of 4 points match, slo is 0.6, amount of remained budget is (0.75 - 0.6) * 4 = 0.6
+					},
+					5,
+					now32,
+				),
+			},
+			nil,
+		},
+		{
+			parser.NewExpr("sloErrorBudget", parser.ArgName("some.data.series"), parser.ArgValue("4sec"), parser.ArgValue("aboveOrEqual"), 2, 0.6),
+			map[parser.MetricRequest][]*types.MetricData{
+				parser.MetricRequest{
+					Metric: "some.data.series",
+					From:   0,
+					Until:  1,
+				}: {
+					types.MakeMetricData(
+						"some.data.series",
+						[]float64{
+							1, 1.5, 2, 3, 4,
+							nan, 0, 1, 1.5, 2.1,
+							1, 2, 3, 4, 5,
+							1, 2, 3, 4,
+						},
+						5,
+						now32,
+					),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData(
+					"sloErrorBudget(some.data.series, 4sec, aboveOrEqual, 2, 0.6)",
+					[]float64{
+						// all data points are nan because interval (4 sec) is less than step time (5 sec)
+						nan, nan, nan, nan, nan, nan, nan, nan,
+						nan, nan, nan, nan, nan, nan, nan, nan,
+						nan, nan, nan, nan, nan, nan, nan, nan,
+					},
+					5,
 					now32,
 				),
 			},

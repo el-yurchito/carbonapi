@@ -34,7 +34,7 @@ func TestGetBuckets(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		buckets := helper.GetBuckets(test.start, test.stop, test.bucketSize)
+		buckets := helper.GetBucketsQty(test.start, test.stop, test.bucketSize)
 		if buckets != test.wantBuckets {
 			t.Errorf("TestGetBuckets failed!\n%v\ngot buckets %d",
 				test,

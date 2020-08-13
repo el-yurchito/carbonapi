@@ -56,7 +56,7 @@ func (f *hitcount) Do(e parser.Expr, from, until int32, values map[parser.Metric
 		start = helper.AlignStartToInterval(start, stop, bucketSize)
 	}
 
-	buckets := helper.GetBuckets(start, stop, bucketSize)
+	buckets := helper.GetBucketsQty(start, stop, bucketSize)
 	results := make([]*types.MetricData, 0, len(args))
 	for _, arg := range args {
 
