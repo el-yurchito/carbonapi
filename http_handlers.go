@@ -123,16 +123,16 @@ type renderResponse struct {
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
-	uuid := uuid.NewV4()
+	uuidString := uuid.NewV4().String()
 
 	// TODO: Migrate to context.WithTimeout
 	// ctx, _ := context.WithTimeout(context.TODO(), config.ZipperTimeout)
-	ctx := util.SetUUID(r.Context(), uuid.String())
+	ctx := util.SetUUID(r.Context(), uuidString)
 	username, _, _ := r.BasicAuth()
 
 	logger := zapwriter.Logger("render")
 	logger.With(
-		zap.String("carbonapi_uuid", uuid.String()),
+		zap.String("carbonapi_uuid", uuidString),
 		zap.String("username", username),
 	)
 
@@ -142,7 +142,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	var accessLogDetails = carbonapipb.AccessLogDetails{
 		Handler:       "render",
 		Username:      username,
-		CarbonapiUuid: uuid.String(),
+		CarbonapiUuid: uuidString,
 		Url:           r.URL.RequestURI(),
 		PeerIp:        srcIP,
 		PeerPort:      srcPort,
@@ -277,6 +277,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		exp.SetCommonBoundaries(from32, until32)
 		for _, m := range exp.Metrics() {
 			metrics = append(metrics, m.Metric)
 			mfetch := m
@@ -332,8 +333,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			accessLogDetails.SendGlobs = sendGlobs
 
 			// construct batch of requests for concurrent launch
-			metricReplacements := make(map[renderRequest]replacement)
-			renderRequestBatch := make([]renderRequest, 0)
+			metricReplacements := make(map[renderRequest]replacement, 32)
+			renderRequestBatch := make([]renderRequest, 0, 1024)
 			if sendGlobs {
 				for _, pathReplacement := range config.rewriterByCommonPrefix.maybeSpawnPaths(m.Metric) {
 					newRenderRequest := renderRequest{

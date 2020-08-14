@@ -122,14 +122,50 @@ func (f *slo) Description() map[string]types.FunctionDescription {
 }
 
 func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
-	if len(args) == 0 || err != nil {
+	// alias(aliasByNode(sumSeries(keepLastValue(resources.monitoring.carbon-clickhouse.graphite-cli*.tcp.metricsReceived, 6)), 3), 'total')
+	// slo(#A, '30d', 'above', 0)
+	var (
+		argsExtended, argsWindowed []*types.MetricData
+		bucketSize, windowSize     int32
+		delta                      int32
+		err                        error
+	)
+
+	// requested data points' window
+	argsWindowed, err = helper.GetSeriesArg(e.Args()[0], from, until, values)
+	if len(argsWindowed) == 0 || err != nil {
 		return nil, err
 	}
 
-	bucketSize, err := e.GetIntervalArg(1, 1)
+	bucketSize, err = e.GetIntervalArg(1, 1)
 	if err != nil {
 		return nil, err
+	}
+
+	// there is an opportunity that requested data points' window is smaller than slo interval
+	// e.g.: requesting slo(some.data.series, '30days', above, 0) with window of 6 hours
+	// this means that we're gonna need 2 sets of data points:
+	// - the first one with range [from, until] - for 6 hours
+	// - the second one with range [from - delta, until] - for 30 days
+	// the result's time range will be 6 hours anyway
+	windowSize = until - from
+	if bucketSize > windowSize && !(from == 0 && until == 1) {
+		delta = bucketSize - windowSize
+		argsExtended, err = helper.GetSeriesArg(e.Args()[0], from-delta, until, values)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(argsExtended) != len(argsWindowed) {
+			return nil, fmt.Errorf(
+				"MetricData quantity differs: there is %d for [%d, %d] and %d for [%d, %d]",
+				len(argsExtended), from-delta, until,
+				len(argsWindowed), from, until,
+			)
+		}
+	} else {
+		argsExtended = argsWindowed
 	}
 
 	value, err := e.GetFloatArg(3)
@@ -156,39 +192,38 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 	}
 
 	intervalStringValue := e.Args()[1].StringValue()
-	results := make([]*types.MetricData, 0, len(args))
+	results := make([]*types.MetricData, 0, len(argsWindowed))
 
-	for _, arg := range args {
+	for i, argWnd := range argsWindowed {
 		var (
-			resultName          string
-			timeStart, timeStop int32
+			argExt     *types.MetricData
+			resultName string
 		)
 
 		if isErrorBudget {
-			resultName = fmt.Sprintf("sloErrorBudget(%s, %s, %s, %v, %v)", arg.Name, intervalStringValue, methodName, value, objective)
+			resultName = fmt.Sprintf("sloErrorBudget(%s, %s, %s, %v, %v)", argWnd.Name, intervalStringValue, methodName, value, objective)
 		} else {
-			resultName = fmt.Sprintf("slo(%s, %s, %s, %v)", arg.Name, intervalStringValue, methodName, value)
+			resultName = fmt.Sprintf("slo(%s, %s, %s, %v)", argWnd.Name, intervalStringValue, methodName, value)
 		}
 
-		// align series boundaries and step size according to the interval
-		timeStart, timeStop = arg.StartTime, arg.StopTime
-		bucketsQty := helper.GetBucketsQty(timeStart, timeStop, bucketSize)
+		// buckets qty is calculated based on requested window
+		bucketsQty := helper.GetBucketsQty(argWnd.StartTime, argWnd.StopTime, bucketSize)
 
-		// result for the given series (arg)
+		// result for the given series (argWnd)
 		r := &types.MetricData{FetchResponse: pb.FetchResponse{
 			Name:      resultName,
 			Values:    make([]float64, 0, bucketsQty+1),
 			IsAbsent:  make([]bool, 0, bucketsQty+1),
 			StepTime:  bucketSize,
-			StartTime: timeStart,
-			StopTime:  timeStop,
+			StartTime: argWnd.StartTime,
+			StopTime:  argWnd.StopTime,
 		}}
 		// it's ok to place new element to result and modify it later since it's the pointer
 		results = append(results, r)
 
 		// if the granularity of series exceeds bucket size then
 		// there are not enough data to do the math
-		if arg.StepTime > bucketSize {
+		if argWnd.StepTime > bucketSize {
 			for i := int32(0); i < bucketsQty; i++ {
 				r.IsAbsent = append(r.IsAbsent, true)
 				r.Values = append(r.Values, 0.0)
@@ -196,26 +231,31 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 			continue
 		}
 
+		// extended data points set will be used for calculating matched items
+		argExt = argsExtended[i]
+
 		// calculate SLO using moving window
 		qtyMatched := 0 // bucket matched items quantity
 		qtyNotNull := 0 // bucket not-null items quantity
 		qtyTotal := 0
-		timeCurrent := timeStart
+
+		timeCurrent := argExt.StartTime
+		timeStop := argExt.StopTime
 		timeBucketStarts := timeCurrent
 		timeBucketEnds := timeCurrent + bucketSize
 
 		// process full buckets
-		for i, argValue := range arg.Values {
+		for i, argValue := range argExt.Values {
 			qtyTotal++
 
-			if !arg.IsAbsent[i] {
+			if !argExt.IsAbsent[i] {
 				qtyNotNull++
 				if methodFoo(argValue) {
 					qtyMatched++
 				}
 			}
 
-			timeCurrent += arg.StepTime
+			timeCurrent += argExt.StepTime
 			if timeCurrent > timeStop {
 				break
 			}

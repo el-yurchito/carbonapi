@@ -16,39 +16,45 @@ import (
 const anomalyPrefix = "resources.monitoring.anomaly_detector."
 
 type expr struct {
-	target    string
-	etype     ExprType
-	val       float64
-	valStr    string
-	args      []*expr // positional
-	namedArgs map[string]*expr
-	argString string
+	exprType ExprType
+	target   string
+
+	val    float64
+	valStr string
+
+	args       []*expr // positional
+	argsNamed  map[string]*expr
+	argsString string
+
+	from       int32
+	until      int32
+	isAdjusted bool
 }
 
 func (e *expr) IsName() bool {
-	return e.etype == EtName
+	return e.exprType == EtName
 }
 
 func (e *expr) IsFunc() bool {
-	return e.etype == EtFunc
+	return e.exprType == EtFunc
 }
 
 func (e *expr) IsConst() bool {
-	return e.etype == EtConst
+	return e.exprType == EtConst
 }
 
 func (e *expr) IsString() bool {
-	return e.etype == EtString
+	return e.exprType == EtString
 }
 
 func (e *expr) Type() ExprType {
-	return e.etype
+	return e.exprType
 }
 
 func (e *expr) ToString() string {
-	switch e.etype {
+	switch e.exprType {
 	case EtFunc:
-		return fmt.Sprintf("%s(%s)", e.target, e.argString)
+		return fmt.Sprintf("%s(%s)", e.target, e.argsString)
 	case EtConst:
 		return fmt.Sprint(e.val)
 	case EtString:
@@ -92,11 +98,11 @@ func (e *expr) MutateValString(value string) Expr {
 }
 
 func (e *expr) RawArgs() string {
-	return e.argString
+	return e.argsString
 }
 
 func (e *expr) SetRawArgs(args string) {
-	e.argString = args
+	e.argsString = args
 }
 
 func (e *expr) MutateRawArgs(args string) Expr {
@@ -114,14 +120,14 @@ func (e *expr) Args() []Expr {
 
 func (e *expr) NamedArgs() map[string]Expr {
 	ret := make(map[string]Expr)
-	for k, v := range e.namedArgs {
+	for k, v := range e.argsNamed {
 		ret[k] = v
 	}
 	return ret
 }
 
 func (e *expr) Metrics() []MetricRequest {
-	switch e.etype {
+	switch e.exprType {
 	case EtName:
 		return []MetricRequest{{Metric: e.target}}
 	case EtConst, EtString:
@@ -136,6 +142,26 @@ func (e *expr) Metrics() []MetricRequest {
 		case "seriesByTag":
 			// pass seriesByTag to backend as is
 			r = append(r, MetricRequest{Metric: e.ToString()})
+		case "slo", "sloErrorBudget":
+			if !e.isAdjusted { // avoid multiple boundaries overriding
+				e.isAdjusted = true
+
+				bucketSize, err := e.GetIntervalArg(1, 1)
+				if err != nil {
+					return nil
+				}
+
+				windowSize := e.until - e.from
+				delta := bucketSize - windowSize
+
+				// function will need more data than it was requested originally
+				// so metric requests' boundaries have to be moved
+				if delta > 0 {
+					for i := range r {
+						r[i].From -= delta
+					}
+				}
+			}
 		case "timeShift":
 			offs, err := e.GetIntervalArg(1, -1)
 			if err != nil {
@@ -187,7 +213,7 @@ func (e *expr) Metrics() []MetricRequest {
 				r[i].From -= 7 * 86400 // starts -7 days from where the original starts
 			}
 		case "movingAverage", "movingMedian", "movingMin", "movingMax", "movingSum":
-			switch e.args[1].etype {
+			switch e.args[1].exprType {
 			case EtString:
 				offs, err := e.GetIntervalArg(1, 1)
 				if err != nil {
@@ -227,7 +253,7 @@ func (e *expr) GetIntervalArg(n int, defaultSign int) (int32, error) {
 		return 0, ErrMissingArgument
 	}
 
-	if e.args[n].etype != EtString {
+	if e.args[n].exprType != EtString {
 		return 0, ErrBadType
 	}
 
@@ -416,18 +442,27 @@ func (e *expr) GetNodeOrTagArgs(n int) ([]NodeOrTag, error) {
 	return nodeTags, nil
 }
 
+func (e *expr) GetCommonBoundaries() (int32, int32) {
+	return e.from, e.until
+}
+
+func (e *expr) SetCommonBoundaries(from, until int32) {
+	e.from = from
+	e.until = until
+}
+
 func (e *expr) insertFirstArg(exp *expr) error {
-	if e.etype != EtFunc {
+	if e.exprType != EtFunc {
 		return fmt.Errorf("pipe to not a function")
 	}
 
 	newArgs := []*expr{exp}
 	e.args = append(newArgs, e.args...)
 
-	if e.argString == "" {
-		e.argString = exp.ToString()
+	if e.argsString == "" {
+		e.argsString = exp.ToString()
 	} else {
-		e.argString = exp.ToString() + "," + e.argString
+		e.argsString = exp.ToString() + "," + e.argsString
 	}
 
 	return nil
@@ -447,13 +482,13 @@ func parseExprWithoutPipe(e string) (Expr, string, error) {
 		val, e, err := parseConst(e)
 		r, _ := utf8.DecodeRuneInString(e)
 		if !unicode.IsLetter(r) {
-			return &expr{val: val, etype: EtConst}, e, err
+			return &expr{val: val, exprType: EtConst}, e, err
 		}
 	}
 
 	if e[0] == '\'' || e[0] == '"' {
 		val, e, err := parseString(e)
-		return &expr{valStr: val, etype: EtString}, e, err
+		return &expr{valStr: val, exprType: EtString}, e, err
 	}
 
 	name, e := parseName(e)
@@ -463,12 +498,12 @@ func parseExprWithoutPipe(e string) (Expr, string, error) {
 	}
 
 	if e != "" && e[0] == '(' {
-		exp := &expr{target: name, etype: EtFunc}
+		exp := &expr{target: name, exprType: EtFunc}
 
 		argString, posArgs, namedArgs, e, err := parseArgList(e)
-		exp.argString = argString
+		exp.argsString = argString
 		exp.args = posArgs
-		exp.namedArgs = namedArgs
+		exp.argsNamed = namedArgs
 
 		return exp, e, err
 	}
@@ -589,10 +624,10 @@ func parseArgList(e string) (string, []*expr, map[string]*expr, string, error) {
 			}
 
 			exp := &expr{
-				etype:  argCont.Type(),
-				val:    argCont.FloatValue(),
-				valStr: argCont.StringValue(),
-				target: argCont.Target(),
+				exprType: argCont.Type(),
+				val:      argCont.FloatValue(),
+				valStr:   argCont.StringValue(),
+				target:   argCont.Target(),
 			}
 			namedArgs[arg.Target()] = exp
 

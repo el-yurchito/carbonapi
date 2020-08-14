@@ -7,7 +7,7 @@ import (
 )
 
 func (e *expr) doGetIntArg() (int, error) {
-	if e.etype != EtConst {
+	if e.exprType != EtConst {
 		return 0, ErrBadType
 	}
 
@@ -15,7 +15,7 @@ func (e *expr) doGetIntArg() (int, error) {
 }
 
 func (e *expr) doGetInt32Arg() (int32, error) {
-	if e.etype != EtConst {
+	if e.exprType != EtConst {
 		return int32(0), ErrBadType
 	}
 
@@ -23,7 +23,7 @@ func (e *expr) doGetInt32Arg() (int32, error) {
 }
 
 func (e *expr) doGetInt64Arg() (int64, error) {
-	if e.etype != EtConst {
+	if e.exprType != EtConst {
 		return int64(0), ErrBadType
 	}
 
@@ -31,7 +31,7 @@ func (e *expr) doGetInt64Arg() (int64, error) {
 }
 
 func (e *expr) getNamedArg(name string) *expr {
-	if a, ok := e.namedArgs[name]; ok {
+	if a, ok := e.argsNamed[name]; ok {
 		return a
 	}
 
@@ -39,7 +39,7 @@ func (e *expr) getNamedArg(name string) *expr {
 }
 
 func (e *expr) doGetFloatArg() (float64, error) {
-	if e.etype != EtConst {
+	if e.exprType != EtConst {
 		return 0, ErrBadType
 	}
 
@@ -47,7 +47,7 @@ func (e *expr) doGetFloatArg() (float64, error) {
 }
 
 func (e *expr) doGetStringArg() (string, error) {
-	if e.etype != EtString {
+	if e.exprType != EtString {
 		return "", ErrBadType
 	}
 
@@ -56,9 +56,9 @@ func (e *expr) doGetStringArg() (string, error) {
 
 func (e *expr) doGetBoolArg() (bool, error) {
 	trg := ""
-	if e.etype == EtName {
+	if e.exprType == EtName {
 		trg = e.target
-	} else if e.etype == EtString {
+	} else if e.exprType == EtString {
 		trg = e.valStr
 	} else {
 		return false, ErrBadType

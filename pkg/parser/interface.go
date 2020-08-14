@@ -144,6 +144,11 @@ type Expr interface {
 	// GetNodeOrTagArgs returns n-th argument as slice of NodeOrTag structures.
 	GetNodeOrTagArgs(n int) ([]NodeOrTag, error)
 
+	// GetCommonBoundaries returns values of expression's common boundaries: `from` and `until`
+	GetCommonBoundaries() (int32, int32)
+	// SetCommonBoundaries changes common boundaries (`from` and `until`) for current expression
+	SetCommonBoundaries(from, until int32)
+
 	toExpr() interface{}
 }
 
@@ -157,8 +162,8 @@ func Parse(e string) (Expr, string, error) {
 // NewTargetExpr Creates new expression with specified target only.
 func NewTargetExpr(target string) Expr {
 	e := &expr{
-		target:    target,
-		argString: target,
+		target:     target,
+		argsString: target,
 	}
 	return e
 }
@@ -166,9 +171,9 @@ func NewTargetExpr(target string) Expr {
 // NewNameExpr Creates new expression with specified name only.
 func NewNameExpr(name string) Expr {
 	e := &expr{
-		target:    name,
-		etype:     EtName,
-		argString: name,
+		target:     name,
+		exprType:   EtName,
+		argsString: name,
 	}
 	return e
 }
@@ -176,9 +181,9 @@ func NewNameExpr(name string) Expr {
 // NewConstExpr Creates new Constant expression.
 func NewConstExpr(value float64) Expr {
 	e := &expr{
-		val:       value,
-		etype:     EtConst,
-		argString: fmt.Sprintf("%v", value),
+		val:        value,
+		exprType:   EtConst,
+		argsString: fmt.Sprintf("%v", value),
 	}
 	return e
 }
@@ -186,9 +191,9 @@ func NewConstExpr(value float64) Expr {
 // NewValueExpr Creates new Value expression.
 func NewValueExpr(value string) Expr {
 	e := &expr{
-		valStr:    value,
-		etype:     EtString,
-		argString: value,
+		valStr:     value,
+		exprType:   EtString,
+		argsString: value,
 	}
 	return e
 }
@@ -226,14 +231,14 @@ func NewExpr(target string, vaArgs ...interface{}) Expr {
 	}
 
 	e := &expr{
-		target:    target,
-		etype:     EtFunc,
-		args:      a,
-		argString: strings.Join(argStrs, ","),
+		target:     target,
+		exprType:   EtFunc,
+		args:       a,
+		argsString: strings.Join(argStrs, ","),
 	}
 
 	if nArgsFinal != nil {
-		e.namedArgs = nArgsFinal
+		e.argsNamed = nArgsFinal
 	}
 
 	return e
@@ -249,10 +254,10 @@ func NewExprTyped(target string, args []Expr) Expr {
 	}
 
 	e := &expr{
-		target:    target,
-		etype:     EtFunc,
-		args:      a,
-		argString: strings.Join(argStrs, ","),
+		target:     target,
+		exprType:   EtFunc,
+		args:       a,
+		argsString: strings.Join(argStrs, ","),
 	}
 
 	return e

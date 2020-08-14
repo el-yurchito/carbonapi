@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -783,6 +784,8 @@ func setUpConfigUpstreams(logger *zap.Logger) {
 }
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	err := zapwriter.ApplyConfig([]zapwriter.Config{defaultLoggerConfig})
 	if err != nil {
 		log.Fatal("Failed to initialize logger with default configuration")
