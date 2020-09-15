@@ -55,9 +55,6 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 		return nil, err
 	}
 
-	windowSize := n
-	fmt.Printf("!!!!\nwindowSize originally = %d\n", windowSize)
-
 	start := from
 	if scaleByStep {
 		start -= int32(n)
@@ -68,12 +65,14 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 		return nil, err
 	}
 
-	var offset int
-
+	offset := 0
+	windowSize := n
 	if scaleByStep && len(arg) > 0 {
 		windowSize /= int(arg[0].StepTime)
-		fmt.Printf("????\n\nscaling windowSize\narg[0].StepTime = %d\nwindowSize after = %d\n", arg[0].StepTime, windowSize)
 		offset = windowSize
+	}
+	if windowSize == 0 { // don't scale too much
+		windowSize = 1
 	}
 
 	var result []*types.MetricData
@@ -107,6 +106,7 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 				case "movingMax":
 					r.Values[ridx] = w.Max()
 				}
+				// default
 				if i < windowSize || math.IsNaN(r.Values[ridx]) {
 					r.Values[ridx] = 0
 					r.IsAbsent[ridx] = true
