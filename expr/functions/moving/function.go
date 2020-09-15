@@ -56,6 +56,7 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 	}
 
 	windowSize := n
+	fmt.Printf("!!!!\nwindowSize originally = %d\n", windowSize)
 
 	start := from
 	if scaleByStep {
@@ -71,6 +72,7 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 
 	if scaleByStep && len(arg) > 0 {
 		windowSize /= int(arg[0].StepTime)
+		fmt.Printf("????\n\nscaling windowSize\narg[0].StepTime = %d\nwindowSize after = %d\n", arg[0].StepTime, windowSize)
 		offset = windowSize
 	}
 
@@ -78,7 +80,6 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 
 	for _, a := range arg {
 		w := &types.Windowed{Data: make([]float64, windowSize)}
-		fmt.Printf("!!!!\n\ne.Target = %s\nwindowSize = %d\na.Name = %s", e.Target(), windowSize, a.Name)
 
 		r := *a
 		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, argstr)
