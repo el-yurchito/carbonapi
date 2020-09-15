@@ -2,12 +2,13 @@ package moving
 
 import (
 	"fmt"
+	"math"
+	"strconv"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"math"
-	"strconv"
 )
 
 type moving struct {
@@ -77,6 +78,7 @@ func (f *moving) Do(e parser.Expr, from, until int32, values map[parser.MetricRe
 
 	for _, a := range arg {
 		w := &types.Windowed{Data: make([]float64, windowSize)}
+		fmt.Printf("!!!!\n\ne.Target = %s\nwindowSize = %d\na.Name = %s", e.Target(), windowSize, a.Name)
 
 		r := *a
 		r.Name = fmt.Sprintf("%s(%s,%s)", e.Target(), a.Name, argstr)

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -23,6 +24,8 @@ type Windowed struct {
 
 // Push pushes data
 func (w *Windowed) Push(n float64) {
+	fmt.Printf("####\n\nlen(w.Data) = %d\nw.head = %d", len(w.Data), w.head)
+
 	old := w.Data[w.head]
 
 	w.length++
