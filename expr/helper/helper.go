@@ -210,9 +210,13 @@ func AggregateSeries(e parser.Expr, args []*types.MetricData, function Aggregate
 	r.IsAbsent = make([]bool, length)
 
 	for i := range args[0].Values {
-		var values []float64
+		values := make([]float64, 0, len(args))
 		for _, arg := range args {
-			if !arg.IsAbsent[i] {
+			isAbsent := true
+			if i < len(arg.IsAbsent) {
+				isAbsent = arg.IsAbsent[i]
+			}
+			if !isAbsent {
 				values = append(values, arg.Values[i])
 			}
 		}
