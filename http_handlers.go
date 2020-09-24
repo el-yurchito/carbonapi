@@ -9,21 +9,22 @@ import (
 	"strings"
 	"time"
 
+	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
+	"github.com/go-graphite/carbonzipper/intervalset"
+	pickle "github.com/lomik/og-rek"
+	"github.com/lomik/zapwriter"
+	"github.com/satori/go.uuid"
+	"go.uber.org/zap"
+
 	"github.com/go-graphite/carbonapi/carbonapipb"
 	"github.com/go-graphite/carbonapi/date"
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions/cairo/png"
+	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/go-graphite/carbonapi/util"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"github.com/go-graphite/carbonzipper/intervalset"
-	pickle "github.com/lomik/og-rek"
-	"github.com/satori/go.uuid"
-
-	"github.com/go-graphite/carbonapi/expr/metadata"
-	"github.com/lomik/zapwriter"
-	"go.uber.org/zap"
+	"github.com/go-graphite/carbonapi/util/patternSub"
 )
 
 const (
@@ -289,8 +290,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			var glob pb.GlobResponse
-			var haveCacheData bool
+			var (
+				glob          pb.GlobResponse
+				haveCacheData bool
+			)
 
 			if useCache {
 				tc := time.Now()
@@ -307,8 +310,9 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			if haveCacheData {
 				apiMetrics.FindCacheHits.Add(1)
 			} else if !config.AlwaysSendGlobsAsIs {
-				apiMetrics.FindCacheMisses.Add(1)
 				var err error
+
+				apiMetrics.FindCacheMisses.Add(1)
 				apiMetrics.FindRequests.Add(1)
 				accessLogDetails.ZipperRequests++
 
@@ -333,17 +337,18 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			accessLogDetails.SendGlobs = sendGlobs
 
 			// construct batch of requests for concurrent launch
-			metricReplacements := make(map[renderRequest]replacement, 32)
+			metricReplacements := make(map[renderRequest]patternSub.SubstituteInfo, 32)
 			renderRequestBatch := make([]renderRequest, 0, 1024)
+
 			if sendGlobs {
-				for _, pathReplacement := range config.rewriterByCommonPrefix.maybeSpawnPaths(m.Metric) {
+				for _, substituteInfo := range config.patternProcessor.ReplacePrefix(m.Metric) {
 					newRenderRequest := renderRequest{
-						metric: pathReplacement.dst,
+						metric: substituteInfo.MetricDst,
 						from:   mfetch.From,
 						until:  mfetch.Until,
 					}
 
-					metricReplacements[newRenderRequest] = pathReplacement
+					metricReplacements[newRenderRequest] = substituteInfo
 					renderRequestBatch = append(renderRequestBatch, newRenderRequest)
 				}
 			} else {
@@ -391,10 +396,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 						newMetricData = response.data[0:]
 					}
 
-					// backward replacement metric data names
+					// backward replacement metric names
 					if metricReplacement, exists := metricReplacements[response.request]; exists {
 						for i := range newMetricData {
-							newMetricData[i].Name = metricReplacement.restore(newMetricData[i].Name)
+							newMetricData[i].Name = config.patternProcessor.RestoreMetricName(newMetricData[i].Name, metricReplacement)
 						}
 					}
 
@@ -535,7 +540,7 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for k, v := range config.rewriter {
+	for k, v := range config.patternProcessor.GetDefaultSubstituteMap() {
 		if strings.HasPrefix(query, k) {
 			query = v + strings.TrimPrefix(query, k)
 			break

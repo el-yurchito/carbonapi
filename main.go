@@ -20,25 +20,26 @@ import (
 
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/facebookgo/pidfile"
-	"github.com/go-graphite/carbonapi/carbonapipb"
-	"github.com/go-graphite/carbonapi/expr/functions/cairo/png"
-	"github.com/go-graphite/carbonapi/expr/helper"
-	"github.com/go-graphite/carbonapi/pkg/parser"
-	"github.com/go-graphite/carbonapi/tagdb"
-	"github.com/go-graphite/carbonapi/util"
 	"github.com/go-graphite/carbonzipper/cache"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/go-graphite/carbonzipper/mstats"
 	"github.com/go-graphite/carbonzipper/pathcache"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	"github.com/gorilla/handlers"
+	"github.com/lomik/zapwriter"
 	"github.com/peterbourgon/g2g"
 	"github.com/spf13/viper"
-
-	"github.com/go-graphite/carbonapi/expr/functions"
-	"github.com/go-graphite/carbonapi/expr/rewrite"
-	"github.com/lomik/zapwriter"
 	"go.uber.org/zap"
+
+	"github.com/go-graphite/carbonapi/carbonapipb"
+	"github.com/go-graphite/carbonapi/expr/functions"
+	"github.com/go-graphite/carbonapi/expr/functions/cairo/png"
+	"github.com/go-graphite/carbonapi/expr/helper"
+	"github.com/go-graphite/carbonapi/expr/rewrite"
+	"github.com/go-graphite/carbonapi/pkg/parser"
+	"github.com/go-graphite/carbonapi/tagdb"
+	"github.com/go-graphite/carbonapi/util"
+	"github.com/go-graphite/carbonapi/util/patternSub"
 )
 
 var apiMetrics = struct {
@@ -279,10 +280,8 @@ var config = struct {
 	// Zipper is API entry to carbonzipper
 	zipper CarbonZipper
 
-	// Rewriter rewrites queries before sending them to backend
-	rewriter rewriter
-	// rewriterByCommonPrefix is rewriter grouped by common prefix
-	rewriterByCommonPrefix rewriterGroup
+	// patternProcessor rewrites queries before sending them to backend
+	patternProcessor *patternSub.PatternProcessor
 
 	// Limiter limits concurrent zipper requests
 	limiter util.SimpleLimiter
@@ -464,9 +463,6 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 	expvar.NewString("BuildVersion").Set(BuildVersion)
 	expvar.Publish("config", expvar.Func(func() interface{} { return config }))
 
-	config.rewriter = newRewriter(config.Rewrite)
-	config.rewriterByCommonPrefix = config.rewriter.commonPrefix()
-
 	config.limiter = util.NewSimpleLimiter(config.Concurency)
 	if config.TagDB.Url != "" {
 		config.tagDBProxy, err = tagdb.NewHttp(&config.TagDB)
@@ -477,6 +473,12 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 			)
 		}
 	}
+
+	configRewriteMap := make(map[string]string, len(config.Rewrite))
+	for _, rewriteEntry := range config.Rewrite {
+		configRewriteMap[rewriteEntry.From] = rewriteEntry.To
+	}
+	config.patternProcessor = patternSub.NewPatternProcessor(configRewriteMap)
 
 	config.zipper = zipper
 
