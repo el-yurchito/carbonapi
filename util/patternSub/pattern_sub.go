@@ -7,6 +7,7 @@ import (
 
 const (
 	pathSep  = "."
+	tagsSep  = ";"
 	wildcard = "*"
 
 	sbtStart = "seriesByTag("
@@ -40,7 +41,9 @@ type nameTagInfo struct {
 type subMap map[string]string
 
 // PatternProcessor is used to replace prefixes of time series patterns
-// e.g. prefix1.a.b.c -> prefix2.a.b.c
+// e.g. prefix1.a.b.c. -> prefix2.d.e.f.
+// all replacements must end with period
+// although target replacement can be empty (but source can not)
 type PatternProcessor struct {
 	config subMap            // original substitute configuration
 	prefix map[string]subMap // config with substitute keys grouped by common prefixes
@@ -65,7 +68,9 @@ func NewPatternProcessor(config map[string]string) *PatternProcessor {
 	}
 
 	for replaceFrom, replaceTo := range config {
-		if replaceFrom == "" { // replacement with empty prefix is not allowed
+		// sanity check: both replaceFrom and replaceTo should end with period
+		// yet replaceTo can also be empty
+		if !(strings.HasSuffix(replaceFrom, pathSep) && (strings.HasSuffix(replaceTo, pathSep) || replaceTo == "")) {
 			continue
 		}
 
@@ -76,7 +81,7 @@ func NewPatternProcessor(config map[string]string) *PatternProcessor {
 			continue
 		}
 
-		replacePrefix = replacePrefix + pathSep + wildcard
+		replacePrefix = replacePrefix + pathSep + wildcard + pathSep
 		if _, exists := result.prefix[replacePrefix]; !exists {
 			result.prefix[replacePrefix] = make(subMap, qty)
 		}
@@ -125,17 +130,14 @@ func (pp *PatternProcessor) RestoreMetricName(metricName string, substituteInfo 
 		return pp.restoreMetricNameSimplePattern(metricName, substituteInfo)
 	}
 
-	// function call
-	args := strings.Split(pp.cleanFunctionCall(metricName), argsSep)
-	if substituteInfo.tagInfo.index < len(args) {
-		// make sure that name tag still has the same position
-		name, value, sign, err := pp.splitArgTerm(pp.cleanArg(args[substituteInfo.tagInfo.index]))
-		if err == nil && nameTagOptions[name] && sign == substituteInfo.tagInfo.sign {
-			value = pp.restoreMetricNameSimplePattern(value, substituteInfo)
-			args[substituteInfo.tagInfo.index] = quote + name + sign + value + quote
-		}
+	// function call looks like `seriesByTag('name=a.b.c.d', 'tag1=val1', 'tag2=val2')`
+	// but resulting metrics look like `a.b.c.d;tag1=val1;tag2=val2`
+	tagParts := strings.SplitN(pp.cleanFunctionCall(metricName), tagsSep, 1)
+	if len(tagParts) == 1 {
+		return pp.restoreMetricNameSimplePattern(tagParts[0], substituteInfo)
 	}
-	return sbtStart + strings.Join(args, argsSep) + sbtEnd
+
+	return metricName
 }
 
 // cleanArg removes possible leading and trailing quotes
@@ -151,9 +153,9 @@ func (pp *PatternProcessor) cleanFunctionCall(pattern string) string {
 	return pattern
 }
 
-// cutOffLastNode takes metric path (e.g. "a.b.c.d"), cuts off its last node and returns the rest
+// cutOffLastNode takes metric path (e.g. "a.b.c.d."), cuts off its last node and returns the rest
 func (pp *PatternProcessor) cutOffLastNode(metricPath string) string {
-	index := strings.LastIndexByte(metricPath, pathSep[0])
+	index := strings.LastIndexByte(strings.TrimSuffix(metricPath, pathSep), pathSep[0])
 	if index == -1 {
 		return metricPath
 	} else {
@@ -264,26 +266,15 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 
 	result = make([]SubstituteInfo, 0, len(matchedReplaceMap)+1)
 	if matchedReplaceMap != nil { // found grouping prefix, will produce substitutes based on each key in group
-		patternSuffix := strings.TrimPrefix(strings.TrimPrefix(pattern, matchedPrefix), pathSep) // it is common for all substitutes
+		patternSuffix := strings.TrimPrefix(pattern, matchedPrefix) // the suffix is common for all substitutes
 		for replaceFrom, replaceTo := range matchedReplaceMap {
-			substituteInfo := SubstituteInfo{
-				MetricSrc:  replaceFrom,
-				MetricDst:  patternSuffix,
+			result = append(result, SubstituteInfo{
+				MetricSrc:  replaceFrom + patternSuffix,
+				MetricDst:  replaceTo + patternSuffix,
 				isReplaced: true,
 				prefixSrc:  replaceFrom,
 				prefixDst:  replaceTo,
-			}
-			if patternSuffix != "" {
-				substituteInfo.MetricSrc += pathSep + patternSuffix
-			}
-			if replaceTo != "" {
-				if patternSuffix != "" {
-					substituteInfo.MetricDst = pathSep + substituteInfo.MetricDst
-				}
-				substituteInfo.MetricDst = replaceTo + substituteInfo.MetricDst
-			}
-
-			result = append(result, substituteInfo)
+			})
 		}
 	} else { // use default substitute
 		var (
@@ -296,18 +287,11 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 			if strings.HasPrefix(pattern, replaceFrom) {
 				substituteInfo = &SubstituteInfo{
 					MetricSrc:  pattern,
-					MetricDst:  strings.TrimPrefix(strings.TrimPrefix(pattern, replaceFrom), pathSep),
+					MetricDst:  replaceTo + strings.TrimPrefix(pattern, replaceFrom),
 					isReplaced: true,
 					prefixSrc:  replaceFrom,
 					prefixDst:  replaceTo,
 				}
-				if replaceTo != "" {
-					if substituteInfo.MetricDst != "" {
-						substituteInfo.MetricDst = pathSep + substituteInfo.MetricDst
-					}
-					substituteInfo.MetricDst = replaceTo + substituteInfo.MetricDst
-				}
-
 				break
 			}
 		}
@@ -329,12 +313,7 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 
 // restoreMetricNameSimplePattern restores simple replacement of metric name
 func (pp *PatternProcessor) restoreMetricNameSimplePattern(metricName string, substituteInfo SubstituteInfo) string {
-	metricName = strings.TrimPrefix(metricName, substituteInfo.prefixDst)
-	if metricName != "" && metricName[0] != pathSep[0] {
-		metricName = pathSep + metricName
-	}
-	metricName = substituteInfo.prefixSrc + metricName
-	return metricName
+	return substituteInfo.prefixSrc + strings.TrimPrefix(metricName, substituteInfo.prefixDst)
 }
 
 // splitArgTerm splits term like 'tag=value' and returns its parts
