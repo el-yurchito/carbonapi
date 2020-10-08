@@ -80,7 +80,14 @@ func (w *Windowed) Sum() float64 {
 }
 
 // Mean returns mean value of data
-func (w *Windowed) Mean() float64 { return w.sum / float64(w.Len()) }
+func (w *Windowed) Mean() float64 {
+	length := w.Len()
+	if length > 0 {
+		return w.sum / float64(length)
+	} else {
+		return math.NaN()
+	}
+}
 
 // Max returns max(values)
 func (w *Windowed) Max() float64 {

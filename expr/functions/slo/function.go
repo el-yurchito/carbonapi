@@ -122,8 +122,6 @@ func (f *slo) Description() map[string]types.FunctionDescription {
 }
 
 func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	// alias(aliasByNode(sumSeries(keepLastValue(resources.monitoring.carbon-clickhouse.graphite-cli*.tcp.metricsReceived, 6)), 3), 'total')
-	// slo(#A, '30d', 'above', 0)
 	var (
 		argsExtended, argsWindowed []*types.MetricData
 		bucketSize, windowSize     int32

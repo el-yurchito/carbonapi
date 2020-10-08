@@ -2,6 +2,7 @@ package event
 
 import (
 	"fmt"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -28,29 +29,13 @@ func New(configFile string) []interfaces.FunctionMetadata {
 
 // event(series)
 func (f *event) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
+	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
 	}
 
-	var results []*types.MetricData
-
-	switch len(arg) {
-	case 1:
-		a := arg[0]
-		r := *a
-		r.Name = fmt.Sprintf("event(%s)", a.Name)
-		r.Values = make([]float64, len(a.Values))
-		r.IsAbsent = make([]bool, len(a.Values))
-
-		for i, v := range a.Values {
-			if a.IsAbsent[i] {
-				v = 0
-			}
-			r.Values[i] = v
-		}
-		results = append(results, &r)
-
+	results := make([]*types.MetricData, 0, len(args)+1)
+	switch len(args) {
 	case 0:
 		const step = 30
 		// round `from` and `until` to nearest `step` seconds
@@ -62,19 +47,33 @@ func (f *event) Do(e parser.Expr, from, until int32, values map[parser.MetricReq
 			until -= mod
 		}
 
-		length := int((until-from)/step) + 1
+		pointsQty := int((until-from)/step) + 1
 		r := types.MetricData{}
+
 		r.Name = e.ToString()
-		r.Values = make([]float64, length)
-		r.IsAbsent = make([]bool, length)
 		r.StartTime = from
 		r.StopTime = until
 		r.StepTime = step
+		r.IsAbsent = make([]bool, pointsQty)
+		r.Values = make([]float64, pointsQty)
+
+		results = append(results, &r)
+
+	case 1:
+		arg := args[0]
+		r := *arg
+
+		r.Name = fmt.Sprintf("event(%s)", arg.Name)
+		r.IsAbsent = make([]bool, len(arg.IsAbsent))
+		r.Values = make([]float64, len(arg.Values))
+		copy(r.Values, arg.Values)
+
 		results = append(results, &r)
 
 	default:
 		return nil, types.ErrWildcardNotAllowed
 	}
+
 	return results, nil
 }
 
