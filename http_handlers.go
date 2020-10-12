@@ -501,11 +501,12 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func findHandler(w http.ResponseWriter, r *http.Request) {
+	contextUuid := uuid.NewV4().String()
 	t0 := time.Now()
-	uuid := uuid.NewV4()
+
 	// TODO: Migrate to context.WithTimeout
 	// ctx, _ := context.WithTimeout(context.TODO(), config.ZipperTimeout)
-	ctx := util.SetUUID(r.Context(), uuid.String())
+	ctx := util.SetUUID(r.Context(), contextUuid)
 	username, _, _ := r.BasicAuth()
 
 	format := r.FormValue("format")
@@ -518,7 +519,7 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 	var accessLogDetails = carbonapipb.AccessLogDetails{
 		Handler:       "find",
 		Username:      username,
-		CarbonapiUuid: uuid.String(),
+		CarbonapiUuid: contextUuid,
 		Url:           r.URL.RequestURI(),
 		PeerIp:        srcIP,
 		PeerPort:      srcPort,
@@ -551,7 +552,13 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 		format = treejsonFormat
 	}
 
-	globs, err := config.zipper.Find(ctx, query)
+	var (
+		b     []byte
+		err   error
+		globs pb.GlobResponse
+	)
+
+	globs, err = config.zipper.Find(ctx, query)
 	if err != nil {
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		accessLogDetails.HttpCode = http.StatusInternalServerError
@@ -560,7 +567,6 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var b []byte
 	switch format {
 	case treejsonFormat, jsonFormat:
 		b, err = findTreejson(globs)
