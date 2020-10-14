@@ -1,6 +1,8 @@
 package alias
 
 import (
+	"strings"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -25,22 +27,33 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *alias) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
+	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
 	}
+
 	alias, err := e.GetStringArg(1)
 	if err != nil {
 		return nil, err
 	}
 
-	var results []*types.MetricData
+	allowFormatStr, err := e.GetBoolArgDefault(2, false)
+	if err != nil {
+		return nil, err
+	}
 
-	for _, a := range arg {
-		r := *a
+	results := make([]*types.MetricData, 0, len(args))
+	for _, arg := range args {
+		r := *arg
+
 		r.Name = alias
+		if allowFormatStr {
+			r.Name = strings.ReplaceAll(r.Name, "${expr}", arg.Name)
+		}
+
 		results = append(results, &r)
 	}
+
 	return results, nil
 }
 
@@ -63,6 +76,12 @@ func (f *alias) Description() map[string]types.FunctionDescription {
 					Name:     "newName",
 					Required: true,
 					Type:     types.String,
+				},
+				{
+					Default:  types.NewSuggestion(false),
+					Name:     "allowFormatStr",
+					Required: false,
+					Type:     types.Boolean,
 				},
 			},
 		},
