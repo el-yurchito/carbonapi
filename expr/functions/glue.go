@@ -41,6 +41,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/group"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByNode"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByTags"
+	"github.com/go-graphite/carbonapi/expr/functions/heatMap"
 	"github.com/go-graphite/carbonapi/expr/functions/highest"
 	"github.com/go-graphite/carbonapi/expr/functions/hitcount"
 	"github.com/go-graphite/carbonapi/expr/functions/holtWintersAberration"
@@ -116,7 +117,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 102)
+	funcs := make([]initFunc, 0, 103)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -191,6 +192,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "groupByNode", order: groupByNode.GetOrder(), f: groupByNode.New})
 
 	funcs = append(funcs, initFunc{name: "groupByTags", order: groupByTags.GetOrder(), f: groupByTags.New})
+
+	funcs = append(funcs, initFunc{name: "heatMap", order: heatMap.GetOrder(), f: heatMap.New})
 
 	funcs = append(funcs, initFunc{name: "highest", order: highest.GetOrder(), f: highest.New})
 
