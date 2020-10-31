@@ -32,4 +32,16 @@ message AccessLogDetails {
     string uri = 26;
     bool from_cache = 27;
     int64 zipper_requests = 28;
+    repeated FunctionCall function_calls = 29;
+}
+
+message FunctionCall {
+    string  fullExpression = 1;
+    string  target = 2;
+    int32   parent = 3;
+    int32   order = 4;
+    int64   call_started = 5;
+    int64   call_finished = 6;
+    bool    failed = 7;
+    string  error_message = 8;
 }
