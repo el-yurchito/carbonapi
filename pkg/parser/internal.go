@@ -1,10 +1,34 @@
 package parser
 
 import (
+	"context"
 	"fmt"
-
 	"runtime/debug"
 )
+
+func (e *expr) deepReplaceContext(ctx context.Context) {
+	replace := append(make([]*expr, 0, 64), e) // expressions to replace context; first one is self
+	visited := make(map[*expr]bool, 64)        // track replaced expressions to avoid duplicating
+
+	// `replace` length may change during iteration
+	// but it's ok as long as `for ... i < len(replaced) ...` is used
+	for i := 0; i < len(replace); i++ {
+		current := replace[i]
+		current.context = ctx
+		visited[current] = true
+
+		for _, arg := range current.args {
+			if !visited[arg] {
+				replace = append(replace, arg)
+			}
+		}
+		for _, arg := range current.argsNamed {
+			if !visited[arg] {
+				replace = append(replace, arg)
+			}
+		}
+	}
+}
 
 func (e *expr) doGetIntArg() (int, error) {
 	if e.exprType != EtConst {
@@ -28,14 +52,6 @@ func (e *expr) doGetInt64Arg() (int64, error) {
 	}
 
 	return int64(e.val), nil
-}
-
-func (e *expr) getNamedArg(name string) *expr {
-	if a, ok := e.argsNamed[name]; ok {
-		return a
-	}
-
-	return nil
 }
 
 func (e *expr) doGetFloatArg() (float64, error) {
@@ -73,6 +89,14 @@ func (e *expr) doGetBoolArg() (bool, error) {
 	}
 
 	return false, ErrBadType
+}
+
+func (e *expr) getNamedArg(name string) *expr {
+	if a, ok := e.argsNamed[name]; ok {
+		return a
+	}
+
+	return nil
 }
 
 func (e *expr) toExpr() interface{} {

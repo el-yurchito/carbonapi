@@ -21,6 +21,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr"
 	"github.com/go-graphite/carbonapi/expr/functions/cairo/png"
 	"github.com/go-graphite/carbonapi/expr/metadata"
+	"github.com/go-graphite/carbonapi/expr/timer"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/go-graphite/carbonapi/util"
@@ -124,37 +125,40 @@ type renderResponse struct {
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
+
 	uuidString := uuid.NewV4().String()
-
-	// TODO: Migrate to context.WithTimeout
-	// ctx, _ := context.WithTimeout(context.TODO(), config.ZipperTimeout)
 	ctx := util.SetUUID(r.Context(), uuidString)
-	username, _, _ := r.BasicAuth()
 
-	logger := zapwriter.Logger("render")
-	logger.With(
+	username, _, _ := r.BasicAuth()
+	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
+
+	var (
+		accessLogDetails = carbonapipb.AccessLogDetails{
+			Handler:       "render",
+			Username:      username,
+			CarbonapiUuid: uuidString,
+			Url:           r.URL.RequestURI(),
+			PeerIp:        srcIP,
+			PeerPort:      srcPort,
+			Host:          r.Host,
+			Referer:       r.Referer(),
+			Uri:           r.RequestURI,
+		}
+		functionCallStacks []*timer.FunctionCallStack
+
+		accessLogger, logger *zap.Logger
+		logAsError           bool
+	)
+
+	accessLogger = zapwriter.Logger("access")
+	logger = zapwriter.Logger("render").With(
 		zap.String("carbonapi_uuid", uuidString),
 		zap.String("username", username),
 	)
 
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-
-	accessLogger := zapwriter.Logger("access")
-	var accessLogDetails = carbonapipb.AccessLogDetails{
-		Handler:       "render",
-		Username:      username,
-		CarbonapiUuid: uuidString,
-		Url:           r.URL.RequestURI(),
-		PeerIp:        srcIP,
-		PeerPort:      srcPort,
-		Host:          r.Host,
-		Referer:       r.Referer(),
-		Uri:           r.RequestURI,
-	}
-
-	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, t0, logAsError)
+		deferredFunctionCallMetrics(functionCallStacks)
+		deferredAccessLogging(accessLogger, &accessLogDetails, functionCallStacks, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)
@@ -185,7 +189,6 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	if format == "" && (parser.TruthyBool(r.FormValue("rawData")) || parser.TruthyBool(r.FormValue("rawdata"))) {
 		format = rawFormat
 	}
-
 	if format == "" {
 		format = pngFormat
 	}
@@ -195,7 +198,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	if tstr := r.FormValue("cacheTimeout"); tstr != "" {
 		t, err := strconv.Atoi(tstr)
 		if err != nil {
-			logger.Error("failed to parse cacheTimeout",
+			logger.Error(
+				"failed to parse cacheTimeout",
 				zap.String("cache_string", tstr),
 				zap.Error(err),
 			)
@@ -231,6 +235,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	accessLogDetails.CacheTimeout = cacheTimeout
 	accessLogDetails.Format = format
 	accessLogDetails.Targets = targets
+	functionCallStacks = make([]*timer.FunctionCallStack, 0, len(targets))
+
 	if useCache {
 		tc := time.Now()
 		response, err := config.queryCache.Get(cacheKey)
@@ -257,8 +263,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var metrics []string
-	var results []*types.MetricData
+	var (
+		metrics []string
+		results []*types.MetricData
+	)
 
 	errors := make(map[string]string)
 	metricValues := make(map[parser.MetricRequest][]*types.MetricData)
@@ -318,7 +326,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 				glob, err = config.zipper.Find(ctx, m.Metric)
 				if err != nil {
-					logger.Error("find error",
+					logger.Error(
+						"find error",
 						zap.String("metric", m.Metric),
 						zap.Error(err),
 					)
@@ -410,7 +419,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if len(errors) != 0 {
-				logger.Error("render error occurred while fetching data",
+				logger.Error(
+					"render error occurred while fetching data",
 					zap.Any("errors", errors),
 				)
 			}
@@ -432,13 +442,19 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Error("panic during eval:",
+						logger.Error(
+							"panic during eval:",
 							zap.String("cache_key", cacheKey),
 							zap.Any("reason", r),
 							zap.Stack("stack"),
 						)
+						logAsError = true
 					}
 				}()
+
+				callStack := timer.NewFunctionCallStack()
+				functionCallStacks = append(functionCallStacks, callStack)
+				exp.SetContext(callStack.Store(nil))
 
 				expressions, err := expr.EvalExpr(exp, from32, until32, metricValues)
 				if err != nil && err != parser.ErrSeriesDoesNotExist {
@@ -464,7 +480,8 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	case protobufFormat, protobuf3Format:
 		body, err = types.MarshalProtobuf(results)
 		if err != nil {
-			logger.Info("request failed",
+			logger.Info(
+				"request failed",
 				zap.Int("http_code", http.StatusInternalServerError),
 				zap.String("reason", err.Error()),
 				zap.Duration("runtime", time.Since(t0)),
@@ -501,12 +518,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func findHandler(w http.ResponseWriter, r *http.Request) {
-	contextUuid := uuid.NewV4().String()
 	t0 := time.Now()
+	uuidString := uuid.NewV4().String()
 
-	// TODO: Migrate to context.WithTimeout
-	// ctx, _ := context.WithTimeout(context.TODO(), config.ZipperTimeout)
-	ctx := util.SetUUID(r.Context(), contextUuid)
+	ctx := util.SetUUID(r.Context(), uuidString)
 	username, _, _ := r.BasicAuth()
 
 	format := r.FormValue("format")
@@ -519,7 +534,7 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 	var accessLogDetails = carbonapipb.AccessLogDetails{
 		Handler:       "find",
 		Username:      username,
-		CarbonapiUuid: contextUuid,
+		CarbonapiUuid: uuidString,
 		Url:           r.URL.RequestURI(),
 		PeerIp:        srcIP,
 		PeerPort:      srcPort,
@@ -530,7 +545,7 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, nil, t0, logAsError)
 	}()
 
 	if query == "" {
@@ -691,10 +706,9 @@ func findList(globs pb.GlobResponse) ([]byte, error) {
 
 func infoHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
-	uuid := uuid.NewV4()
-	// TODO: Migrate to context.WithTimeout
-	// ctx, _ := context.WithTimeout(context.TODO(), config.ZipperTimeout)
-	ctx := util.SetUUID(r.Context(), uuid.String())
+	uuidString := uuid.NewV4().String()
+
+	ctx := util.SetUUID(r.Context(), uuidString)
 	username, _, _ := r.BasicAuth()
 	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
 	format := r.FormValue("format")
@@ -707,7 +721,7 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 	var accessLogDetails = carbonapipb.AccessLogDetails{
 		Handler:       "info",
 		Username:      username,
-		CarbonapiUuid: uuid.String(),
+		CarbonapiUuid: uuidString,
 		Url:           r.URL.RequestURI(),
 		PeerIp:        srcIP,
 		PeerPort:      srcPort,
@@ -719,11 +733,13 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, nil, t0, logAsError)
 	}()
 
-	var data map[string]pb.InfoResponse
-	var err error
+	var (
+		data map[string]pb.InfoResponse
+		err  error
+	)
 
 	query := r.FormValue("target")
 	if query == "" {
@@ -833,7 +849,7 @@ func functionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, nil, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)

@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -148,6 +149,13 @@ type Expr interface {
 	GetCommonBoundaries() (int32, int32)
 	// SetCommonBoundaries changes common boundaries (`from` and `until`) for current expression
 	SetCommonBoundaries(from, until int32)
+
+	// GetContext returns current context of the Expr
+	GetContext() context.Context
+	// SetContext sets new context for the Expr
+	SetContext(context.Context)
+	// WithContext returns current Expr with context being replaced
+	WithContext(context.Context) Expr
 
 	toExpr() interface{}
 }

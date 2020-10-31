@@ -133,7 +133,8 @@ func (f *asPercent) Do(e parser.Expr, from, until int32, values map[parser.Metri
 				seriesNameExprs[i] = parser.NewTargetExpr(seriesName)
 			}
 
-			result, err := f.Evaluator.EvalExpr(parser.NewExprTyped("sumSeries", seriesNameExprs), from, until, values)
+			expr := parser.NewExprTyped("sumSeries", seriesNameExprs).WithContext(e.GetContext())
+			result, err := f.Evaluator.EvalExpr(expr, from, until, values)
 
 			if err != nil {
 				return nil, err
