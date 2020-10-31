@@ -56,6 +56,6 @@ require (
 	go.uber.org/zap v1.7.1
 	golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 // indirect
 	golang.org/x/text v0.3.0 // indirect
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.0.1 // indirect
+	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.1.1 // indirect
 )

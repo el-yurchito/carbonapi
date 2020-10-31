@@ -19,8 +19,8 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 
-	"bitbucket.org/tebeka/strftime"
 	"github.com/evmar/gocairo/cairo"
+	"github.com/tebeka/strftime"
 )
 
 const HaveGraphSupport = true
