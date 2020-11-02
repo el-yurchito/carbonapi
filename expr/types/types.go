@@ -26,7 +26,6 @@ type MetricData struct {
 
 	GraphOptions
 
-	RequestedTarget   string `json:"requested_target"`
 	ValuesPerPoint    int
 	aggregatedValues  []float64
 	aggregatedAbsent  []bool
