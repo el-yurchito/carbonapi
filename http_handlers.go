@@ -271,6 +271,11 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	errors := make(map[string]string)
 	metricValues := make(map[parser.MetricRequest][]*types.MetricData)
 
+	// keep information about targets being rewritten with expr.RewriteExpr
+	// if there was a chain of rewrites then only the first one and the last one are kept
+	// key are replaced targets, values are original ones
+	targetsHistory := make(map[string]string, len(targets))
+
 	// it's important to use for ... i < len ... here instead of for ... range ...
 	// because slice's size may change during iteration
 	for i := 0; i < len(targets); i++ {
@@ -408,7 +413,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 					// backward replacement metric names
 					if metricReplacement, exists := metricReplacements[response.request]; exists {
 						for i := range newMetricData {
-							newMetricData[i].Name = config.patternProcessor.RestoreMetricName(newMetricData[i].Name, metricReplacement)
+							newMetricData[i].Name = config.patternProcessor.RestoreMetricName(
+								newMetricData[i].Name,
+								metricReplacement,
+							)
 						}
 					}
 
@@ -436,37 +444,64 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 			accessLogDetails.Reason = err.Error()
 			logAsError = true
 			return
-		} else if rewritten {
-			targets = append(targets, newTargets...)
-		} else {
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						logger.Error(
-							"panic during eval:",
-							zap.String("cache_key", cacheKey),
-							zap.Any("reason", r),
-							zap.Stack("stack"),
-						)
-						logAsError = true
-					}
-				}()
+		}
 
-				callStack := timer.NewFunctionCallStack()
-				functionCallStacks = append(functionCallStacks, callStack)
-				exp.SetContext(callStack.Store(nil))
-
-				expressions, err := expr.EvalExpr(exp, from32, until32, metricValues)
-				if err != nil && err != parser.ErrSeriesDoesNotExist {
-					errors[target] = err.Error()
-					accessLogDetails.Reason = err.Error()
-					logAsError = true
-					return
+		if rewritten {
+			// memorize original target for each new one
+			for _, nt := range newTargets {
+				if record, ok := targetsHistory[target]; ok {
+					// if current target is the replacement of another target
+					// then keep that another target (the original one)
+					targetsHistory[nt] = record
+				} else {
+					// otherwise it is original target, keep the replacement
+					targetsHistory[nt] = target
 				}
 
-				results = append(results, expressions...)
-			}()
+				// append new target to common list; it will be processed as well
+				targets = append(targets, nt)
+			}
+
+			// don't evaluate rewritten target, just move to the next one
+			continue
 		}
+
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error(
+						"panic during eval:",
+						zap.String("cache_key", cacheKey),
+						zap.Any("reason", r),
+						zap.Stack("stack"),
+					)
+					logAsError = true
+				}
+			}()
+
+			callStack := timer.NewFunctionCallStack()
+			functionCallStacks = append(functionCallStacks, callStack)
+			exp.SetContext(callStack.Store(nil))
+
+			expressions, err := expr.EvalExpr(exp, from32, until32, metricValues)
+			if err != nil && err != parser.ErrSeriesDoesNotExist {
+				errors[target] = err.Error()
+				accessLogDetails.Reason = err.Error()
+				logAsError = true
+				return
+			}
+
+			// return requested target for each resulting metric
+			// considering the fact that target might have been rewritten
+			requestedTarget, ok := targetsHistory[target]
+			if !ok {
+				requestedTarget = target
+			}
+			for _, data := range expressions {
+				data.RequestedTarget = requestedTarget
+				results = append(results, data)
+			}
+		}()
 	}
 
 	var body []byte
