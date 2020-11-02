@@ -36,6 +36,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/cairo/png"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/rewrite"
+	"github.com/go-graphite/carbonapi/expr/timer"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/go-graphite/carbonapi/tagdb"
 	"github.com/go-graphite/carbonapi/util"
@@ -119,6 +120,8 @@ var zipperMetrics = struct {
 // BuildVersion is provided to be overridden at build time. Eg. go build -ldflags -X 'main.BuildVersion=...'
 var BuildVersion = "(development build)"
 
+var hostname string
+
 // for testing
 var timeNow = time.Now
 
@@ -147,13 +150,55 @@ func buildParseErrorString(target, e string, err error) string {
 	return msg
 }
 
-func deferredAccessLogging(accessLogger *zap.Logger, accessLogDetails *carbonapipb.AccessLogDetails, t time.Time, logAsError bool) {
+func deferredAccessLogging(
+	accessLogger *zap.Logger,
+	accessLogDetails *carbonapipb.AccessLogDetails,
+	functionCallStacks []*timer.FunctionCallStack,
+	t time.Time,
+	logAsError bool,
+) {
+	if functionCallStacks != nil && config.FunctionCalls.WriteLog {
+		calls := make([]*timer.FunctionCall, 0, 64)
+		for _, stack := range functionCallStacks {
+			calls = append(calls, stack.GetCalls()...)
+		}
+		accessLogDetails.FunctionCalls = calls
+	}
+
 	accessLogDetails.Runtime = time.Since(t).Seconds()
 	if logAsError {
 		accessLogger.Error("request failed", zap.Any("data", *accessLogDetails))
 	} else {
 		accessLogDetails.HttpCode = http.StatusOK
 		accessLogger.Info("request served", zap.Any("data", *accessLogDetails))
+	}
+}
+
+func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) {
+	if functionCallStacks == nil || !config.FunctionCalls.SendMetrics {
+		return
+	}
+
+	client := statsdLimiter.Get()
+	defer client.Release()
+
+	for _, stack := range functionCallStacks {
+		for _, call := range stack.GetIsolatedCalls() {
+			timeRangeMarks := call.TimeRangeMarks()
+			tags := fmt.Sprintf(
+				";hostname=%s;function=%s;range.requested=%d;range.days=%d;range.hours=%d;range.minutes=%d;range.seconds=%d",
+				hostname,
+				call.Name,
+				timeRangeMarks.Range,
+				timeRangeMarks.Days,
+				timeRangeMarks.Hours,
+				timeRangeMarks.Minutes,
+				timeRangeMarks.Seconds,
+			)
+
+			client.Timing("function-calls.time.duration"+tags, call.ExecutionTime)
+			client.Timing("function-calls.time.interval"+tags, timeRangeMarks.Range)
+		}
 	}
 }
 
@@ -234,6 +279,11 @@ type cacheConfig struct {
 	DefaultTimeoutSec int32    `mapstructure:"defaultTimeoutSec"`
 }
 
+type functionCallsConfig struct {
+	SendMetrics bool
+	WriteLog    bool
+}
+
 type graphiteConfig struct {
 	Pattern  string
 	Host     string
@@ -246,31 +296,39 @@ type rewriteConfig struct {
 	To   string
 }
 
+type statsdConfig struct {
+	Enabled bool
+	Address string
+	Prefix  string
+}
+
 var config = struct {
-	ExtrapolateExperiment      bool               `mapstructure:"extrapolateExperiment"`
-	Logger                     []zapwriter.Config `mapstructure:"logger"`
-	Listen                     string             `mapstructure:"listen"`
-	Concurency                 int                `mapstructure:"concurency"`
-	Cache                      cacheConfig        `mapstructure:"cache"`
-	Cpus                       int                `mapstructure:"cpus"`
-	TimezoneString             string             `mapstructure:"tz"`
-	UnicodeRangeTables         []string           `mapstructure:"unicodeRangeTables"`
-	Graphite                   graphiteConfig     `mapstructure:"graphite"`
-	IdleConnections            int                `mapstructure:"idleConnections"`
-	PidFile                    string             `mapstructure:"pidFile"`
-	SendGlobsAsIs              bool               `mapstructure:"sendGlobsAsIs"`
-	AlwaysSendGlobsAsIs        bool               `mapstructure:"alwaysSendGlobsAsIs"`
-	MaxBatchSize               int                `mapstructure:"maxBatchSize"`
-	Zipper                     string             `mapstructure:"zipper"`
-	Upstreams                  realZipper.Config  `mapstructure:"upstreams"`
-	ExpireDelaySec             int32              `mapstructure:"expireDelaySec"`
-	GraphiteWeb09Compatibility bool               `mapstructure:"graphite09compat"`
-	IgnoreClientTimeout        bool               `mapstructure:"ignoreClientTimeout"`
-	DefaultColors              map[string]string  `mapstructure:"defaultColors"`
-	GraphTemplates             string             `mapstructure:"graphTemplates"`
-	FunctionsConfigs           map[string]string  `mapstructure:"functionsConfig"`
-	Rewrite                    []rewriteConfig    `mapstructure:"rewrite"`
-	TagDB                      tagdb.Config       `mapstructure:"tagDB"`
+	ExtrapolateExperiment      bool                `mapstructure:"extrapolateExperiment"`
+	Logger                     []zapwriter.Config  `mapstructure:"logger"`
+	Listen                     string              `mapstructure:"listen"`
+	Concurency                 int                 `mapstructure:"concurency"`
+	Cache                      cacheConfig         `mapstructure:"cache"`
+	Cpus                       int                 `mapstructure:"cpus"`
+	TimezoneString             string              `mapstructure:"tz"`
+	UnicodeRangeTables         []string            `mapstructure:"unicodeRangeTables"`
+	Graphite                   graphiteConfig      `mapstructure:"graphite"`
+	Statsd                     statsdConfig        `mapstructure:"statsd"`
+	IdleConnections            int                 `mapstructure:"idleConnections"`
+	PidFile                    string              `mapstructure:"pidFile"`
+	SendGlobsAsIs              bool                `mapstructure:"sendGlobsAsIs"`
+	AlwaysSendGlobsAsIs        bool                `mapstructure:"alwaysSendGlobsAsIs"`
+	MaxBatchSize               int                 `mapstructure:"maxBatchSize"`
+	Zipper                     string              `mapstructure:"zipper"`
+	Upstreams                  realZipper.Config   `mapstructure:"upstreams"`
+	ExpireDelaySec             int32               `mapstructure:"expireDelaySec"`
+	GraphiteWeb09Compatibility bool                `mapstructure:"graphite09compat"`
+	IgnoreClientTimeout        bool                `mapstructure:"ignoreClientTimeout"`
+	FunctionCalls              functionCallsConfig `mapstructure:"functionCalls"`
+	DefaultColors              map[string]string   `mapstructure:"defaultColors"`
+	GraphTemplates             string              `mapstructure:"graphTemplates"`
+	FunctionsConfigs           map[string]string   `mapstructure:"functionsConfig"`
+	Rewrite                    []rewriteConfig     `mapstructure:"rewrite"`
+	TagDB                      tagdb.Config        `mapstructure:"tagDB"`
 
 	queryCache cache.BytesCache
 	findCache  cache.BytesCache
@@ -594,7 +652,7 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 		// register our metrics with graphite
 		graphite := g2g.NewGraphite(host, config.Graphite.Interval, 10*time.Second)
 
-		hostname, _ := os.Hostname()
+		hostname, _ = os.Hostname()
 		hostname = strings.Replace(hostname, ".", "_", -1)
 
 		prefix := config.Graphite.Prefix
@@ -656,11 +714,17 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 
 	}
 
+	statsdLimiter, err = NewStatsdLimiter(config.Statsd)
+	if err != nil {
+		logger.Error("Failed to initialize statsd", zap.Error(err))
+	}
+
 	if config.PidFile != "" {
 		pidfile.SetPidfilePath(config.PidFile)
 		err := pidfile.Write()
 		if err != nil {
-			logger.Fatal("error during pidfile.Write()",
+			logger.Fatal(
+				"error during pidfile.Write()",
 				zap.Error(err),
 			)
 		}

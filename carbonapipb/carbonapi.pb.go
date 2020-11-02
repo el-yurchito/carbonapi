@@ -10,6 +10,7 @@
 
 	It has these top-level messages:
 		AccessLogDetails
+		FunctionCall
 */
 package carbonapipb
 
@@ -31,34 +32,35 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 type AccessLogDetails struct {
-	Handler                       string   `protobuf:"bytes,1,opt,name=handler,proto3" json:"handler,omitempty"`
-	CarbonapiUuid                 string   `protobuf:"bytes,2,opt,name=carbonapi_uuid,json=carbonapiUuid,proto3" json:"carbonapi_uuid,omitempty"`
-	Username                      string   `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
-	Url                           string   `protobuf:"bytes,4,opt,name=url,proto3" json:"url,omitempty"`
-	PeerIp                        string   `protobuf:"bytes,5,opt,name=peer_ip,json=peerIp,proto3" json:"peer_ip,omitempty"`
-	PeerPort                      string   `protobuf:"bytes,6,opt,name=peer_port,json=peerPort,proto3" json:"peer_port,omitempty"`
-	Host                          string   `protobuf:"bytes,7,opt,name=host,proto3" json:"host,omitempty"`
-	Referer                       string   `protobuf:"bytes,8,opt,name=referer,proto3" json:"referer,omitempty"`
-	Format                        string   `protobuf:"bytes,9,opt,name=format,proto3" json:"format,omitempty"`
-	UseCache                      bool     `protobuf:"varint,10,opt,name=use_cache,json=useCache,proto3" json:"use_cache,omitempty"`
-	Targets                       []string `protobuf:"bytes,11,rep,name=targets" json:"targets,omitempty"`
-	CacheTimeout                  int32    `protobuf:"varint,12,opt,name=cache_timeout,json=cacheTimeout,proto3" json:"cache_timeout,omitempty"`
-	Metrics                       []string `protobuf:"bytes,13,rep,name=metrics" json:"metrics,omitempty"`
-	HaveNonFatalErrors            bool     `protobuf:"varint,14,opt,name=have_non_fatal_errors,json=haveNonFatalErrors,proto3" json:"have_non_fatal_errors,omitempty"`
-	Runtime                       float64  `protobuf:"fixed64,15,opt,name=runtime,proto3" json:"runtime,omitempty"`
-	HttpCode                      int32    `protobuf:"varint,16,opt,name=http_code,json=httpCode,proto3" json:"http_code,omitempty"`
-	CarbonzipperResponseSizeBytes int64    `protobuf:"varint,17,opt,name=carbonzipper_response_size_bytes,json=carbonzipperResponseSizeBytes,proto3" json:"carbonzipper_response_size_bytes,omitempty"`
-	CarbonapiResponseSizeBytes    int64    `protobuf:"varint,18,opt,name=carbonapi_response_size_bytes,json=carbonapiResponseSizeBytes,proto3" json:"carbonapi_response_size_bytes,omitempty"`
-	Reason                        string   `protobuf:"bytes,19,opt,name=reason,proto3" json:"reason,omitempty"`
-	SendGlobs                     bool     `protobuf:"varint,20,opt,name=send_globs,json=sendGlobs,proto3" json:"send_globs,omitempty"`
-	From                          int32    `protobuf:"varint,21,opt,name=from,proto3" json:"from,omitempty"`
-	Until                         int32    `protobuf:"varint,22,opt,name=until,proto3" json:"until,omitempty"`
-	Tz                            string   `protobuf:"bytes,23,opt,name=tz,proto3" json:"tz,omitempty"`
-	FromRaw                       string   `protobuf:"bytes,24,opt,name=from_raw,json=fromRaw,proto3" json:"from_raw,omitempty"`
-	UntilRaw                      string   `protobuf:"bytes,25,opt,name=until_raw,json=untilRaw,proto3" json:"until_raw,omitempty"`
-	Uri                           string   `protobuf:"bytes,26,opt,name=uri,proto3" json:"uri,omitempty"`
-	FromCache                     bool     `protobuf:"varint,27,opt,name=from_cache,json=fromCache,proto3" json:"from_cache,omitempty"`
-	ZipperRequests                int64    `protobuf:"varint,28,opt,name=zipper_requests,json=zipperRequests,proto3" json:"zipper_requests,omitempty"`
+	Handler                       string          `protobuf:"bytes,1,opt,name=handler,proto3" json:"handler,omitempty"`
+	CarbonapiUuid                 string          `protobuf:"bytes,2,opt,name=carbonapi_uuid,json=carbonapiUuid,proto3" json:"carbonapi_uuid,omitempty"`
+	Username                      string          `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
+	Url                           string          `protobuf:"bytes,4,opt,name=url,proto3" json:"url,omitempty"`
+	PeerIp                        string          `protobuf:"bytes,5,opt,name=peer_ip,json=peerIp,proto3" json:"peer_ip,omitempty"`
+	PeerPort                      string          `protobuf:"bytes,6,opt,name=peer_port,json=peerPort,proto3" json:"peer_port,omitempty"`
+	Host                          string          `protobuf:"bytes,7,opt,name=host,proto3" json:"host,omitempty"`
+	Referer                       string          `protobuf:"bytes,8,opt,name=referer,proto3" json:"referer,omitempty"`
+	Format                        string          `protobuf:"bytes,9,opt,name=format,proto3" json:"format,omitempty"`
+	UseCache                      bool            `protobuf:"varint,10,opt,name=use_cache,json=useCache,proto3" json:"use_cache,omitempty"`
+	Targets                       []string        `protobuf:"bytes,11,rep,name=targets" json:"targets,omitempty"`
+	CacheTimeout                  int32           `protobuf:"varint,12,opt,name=cache_timeout,json=cacheTimeout,proto3" json:"cache_timeout,omitempty"`
+	Metrics                       []string        `protobuf:"bytes,13,rep,name=metrics" json:"metrics,omitempty"`
+	HaveNonFatalErrors            bool            `protobuf:"varint,14,opt,name=have_non_fatal_errors,json=haveNonFatalErrors,proto3" json:"have_non_fatal_errors,omitempty"`
+	Runtime                       float64         `protobuf:"fixed64,15,opt,name=runtime,proto3" json:"runtime,omitempty"`
+	HttpCode                      int32           `protobuf:"varint,16,opt,name=http_code,json=httpCode,proto3" json:"http_code,omitempty"`
+	CarbonzipperResponseSizeBytes int64           `protobuf:"varint,17,opt,name=carbonzipper_response_size_bytes,json=carbonzipperResponseSizeBytes,proto3" json:"carbonzipper_response_size_bytes,omitempty"`
+	CarbonapiResponseSizeBytes    int64           `protobuf:"varint,18,opt,name=carbonapi_response_size_bytes,json=carbonapiResponseSizeBytes,proto3" json:"carbonapi_response_size_bytes,omitempty"`
+	Reason                        string          `protobuf:"bytes,19,opt,name=reason,proto3" json:"reason,omitempty"`
+	SendGlobs                     bool            `protobuf:"varint,20,opt,name=send_globs,json=sendGlobs,proto3" json:"send_globs,omitempty"`
+	From                          int32           `protobuf:"varint,21,opt,name=from,proto3" json:"from,omitempty"`
+	Until                         int32           `protobuf:"varint,22,opt,name=until,proto3" json:"until,omitempty"`
+	Tz                            string          `protobuf:"bytes,23,opt,name=tz,proto3" json:"tz,omitempty"`
+	FromRaw                       string          `protobuf:"bytes,24,opt,name=from_raw,json=fromRaw,proto3" json:"from_raw,omitempty"`
+	UntilRaw                      string          `protobuf:"bytes,25,opt,name=until_raw,json=untilRaw,proto3" json:"until_raw,omitempty"`
+	Uri                           string          `protobuf:"bytes,26,opt,name=uri,proto3" json:"uri,omitempty"`
+	FromCache                     bool            `protobuf:"varint,27,opt,name=from_cache,json=fromCache,proto3" json:"from_cache,omitempty"`
+	ZipperRequests                int64           `protobuf:"varint,28,opt,name=zipper_requests,json=zipperRequests,proto3" json:"zipper_requests,omitempty"`
+	FunctionCalls                 []*FunctionCall `protobuf:"bytes,29,rep,name=function_calls,json=functionCalls" json:"function_calls,omitempty"`
 }
 
 func (m *AccessLogDetails) Reset()                    { *m = AccessLogDetails{} }
@@ -262,8 +264,104 @@ func (m *AccessLogDetails) GetZipperRequests() int64 {
 	return 0
 }
 
+func (m *AccessLogDetails) GetFunctionCalls() []*FunctionCall {
+	if m != nil {
+		return m.FunctionCalls
+	}
+	return nil
+}
+
+type FunctionCall struct {
+	FullExpression string `protobuf:"bytes,1,opt,name=fullExpression,proto3" json:"fullExpression,omitempty"`
+	Target         string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	From           int32  `protobuf:"varint,3,opt,name=from,proto3" json:"from,omitempty"`
+	Until          int32  `protobuf:"varint,4,opt,name=until,proto3" json:"until,omitempty"`
+	Parent         int32  `protobuf:"varint,5,opt,name=parent,proto3" json:"parent,omitempty"`
+	Order          int32  `protobuf:"varint,6,opt,name=order,proto3" json:"order,omitempty"`
+	CallStarted    int64  `protobuf:"varint,7,opt,name=call_started,json=callStarted,proto3" json:"call_started,omitempty"`
+	CallFinished   int64  `protobuf:"varint,8,opt,name=call_finished,json=callFinished,proto3" json:"call_finished,omitempty"`
+	Failed         bool   `protobuf:"varint,9,opt,name=failed,proto3" json:"failed,omitempty"`
+	ErrorMessage   string `protobuf:"bytes,10,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+}
+
+func (m *FunctionCall) Reset()                    { *m = FunctionCall{} }
+func (m *FunctionCall) String() string            { return proto.CompactTextString(m) }
+func (*FunctionCall) ProtoMessage()               {}
+func (*FunctionCall) Descriptor() ([]byte, []int) { return fileDescriptorCarbonapi, []int{1} }
+
+func (m *FunctionCall) GetFullExpression() string {
+	if m != nil {
+		return m.FullExpression
+	}
+	return ""
+}
+
+func (m *FunctionCall) GetTarget() string {
+	if m != nil {
+		return m.Target
+	}
+	return ""
+}
+
+func (m *FunctionCall) GetFrom() int32 {
+	if m != nil {
+		return m.From
+	}
+	return 0
+}
+
+func (m *FunctionCall) GetUntil() int32 {
+	if m != nil {
+		return m.Until
+	}
+	return 0
+}
+
+func (m *FunctionCall) GetParent() int32 {
+	if m != nil {
+		return m.Parent
+	}
+	return 0
+}
+
+func (m *FunctionCall) GetOrder() int32 {
+	if m != nil {
+		return m.Order
+	}
+	return 0
+}
+
+func (m *FunctionCall) GetCallStarted() int64 {
+	if m != nil {
+		return m.CallStarted
+	}
+	return 0
+}
+
+func (m *FunctionCall) GetCallFinished() int64 {
+	if m != nil {
+		return m.CallFinished
+	}
+	return 0
+}
+
+func (m *FunctionCall) GetFailed() bool {
+	if m != nil {
+		return m.Failed
+	}
+	return false
+}
+
+func (m *FunctionCall) GetErrorMessage() string {
+	if m != nil {
+		return m.ErrorMessage
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*AccessLogDetails)(nil), "carbonapipb.AccessLogDetails")
+	proto.RegisterType((*FunctionCall)(nil), "carbonapipb.FunctionCall")
 }
 func (m *AccessLogDetails) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -500,6 +598,96 @@ func (m *AccessLogDetails) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintCarbonapi(dAtA, i, uint64(m.ZipperRequests))
 	}
+	if len(m.FunctionCalls) > 0 {
+		for _, msg := range m.FunctionCalls {
+			dAtA[i] = 0xea
+			i++
+			dAtA[i] = 0x1
+			i++
+			i = encodeVarintCarbonapi(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	return i, nil
+}
+
+func (m *FunctionCall) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FunctionCall) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.FullExpression) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(len(m.FullExpression)))
+		i += copy(dAtA[i:], m.FullExpression)
+	}
+	if len(m.Target) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(len(m.Target)))
+		i += copy(dAtA[i:], m.Target)
+	}
+	if m.From != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(m.From))
+	}
+	if m.Until != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(m.Until))
+	}
+	if m.Parent != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(m.Parent))
+	}
+	if m.Order != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(m.Order))
+	}
+	if m.CallStarted != 0 {
+		dAtA[i] = 0x38
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(m.CallStarted))
+	}
+	if m.CallFinished != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(m.CallFinished))
+	}
+	if m.Failed {
+		dAtA[i] = 0x48
+		i++
+		if m.Failed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.ErrorMessage) > 0 {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintCarbonapi(dAtA, i, uint64(len(m.ErrorMessage)))
+		i += copy(dAtA[i:], m.ErrorMessage)
+	}
 	return i, nil
 }
 
@@ -636,6 +824,51 @@ func (m *AccessLogDetails) Size() (n int) {
 	}
 	if m.ZipperRequests != 0 {
 		n += 2 + sovCarbonapi(uint64(m.ZipperRequests))
+	}
+	if len(m.FunctionCalls) > 0 {
+		for _, e := range m.FunctionCalls {
+			l = e.Size()
+			n += 2 + l + sovCarbonapi(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *FunctionCall) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.FullExpression)
+	if l > 0 {
+		n += 1 + l + sovCarbonapi(uint64(l))
+	}
+	l = len(m.Target)
+	if l > 0 {
+		n += 1 + l + sovCarbonapi(uint64(l))
+	}
+	if m.From != 0 {
+		n += 1 + sovCarbonapi(uint64(m.From))
+	}
+	if m.Until != 0 {
+		n += 1 + sovCarbonapi(uint64(m.Until))
+	}
+	if m.Parent != 0 {
+		n += 1 + sovCarbonapi(uint64(m.Parent))
+	}
+	if m.Order != 0 {
+		n += 1 + sovCarbonapi(uint64(m.Order))
+	}
+	if m.CallStarted != 0 {
+		n += 1 + sovCarbonapi(uint64(m.CallStarted))
+	}
+	if m.CallFinished != 0 {
+		n += 1 + sovCarbonapi(uint64(m.CallFinished))
+	}
+	if m.Failed {
+		n += 2
+	}
+	l = len(m.ErrorMessage)
+	if l > 0 {
+		n += 1 + l + sovCarbonapi(uint64(l))
 	}
 	return n
 }
@@ -1377,6 +1610,308 @@ func (m *AccessLogDetails) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 29:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FunctionCalls", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCarbonapi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FunctionCalls = append(m.FunctionCalls, &FunctionCall{})
+			if err := m.FunctionCalls[len(m.FunctionCalls)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCarbonapi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCarbonapi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FunctionCall) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCarbonapi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FunctionCall: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FunctionCall: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FullExpression", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCarbonapi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FullExpression = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Target", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCarbonapi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Target = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field From", wireType)
+			}
+			m.From = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.From |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Until", wireType)
+			}
+			m.Until = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Until |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Parent", wireType)
+			}
+			m.Parent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Parent |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Order", wireType)
+			}
+			m.Order = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Order |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CallStarted", wireType)
+			}
+			m.CallStarted = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CallStarted |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CallFinished", wireType)
+			}
+			m.CallFinished = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CallFinished |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Failed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Failed = bool(v != 0)
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ErrorMessage", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCarbonapi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCarbonapi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ErrorMessage = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipCarbonapi(dAtA[iNdEx:])
@@ -1506,40 +2041,50 @@ var (
 func init() { proto.RegisterFile("carbonapi.proto", fileDescriptorCarbonapi) }
 
 var fileDescriptorCarbonapi = []byte{
-	// 547 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x93, 0xcf, 0x6e, 0xd3, 0x40,
-	0x10, 0xc6, 0xe5, 0xa6, 0x75, 0x93, 0x6d, 0x9b, 0x96, 0xa5, 0x7f, 0xa6, 0x2d, 0x8d, 0x2c, 0x10,
-	0x22, 0x27, 0x24, 0xc4, 0x13, 0xb4, 0x05, 0x2a, 0x24, 0x84, 0x90, 0x81, 0xf3, 0x6a, 0x63, 0x4f,
-	0x92, 0x95, 0x1c, 0xaf, 0xd9, 0x5d, 0x53, 0x91, 0x27, 0xe4, 0xc8, 0x23, 0xa0, 0x9c, 0x79, 0x08,
-	0x34, 0xb3, 0x89, 0x41, 0x82, 0x9b, 0xbf, 0xdf, 0xcc, 0x7c, 0x3b, 0xbb, 0x33, 0x16, 0x87, 0x85,
-	0x76, 0x13, 0x5b, 0xeb, 0xc6, 0x3c, 0x6f, 0x9c, 0x0d, 0x56, 0xee, 0x75, 0xa0, 0x99, 0x3c, 0xfe,
-	0x95, 0x8a, 0xa3, 0xeb, 0xa2, 0x40, 0xef, 0xdf, 0xd9, 0xd9, 0x2b, 0x0c, 0xda, 0x54, 0x5e, 0x82,
-	0xd8, 0x9d, 0xeb, 0xba, 0xac, 0xd0, 0x41, 0x92, 0x25, 0xe3, 0x41, 0xbe, 0x91, 0xf2, 0xa9, 0x18,
-	0x76, 0xd5, 0xaa, 0x6d, 0x4d, 0x09, 0x5b, 0x9c, 0x70, 0xd0, 0xd1, 0xcf, 0xad, 0x29, 0xe5, 0x85,
-	0xe8, 0xb7, 0x1e, 0x5d, 0xad, 0x17, 0x08, 0x3d, 0x4e, 0xe8, 0xb4, 0x3c, 0x12, 0xbd, 0xd6, 0x55,
-	0xb0, 0xcd, 0x98, 0x3e, 0xe5, 0x99, 0xd8, 0x6d, 0x10, 0x9d, 0x32, 0x0d, 0xec, 0x30, 0x4d, 0x49,
-	0xbe, 0x6d, 0xe4, 0xa5, 0x18, 0x70, 0xa0, 0xb1, 0x2e, 0x40, 0x1a, 0x7d, 0x08, 0x7c, 0xb0, 0x2e,
-	0x48, 0x29, 0xb6, 0xe7, 0xd6, 0x07, 0xd8, 0x65, 0xce, 0xdf, 0xd4, 0xb8, 0xc3, 0x29, 0x3a, 0x74,
-	0xd0, 0x8f, 0x8d, 0xaf, 0xa5, 0x3c, 0x15, 0xe9, 0xd4, 0xba, 0x85, 0x0e, 0x30, 0x88, 0x47, 0x44,
-	0x45, 0x47, 0xb4, 0x1e, 0x55, 0xa1, 0x8b, 0x39, 0x82, 0xc8, 0x92, 0x71, 0x9f, 0x5b, 0xbd, 0x25,
-	0x4d, 0x76, 0x41, 0xbb, 0x19, 0x06, 0x0f, 0x7b, 0x59, 0x8f, 0xec, 0xd6, 0x52, 0x3e, 0x11, 0x07,
-	0x5c, 0xa2, 0x82, 0x59, 0xa0, 0x6d, 0x03, 0xec, 0x67, 0xc9, 0x78, 0x27, 0xdf, 0x67, 0xf8, 0x29,
-	0x32, 0x2a, 0x5f, 0x60, 0x70, 0xa6, 0xf0, 0x70, 0x10, 0xcb, 0xd7, 0x52, 0xbe, 0x10, 0x27, 0x73,
-	0xfd, 0x15, 0x55, 0x6d, 0x6b, 0x35, 0xd5, 0x41, 0x57, 0x0a, 0x9d, 0xb3, 0xce, 0xc3, 0x90, 0x3b,
-	0x90, 0x14, 0x7c, 0x6f, 0xeb, 0x37, 0x14, 0x7a, 0xcd, 0x11, 0xbe, 0x5a, 0x5b, 0xd3, 0x71, 0x70,
-	0x98, 0x25, 0xe3, 0x24, 0xdf, 0x48, 0xba, 0xc2, 0x3c, 0x84, 0x46, 0x15, 0xb6, 0x44, 0x38, 0xe2,
-	0x3e, 0xfa, 0x04, 0x6e, 0x6d, 0x89, 0xf2, 0x4e, 0x64, 0x71, 0x34, 0x4b, 0xd3, 0x34, 0xe8, 0x94,
-	0x43, 0xdf, 0xd8, 0xda, 0xa3, 0xf2, 0x66, 0x89, 0x6a, 0xf2, 0x2d, 0xa0, 0x87, 0x07, 0x59, 0x32,
-	0xee, 0xe5, 0x57, 0x7f, 0xe7, 0xe5, 0xeb, 0xb4, 0x8f, 0x66, 0x89, 0x37, 0x94, 0x24, 0xaf, 0xc5,
-	0xd5, 0x9f, 0xc9, 0xff, 0xcf, 0x45, 0xb2, 0xcb, 0x45, 0x97, 0xf4, 0xaf, 0xc5, 0xa9, 0x48, 0x1d,
-	0x6a, 0x6f, 0x6b, 0x78, 0x18, 0x67, 0x10, 0x95, 0xbc, 0x12, 0xc2, 0x63, 0x5d, 0xaa, 0x59, 0x65,
-	0x27, 0x1e, 0x8e, 0xf9, 0x09, 0x06, 0x44, 0xee, 0x08, 0xd0, 0xa0, 0xa7, 0xce, 0x2e, 0xe0, 0x84,
-	0xaf, 0xc6, 0xdf, 0xf2, 0x58, 0xec, 0xd0, 0xed, 0x2b, 0x38, 0x65, 0x18, 0x85, 0x1c, 0x8a, 0xad,
-	0xb0, 0x84, 0x33, 0x36, 0xdf, 0x0a, 0x4b, 0x79, 0x2e, 0xfa, 0x94, 0xad, 0x9c, 0xbe, 0x07, 0x88,
-	0xfb, 0x40, 0x3a, 0xd7, 0xf7, 0x3c, 0x77, 0xaa, 0xe1, 0xd8, 0xf9, 0x7a, 0x45, 0x09, 0x50, 0x90,
-	0x57, 0xd4, 0xc0, 0xc5, 0x66, 0x45, 0x0d, 0xb5, 0xc8, 0x4e, 0x71, 0x4f, 0x2e, 0x63, 0x8b, 0x44,
-	0xe2, 0xa2, 0x3c, 0x13, 0x87, 0xdd, 0xfb, 0x7e, 0x69, 0xd1, 0x07, 0x0f, 0x8f, 0xf8, 0x39, 0x86,
-	0x9b, 0xe7, 0x8c, 0xf4, 0x66, 0xff, 0xfb, 0x6a, 0x94, 0xfc, 0x58, 0x8d, 0x92, 0x9f, 0xab, 0x51,
-	0x32, 0x49, 0xf9, 0x87, 0x7c, 0xf9, 0x3b, 0x00, 0x00, 0xff, 0xff, 0xb6, 0xd6, 0xc1, 0xf2, 0xa3,
-	0x03, 0x00, 0x00,
+	// 717 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x54, 0x5b, 0x6e, 0xf3, 0x44,
+	0x14, 0xc6, 0x71, 0x73, 0x9b, 0x5c, 0x1a, 0x86, 0xff, 0x4f, 0xa7, 0x2d, 0x89, 0x4c, 0x11, 0x90,
+	0xa7, 0x4a, 0xc0, 0x06, 0x68, 0x4b, 0x5b, 0x21, 0x01, 0x42, 0x2e, 0x3c, 0x8f, 0x26, 0xf6, 0x49,
+	0x32, 0x92, 0xe3, 0x31, 0x33, 0x63, 0x0a, 0x59, 0x09, 0x7b, 0x40, 0x62, 0x1d, 0x3c, 0xb2, 0x04,
+	0x54, 0x36, 0x82, 0xce, 0x19, 0x27, 0x44, 0xd0, 0x37, 0x7f, 0xdf, 0xb9, 0xcc, 0xb9, 0x7d, 0x66,
+	0xa7, 0x99, 0xb2, 0x4b, 0x53, 0xaa, 0x4a, 0x5f, 0x57, 0xd6, 0x78, 0xc3, 0x07, 0x07, 0xa2, 0x5a,
+	0x5e, 0xfd, 0xde, 0x65, 0x93, 0x9b, 0x2c, 0x03, 0xe7, 0xbe, 0x36, 0xeb, 0x2f, 0xc1, 0x2b, 0x5d,
+	0x38, 0x2e, 0x58, 0x77, 0xa3, 0xca, 0xbc, 0x00, 0x2b, 0xa2, 0x24, 0x5a, 0xf4, 0xd3, 0x3d, 0xe4,
+	0x1f, 0xb1, 0xf1, 0x21, 0x5a, 0xd6, 0xb5, 0xce, 0x45, 0x8b, 0x1c, 0x46, 0x07, 0xf6, 0x87, 0x5a,
+	0xe7, 0xfc, 0x82, 0xf5, 0x6a, 0x07, 0xb6, 0x54, 0x5b, 0x10, 0x31, 0x39, 0x1c, 0x30, 0x9f, 0xb0,
+	0xb8, 0xb6, 0x85, 0x38, 0x21, 0x1a, 0x3f, 0xf9, 0x19, 0xeb, 0x56, 0x00, 0x56, 0xea, 0x4a, 0xb4,
+	0x89, 0xed, 0x20, 0xfc, 0xaa, 0xe2, 0x97, 0xac, 0x4f, 0x86, 0xca, 0x58, 0x2f, 0x3a, 0x21, 0x0f,
+	0x12, 0xdf, 0x19, 0xeb, 0x39, 0x67, 0x27, 0x1b, 0xe3, 0xbc, 0xe8, 0x12, 0x4f, 0xdf, 0x58, 0xb8,
+	0x85, 0x15, 0x58, 0xb0, 0xa2, 0x17, 0x0a, 0x6f, 0x20, 0x9f, 0xb2, 0xce, 0xca, 0xd8, 0xad, 0xf2,
+	0xa2, 0x1f, 0x9e, 0x08, 0x08, 0x9f, 0xa8, 0x1d, 0xc8, 0x4c, 0x65, 0x1b, 0x10, 0x2c, 0x89, 0x16,
+	0x3d, 0x2a, 0xf5, 0x0e, 0x31, 0xa6, 0xf3, 0xca, 0xae, 0xc1, 0x3b, 0x31, 0x48, 0x62, 0x4c, 0xd7,
+	0x40, 0xfe, 0x21, 0x1b, 0x51, 0x88, 0xf4, 0x7a, 0x0b, 0xa6, 0xf6, 0x62, 0x98, 0x44, 0x8b, 0x76,
+	0x3a, 0x24, 0xf2, 0xfb, 0xc0, 0x61, 0xf8, 0x16, 0xbc, 0xd5, 0x99, 0x13, 0xa3, 0x10, 0xde, 0x40,
+	0xfe, 0x29, 0x7b, 0xbb, 0x51, 0x3f, 0x81, 0x2c, 0x4d, 0x29, 0x57, 0xca, 0xab, 0x42, 0x82, 0xb5,
+	0xc6, 0x3a, 0x31, 0xa6, 0x0a, 0x38, 0x1a, 0xbf, 0x35, 0xe5, 0x03, 0x9a, 0xee, 0xc9, 0x42, 0xad,
+	0xd5, 0x25, 0x3e, 0x27, 0x4e, 0x93, 0x68, 0x11, 0xa5, 0x7b, 0x88, 0x2d, 0x6c, 0xbc, 0xaf, 0x64,
+	0x66, 0x72, 0x10, 0x13, 0xaa, 0xa3, 0x87, 0xc4, 0x9d, 0xc9, 0x81, 0x3f, 0xb2, 0x24, 0xac, 0x66,
+	0xa7, 0xab, 0x0a, 0xac, 0xb4, 0xe0, 0x2a, 0x53, 0x3a, 0x90, 0x4e, 0xef, 0x40, 0x2e, 0x7f, 0xf1,
+	0xe0, 0xc4, 0xbb, 0x49, 0xb4, 0x88, 0xd3, 0xd9, 0xb1, 0x5f, 0xda, 0xb8, 0x3d, 0xe9, 0x1d, 0xdc,
+	0xa2, 0x13, 0xbf, 0x61, 0xb3, 0x7f, 0x37, 0xff, 0x5a, 0x16, 0x4e, 0x59, 0x2e, 0x0e, 0x4e, 0xff,
+	0x4f, 0x31, 0x65, 0x1d, 0x0b, 0xca, 0x99, 0x52, 0xbc, 0x17, 0x76, 0x10, 0x10, 0x9f, 0x31, 0xe6,
+	0xa0, 0xcc, 0xe5, 0xba, 0x30, 0x4b, 0x27, 0xde, 0xd0, 0x08, 0xfa, 0xc8, 0x3c, 0x22, 0x81, 0x8b,
+	0x5e, 0x59, 0xb3, 0x15, 0x6f, 0xa9, 0x35, 0xfa, 0xe6, 0x6f, 0x58, 0x1b, 0xbb, 0x2f, 0xc4, 0x94,
+	0xc8, 0x00, 0xf8, 0x98, 0xb5, 0xfc, 0x4e, 0x9c, 0x51, 0xf2, 0x96, 0xdf, 0xf1, 0x73, 0xd6, 0x43,
+	0x6f, 0x69, 0xd5, 0xb3, 0x10, 0xe1, 0x1e, 0x10, 0xa7, 0xea, 0x99, 0xf6, 0x8e, 0x31, 0x64, 0x3b,
+	0x6f, 0x4e, 0x14, 0x09, 0x34, 0xd2, 0x89, 0x6a, 0x71, 0xb1, 0x3f, 0x51, 0x8d, 0x25, 0x52, 0xa6,
+	0x70, 0x27, 0x97, 0xa1, 0x44, 0x64, 0xc2, 0xa1, 0x7c, 0xc2, 0x4e, 0x0f, 0xf3, 0xfd, 0xb1, 0x06,
+	0xe7, 0x9d, 0x78, 0x9f, 0xc6, 0x31, 0xde, 0x8f, 0x33, 0xb0, 0xfc, 0x0b, 0x36, 0x5e, 0xd5, 0x65,
+	0xe6, 0xb5, 0x29, 0x65, 0xa6, 0x8a, 0xc2, 0x89, 0x59, 0x12, 0x2f, 0x06, 0x9f, 0x9d, 0x5f, 0x1f,
+	0x89, 0xf2, 0xfa, 0xa1, 0x71, 0xb9, 0x53, 0x45, 0x91, 0x8e, 0x56, 0x47, 0xc8, 0x5d, 0xfd, 0xd6,
+	0x62, 0xc3, 0x63, 0x3b, 0xff, 0x18, 0x53, 0x16, 0xc5, 0xfd, 0xcf, 0x95, 0x05, 0xe7, 0xb4, 0x29,
+	0x1b, 0xcd, 0xfe, 0x87, 0xc5, 0xe9, 0x87, 0xeb, 0x6d, 0x24, 0xdb, 0xa0, 0xc3, 0x78, 0xe3, 0xd7,
+	0xc6, 0x7b, 0x72, 0x3c, 0xde, 0x29, 0xeb, 0x54, 0xca, 0x42, 0xe9, 0x49, 0xa6, 0xed, 0xb4, 0x41,
+	0xe8, 0x6d, 0x6c, 0x0e, 0x96, 0x24, 0xda, 0x4e, 0x03, 0xe0, 0x1f, 0xb0, 0x21, 0x76, 0x28, 0x9d,
+	0x57, 0xd6, 0x43, 0x4e, 0x3a, 0x8d, 0xd3, 0x01, 0x72, 0x4f, 0x81, 0x0a, 0x2a, 0x2a, 0x0a, 0xb9,
+	0xd2, 0xa5, 0x76, 0x1b, 0xc8, 0x49, 0xb4, 0x71, 0x4a, 0x71, 0x0f, 0x0d, 0x47, 0xca, 0x55, 0xba,
+	0x80, 0x9c, 0x94, 0xdb, 0x4b, 0x1b, 0x84, 0xc1, 0x24, 0x1a, 0xb9, 0x05, 0xe7, 0xd4, 0x3a, 0xa8,
+	0xb7, 0x9f, 0x0e, 0x89, 0xfc, 0x26, 0x70, 0xb7, 0x93, 0x3f, 0x5e, 0xe6, 0xd1, 0x9f, 0x2f, 0xf3,
+	0xe8, 0xaf, 0x97, 0x79, 0xf4, 0xeb, 0xdf, 0xf3, 0x77, 0x96, 0x1d, 0xfa, 0x09, 0x7e, 0xfe, 0x4f,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0xd7, 0xc0, 0x95, 0xf9, 0x17, 0x05, 0x00, 0x00,
 }

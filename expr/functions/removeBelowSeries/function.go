@@ -18,7 +18,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &removeBelowSeries{}
 	functions := []string{"removeBelowValue", "removeAboveValue", "removeBelowPercentile", "removeAbovePercentile"}

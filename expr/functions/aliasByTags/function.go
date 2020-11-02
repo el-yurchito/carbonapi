@@ -76,13 +76,11 @@ func metricToTagMap(metric string) map[string]string {
 func (f *aliasByTags) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
-		fmt.Println("getSeriesArg missing argument")
 		return nil, err
 	}
 
 	tags, err := e.GetNodeOrTagArgs(1)
 	if err != nil {
-		fmt.Println("GetNodeOrTagArgs missing argument")
 		return nil, err
 	}
 

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 const anomalyPrefix = "resources.monitoring.anomaly_detector."
 
 type expr struct {
+	context  context.Context
 	exprType ExprType
 	target   string
 
@@ -451,6 +453,19 @@ func (e *expr) SetCommonBoundaries(from, until int32) {
 	e.until = until
 }
 
+func (e *expr) GetContext() context.Context {
+	return e.context
+}
+
+func (e *expr) SetContext(ctx context.Context) {
+	e.deepReplaceContext(ctx)
+}
+
+func (e *expr) WithContext(ctx context.Context) Expr {
+	e.deepReplaceContext(ctx)
+	return e
+}
+
 func (e *expr) insertFirstArg(exp *expr) error {
 	if e.exprType != EtFunc {
 		return fmt.Errorf("pipe to not a function")
@@ -548,6 +563,7 @@ func pipe(exp *expr, e string) (*expr, string, error) {
 
 // IsNameChar checks if specified char is actually a valid (from graphite's protocol point of view)
 func IsNameChar(r byte) bool {
+	//goland:noinspection GoBoolExpressions
 	return false ||
 		'a' <= r && r <= 'z' ||
 		'A' <= r && r <= 'Z' ||

@@ -19,7 +19,7 @@ func GetOrder() interfaces.Order {
 
 const anomalyPrefix = "[anomaly] "
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &aliasByNode{}
 	for _, n := range []string{"aliasByNode"} {
@@ -42,7 +42,7 @@ func (f *aliasByNode) Do(e parser.Expr, from, until int32, values map[parser.Met
 	var results []*types.MetricData
 
 	for _, a := range args {
-		addAnomPrefix := strings.Contains(a.Name, anomalyPrefix)
+		addAnomalyPrefix := strings.Contains(a.Name, anomalyPrefix)
 		metric := helper.ExtractMetric(a.Name)
 		nodes := strings.Split(metric, ".")
 
@@ -59,7 +59,7 @@ func (f *aliasByNode) Do(e parser.Expr, from, until int32, values map[parser.Met
 
 		r := *a
 		r.Name = strings.Join(name, ".")
-		if addAnomPrefix {
+		if addAnomalyPrefix {
 			r.Name = anomalyPrefix + r.Name
 		}
 		results = append(results, &r)

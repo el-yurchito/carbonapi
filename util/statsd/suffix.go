@@ -1,10 +1,12 @@
 package statsd
 
-import "strings"
+import (
+	"strings"
+)
 
 const CountSuffix = ".count"
 
-var StatsdSuffixes = [...]string{
+var Suffixes = [...]string{
 	".last",
 	".min",
 	".max",
@@ -24,7 +26,7 @@ func CountSuffixMetric(name string) string {
 }
 
 func GetSuffix(name string) (suffix string) {
-	for _, suffix := range StatsdSuffixes {
+	for _, suffix := range Suffixes {
 		if strings.HasSuffix(name, suffix) {
 			return suffix
 		}
