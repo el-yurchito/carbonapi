@@ -2,12 +2,12 @@ package multiplySeries
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"math"
 )
 
 type multiplySeries struct {
@@ -18,7 +18,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &multiplySeries{}
 	functions := []string{"multiplySeries"}
@@ -31,7 +31,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 // multiplySeries(factorsSeriesList)
 func (f *multiplySeries) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	r := types.MetricData{
-		FetchResponse: pb.FetchResponse{
+		FetchResponse: types.FetchResponse{
 			Name:      fmt.Sprintf("multiplySeries(%s)", e.RawArgs()),
 			StartTime: from,
 			StopTime:  until,

@@ -5,14 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/util"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	"go.uber.org/zap"
-)
 
-var errNoMetrics = errors.New("no metrics")
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/util"
+)
 
 type zipper struct {
 	z *realZipper.Zipper
@@ -79,25 +78,28 @@ func (z zipper) Info(ctx context.Context, metric string) (map[string]pb.InfoResp
 }
 
 func (z zipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, error) {
-	var result []*types.MetricData
-	newCtx := ctx
+	var (
+		newCtx = ctx
+		result []*types.MetricData
+	)
+
 	if z.ignoreClientTimeout {
-		uuid := util.GetUUID(ctx)
-		newCtx = util.SetUUID(context.Background(), uuid)
+		newCtx = util.SetUUID(context.Background(), util.GetUUID(ctx))
 	}
-	pbresp, stats, err := z.z.Render(newCtx, z.logger, metric, from, until)
+
+	resp, stats, err := z.z.Render(newCtx, z.logger, metric, from, until)
 	if err != nil {
 		return result, err
 	}
-
 	z.statsSender(stats)
 
-	if m := pbresp.Metrics; len(m) == 0 {
-		return result, errNoMetrics
+	metricsQty := len(resp.Metrics)
+	if metricsQty == 0 {
+		return result, errors.New("no metrics")
 	}
 
-	for i := range pbresp.Metrics {
-		result = append(result, &types.MetricData{FetchResponse: pbresp.Metrics[i]})
+	for i := 0; i < metricsQty; i++ {
+		result = append(result, &types.MetricData{FetchResponse: *types.CastFetchResponse(resp.Metrics[i])})
 	}
 
 	return result, nil

@@ -7,12 +7,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-graphite/carbonapi/expr/types"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	"github.com/lomik/zapwriter"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
+
+	"github.com/go-graphite/carbonapi/expr/types"
 )
 
 type mockCarbonZipper struct {
@@ -41,7 +42,7 @@ func (z mockCarbonZipper) Info(ctx context.Context, metric string) (map[string]p
 func (z mockCarbonZipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, error) {
 	var result []*types.MetricData
 	multiFetchResponse := getMultiFetchResponse()
-	result = append(result, &types.MetricData{FetchResponse: multiFetchResponse.Metrics[0]})
+	result = append(result, &types.MetricData{FetchResponse: *multiFetchResponse.Metrics[0]})
 	return result, nil
 }
 
@@ -56,8 +57,8 @@ func getGlobResponse() pb.GlobResponse {
 	return globResponse
 }
 
-func getMultiFetchResponse() pb.MultiFetchResponse {
-	mfr := pb.FetchResponse{
+func getMultiFetchResponse() types.MultiFetchResponse {
+	mfr := &types.FetchResponse{
 		Name:      "foo.bar",
 		StartTime: 1510913280,
 		StopTime:  1510913880,
@@ -66,7 +67,7 @@ func getMultiFetchResponse() pb.MultiFetchResponse {
 		IsAbsent:  []bool{true, false, false},
 	}
 
-	result := pb.MultiFetchResponse{Metrics: []pb.FetchResponse{mfr}}
+	result := types.MultiFetchResponse{Metrics: []*types.FetchResponse{mfr}}
 	return result
 }
 

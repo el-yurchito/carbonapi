@@ -1,11 +1,11 @@
 package randomWalk
 
 import (
+	"math/rand"
+
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"math/rand"
 )
 
 type randomWalk struct {
@@ -16,7 +16,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &randomWalk{}
 	functions := []string{"randomWalk", "randomWalkFunction"}
@@ -27,7 +27,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 // squareRoot(seriesList)
-func (f *randomWalk) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+func (f *randomWalk) Do(e parser.Expr, from, until int32, _ map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	name, err := e.GetStringArg(0)
 	if err != nil {
 		name = "randomWalk"
@@ -35,7 +35,7 @@ func (f *randomWalk) Do(e parser.Expr, from, until int32, values map[parser.Metr
 
 	size := until - from
 
-	r := types.MetricData{FetchResponse: pb.FetchResponse{
+	r := types.MetricData{FetchResponse: types.FetchResponse{
 		Name:      name,
 		Values:    make([]float64, size),
 		IsAbsent:  make([]bool, size),

@@ -2,10 +2,10 @@ package timeFunction
 
 import (
 	"errors"
+
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 )
 
 type timeFunction struct {
@@ -16,7 +16,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &timeFunction{}
 	functions := []string{"timeFunction", "time"}
@@ -54,7 +54,7 @@ func (f *timeFunction) Do(e parser.Expr, from, until int32, values map[parser.Me
 	}
 
 	p := types.MetricData{
-		FetchResponse: pb.FetchResponse{
+		FetchResponse: types.FetchResponse{
 			Name:      name,
 			StartTime: from,
 			StopTime:  until,

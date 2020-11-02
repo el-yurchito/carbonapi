@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -20,7 +18,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &summarize{}
 	functions := []string{"summarize"}
@@ -94,7 +92,7 @@ func (f *summarize) Do(e parser.Expr, from, until int32, values map[parser.Metri
 
 		if arg.StepTime > bucketSize {
 			// We don't have enough data to do math
-			results = append(results, &types.MetricData{FetchResponse: pb.FetchResponse{
+			results = append(results, &types.MetricData{FetchResponse: types.FetchResponse{
 				Name:      name,
 				Values:    arg.Values,
 				IsAbsent:  arg.IsAbsent,
@@ -105,7 +103,7 @@ func (f *summarize) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			continue
 		}
 
-		r := types.MetricData{FetchResponse: pb.FetchResponse{
+		r := types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      name,
 			Values:    make([]float64, buckets, buckets),
 			IsAbsent:  make([]bool, buckets, buckets),

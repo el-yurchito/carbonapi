@@ -2,12 +2,12 @@ package hitcount
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"math"
 )
 
 type hitcount struct {
@@ -66,7 +66,7 @@ func (f *hitcount) Do(e parser.Expr, from, until int32, values map[parser.Metric
 		}
 		name += ")"
 
-		r := types.MetricData{FetchResponse: pb.FetchResponse{
+		r := types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      name,
 			Values:    make([]float64, buckets, buckets+1),
 			IsAbsent:  make([]bool, buckets, buckets+1),

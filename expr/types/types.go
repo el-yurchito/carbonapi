@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	pickle "github.com/lomik/og-rek"
 )
 
@@ -22,7 +21,7 @@ const MetricPathSep = "."
 
 // MetricData contains necessary data to represent parsed metric (ready to be send out or drawn)
 type MetricData struct {
-	pb.FetchResponse
+	FetchResponse
 
 	GraphOptions
 
@@ -46,7 +45,7 @@ func MakeMetricData(name string, values []float64, step, start int32) *MetricDat
 
 	stop := start + int32(len(values))*step
 
-	return &MetricData{FetchResponse: pb.FetchResponse{
+	return &MetricData{FetchResponse: FetchResponse{
 		Name:      name,
 		Values:    values,
 		StartTime: start,
@@ -193,18 +192,19 @@ func MarshalPickle(results []*MetricData) []byte {
 
 	var buf bytes.Buffer
 
-	penc := pickle.NewEncoder(&buf)
-	penc.Encode(p)
+	pickleEncoder := pickle.NewEncoder(&buf)
+	_ = pickleEncoder.Encode(p)
 
 	return buf.Bytes()
 }
 
 // MarshalProtobuf marshals metric data to protobuf
 func MarshalProtobuf(results []*MetricData) ([]byte, error) {
-	response := pb.MultiFetchResponse{}
+	response := MultiFetchResponse{}
 	for _, metric := range results {
-		response.Metrics = append(response.Metrics, (*metric).FetchResponse)
+		response.Metrics = append(response.Metrics, &metric.FetchResponse)
 	}
+
 	b, err := response.Marshal()
 	if err != nil {
 		return nil, err
@@ -377,20 +377,16 @@ func AggSum(v []float64, absent []bool) (float64, bool) {
 
 // AggFirst returns first point
 func AggFirst(v []float64, absent []bool) (float64, bool) {
-	var m = math.Inf(-1)
-	var abs = true
 	if len(v) > 0 {
 		return v[0], absent[0]
 	}
-	return m, abs
+	return math.Inf(-1), true
 }
 
 // AggLast returns last point
 func AggLast(v []float64, absent []bool) (float64, bool) {
-	var m = math.Inf(-1)
-	var abs = true
 	if len(v) > 0 {
 		return v[len(v)-1], absent[len(v)-1]
 	}
-	return m, abs
+	return math.Inf(-1), true
 }

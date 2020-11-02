@@ -2,13 +2,13 @@ package holtWintersConfidenceBands
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/holtwinters"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"math"
 )
 
 type holtWintersConfidenceBands struct {
@@ -19,7 +19,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &holtWintersConfidenceBands{}
 	functions := []string{"holtWintersConfidenceBands"}
@@ -46,7 +46,7 @@ func (f *holtWintersConfidenceBands) Do(e parser.Expr, from, until int32, values
 
 		lowerBand, upperBand := holtwinters.HoltWintersConfidenceBands(arg.Values, stepTime, delta)
 
-		lowerSeries := types.MetricData{FetchResponse: pb.FetchResponse{
+		lowerSeries := types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      fmt.Sprintf("holtWintersConfidenceLower(%s)", arg.Name),
 			Values:    lowerBand,
 			IsAbsent:  make([]bool, len(lowerBand)),
@@ -62,7 +62,7 @@ func (f *holtWintersConfidenceBands) Do(e parser.Expr, from, until int32, values
 			}
 		}
 
-		upperSeries := types.MetricData{FetchResponse: pb.FetchResponse{
+		upperSeries := types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      fmt.Sprintf("holtWintersConfidenceUpper(%s)", arg.Name),
 			Values:    upperBand,
 			IsAbsent:  make([]bool, len(upperBand)),

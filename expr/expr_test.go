@@ -13,7 +13,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 )
 
 func init() {
@@ -187,7 +186,7 @@ func TestEvalExpr(t *testing.T) {
 			}
 
 			data := types.MetricData{
-				FetchResponse: pb.FetchResponse{
+				FetchResponse: types.FetchResponse{
 					Name:      request.Metric,
 					StartTime: request.From,
 					StopTime:  request.Until,
@@ -201,7 +200,7 @@ func TestEvalExpr(t *testing.T) {
 				&data,
 			}
 
-			EvalExpr(exp, int32(request.From), int32(request.Until), metricMap)
+			_, _ = EvalExpr(exp, request.From, request.Until, metricMap)
 		})
 	}
 }

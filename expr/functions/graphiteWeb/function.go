@@ -12,15 +12,15 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/go-graphite/carbonapi/expr/interfaces"
-	"github.com/go-graphite/carbonapi/expr/metadata"
-	"github.com/go-graphite/carbonapi/expr/types"
-	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/go-graphite/carbonzipper/limiter"
 	"github.com/lomik/zapwriter"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+
+	"github.com/go-graphite/carbonapi/expr/interfaces"
+	"github.com/go-graphite/carbonapi/expr/metadata"
+	"github.com/go-graphite/carbonapi/expr/types"
+	"github.com/go-graphite/carbonapi/pkg/parser"
 )
 
 type graphiteWeb struct {
@@ -92,8 +92,8 @@ func New(configFile string) []interfaces.FunctionMetadata {
 	}
 
 	cfg := graphiteWebConfig{
-		Enabled: false,
-		Strict:  false,
+		Enabled:                  false,
+		Strict:                   false,
 		MaxConcurrentConnections: 10,
 		Timeout:                  60 * time.Second,
 		KeepAliveInterval:        30 * time.Second,
@@ -410,7 +410,8 @@ func (f *graphiteWeb) Do(e parser.Expr, from, until int32, values map[parser.Met
 		if len(m.Datapoints) > 1 {
 			stepTime = int32(m.Datapoints[1][0] - m.Datapoints[0][0])
 		}
-		pbResp := pb.FetchResponse{
+
+		resp := types.FetchResponse{
 			Name:      string(m.Target),
 			StartTime: int32(m.Datapoints[0][0]),
 			StopTime:  int32(m.Datapoints[len(m.Datapoints)-1][0]),
@@ -418,17 +419,18 @@ func (f *graphiteWeb) Do(e parser.Expr, from, until int32, values map[parser.Met
 			Values:    make([]float64, len(m.Datapoints)),
 			IsAbsent:  make([]bool, len(m.Datapoints)),
 		}
+
 		for i, v := range m.Datapoints {
 			if math.IsNaN(v[1]) {
-				pbResp.Values[i] = 0
-				pbResp.IsAbsent[i] = true
+				resp.Values[i] = 0
+				resp.IsAbsent[i] = true
 			} else {
-				pbResp.Values[i] = v[1]
-				pbResp.IsAbsent[i] = false
+				resp.Values[i] = v[1]
+				resp.IsAbsent[i] = false
 			}
 		}
 		res = append(res, &types.MetricData{
-			FetchResponse: pbResp,
+			FetchResponse: resp,
 		})
 	}
 

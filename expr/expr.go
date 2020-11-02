@@ -8,7 +8,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/timer"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 )
 
 type evaluator struct{}
@@ -30,7 +29,7 @@ func EvalExpr(expr parser.Expr, from, until int32, values map[parser.MetricReque
 	if expr.IsName() {
 		return values[parser.MetricRequest{Metric: expr.Target(), From: from, Until: until}], nil
 	} else if expr.IsConst() {
-		p := types.MetricData{FetchResponse: pb.FetchResponse{Name: expr.Target(), Values: []float64{expr.FloatValue()}}}
+		p := types.MetricData{FetchResponse: types.FetchResponse{Name: expr.Target(), Values: []float64{expr.FloatValue()}}}
 		return []*types.MetricData{&p}, nil
 	}
 	// evaluate the function

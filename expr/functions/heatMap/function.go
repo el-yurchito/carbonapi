@@ -3,8 +3,6 @@ package heatMap
 import (
 	"fmt"
 
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -62,7 +60,7 @@ func (f *heatMap) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 		}
 
 		pointsQty := len(curr.Values)
-		r := &types.MetricData{FetchResponse: pb.FetchResponse{
+		r := &types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      fmt.Sprintf("heatMap(%s,%s)", curr.Name, prev.Name),
 			IsAbsent:  make([]bool, pointsQty),
 			Values:    make([]float64, pointsQty),

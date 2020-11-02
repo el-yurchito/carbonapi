@@ -14,13 +14,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/evmar/gocairo/cairo"
+	"github.com/tebeka/strftime"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-
-	"github.com/evmar/gocairo/cairo"
-	"github.com/tebeka/strftime"
 )
 
 const HaveGraphSupport = true
@@ -851,7 +850,7 @@ func EvalExprGraph(e parser.Expr, from, until int32, values map[parser.MetricReq
 		}
 
 		p := types.MetricData{
-			FetchResponse: pb.FetchResponse{
+			FetchResponse: types.FetchResponse{
 				Name:      name,
 				StartTime: from,
 				StopTime:  until,
@@ -2242,7 +2241,7 @@ func drawLines(cr *cairoSurfaceContext, params *Params, results []*types.MetricD
 				r.HasAlpha = true
 
 				newSeries := types.MetricData{
-					FetchResponse: pb.FetchResponse{
+					FetchResponse: types.FetchResponse{
 						Name:      r.Name,
 						StopTime:  r.StopTime,
 						StartTime: r.StartTime,

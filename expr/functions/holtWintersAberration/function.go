@@ -2,13 +2,13 @@ package holtWintersAberration
 
 import (
 	"fmt"
+	"math"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/holtwinters"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-	"math"
 )
 
 type holtWintersAberration struct {
@@ -19,7 +19,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &holtWintersAberration{}
 	functions := []string{"holtWintersAberration"}
@@ -64,7 +64,7 @@ func (f *holtWintersAberration) Do(e parser.Expr, from, until int32, values map[
 			}
 		}
 
-		r := types.MetricData{FetchResponse: pb.FetchResponse{
+		r := types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      fmt.Sprintf("holtWintersAberration(%s)", arg.Name),
 			Values:    aberration,
 			IsAbsent:  make([]bool, len(aberration)),

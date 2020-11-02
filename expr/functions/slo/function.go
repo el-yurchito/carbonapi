@@ -3,8 +3,6 @@ package slo
 import (
 	"fmt"
 
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
-
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -208,7 +206,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		bucketsQty := helper.GetBucketsQty(argWnd.StartTime, argWnd.StopTime, bucketSize)
 
 		// result for the given series (argWnd)
-		r := &types.MetricData{FetchResponse: pb.FetchResponse{
+		r := &types.MetricData{FetchResponse: types.FetchResponse{
 			Name:      resultName,
 			Values:    make([]float64, 0, bucketsQty+1),
 			IsAbsent:  make([]bool, 0, bucketsQty+1),

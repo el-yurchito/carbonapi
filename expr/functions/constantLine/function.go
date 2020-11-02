@@ -5,7 +5,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 )
 
 type constantLine struct {
@@ -32,16 +31,14 @@ func (f *constantLine) Do(e parser.Expr, from, until int32, values map[parser.Me
 	if err != nil {
 		return nil, err
 	}
-	p := types.MetricData{
-		FetchResponse: pb.FetchResponse{
-			Name:      fmt.Sprintf("%g", value),
-			StartTime: from,
-			StopTime:  until,
-			StepTime:  until - from,
-			Values:    []float64{value, value},
-			IsAbsent:  []bool{false, false},
-		},
-	}
+	p := types.MetricData{FetchResponse: types.FetchResponse{
+		Name:      fmt.Sprintf("%g", value),
+		StartTime: from,
+		StopTime:  until,
+		StepTime:  until - from,
+		Values:    []float64{value, value},
+		IsAbsent:  []bool{false, false},
+	}}
 
 	return []*types.MetricData{&p}, nil
 }

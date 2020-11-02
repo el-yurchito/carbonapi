@@ -11,7 +11,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 )
 
 type FuncEvaluator struct {
@@ -22,7 +21,7 @@ func (evaluator *FuncEvaluator) EvalExpr(e parser.Expr, from, until int32, value
 	if e.IsName() {
 		return values[parser.MetricRequest{Metric: e.Target(), From: from, Until: until}], nil
 	} else if e.IsConst() {
-		p := types.MetricData{FetchResponse: pb.FetchResponse{Name: e.Target(), Values: []float64{e.FloatValue()}}}
+		p := types.MetricData{FetchResponse: types.FetchResponse{Name: e.Target(), Values: []float64{e.FloatValue()}}}
 		return []*types.MetricData{&p}, nil
 	}
 	// evaluate the function
@@ -58,10 +57,10 @@ func EvaluatorFromFuncWithMetadata(metadata map[string]interfaces.Function) inte
 func DeepClone(original map[parser.MetricRequest][]*types.MetricData) map[parser.MetricRequest][]*types.MetricData {
 	clone := map[parser.MetricRequest][]*types.MetricData{}
 	for key, originalMetrics := range original {
-		copiedMetrics := []*types.MetricData{}
+		copiedMetrics := make([]*types.MetricData, 0, len(originalMetrics))
 		for _, originalMetric := range originalMetrics {
 			copiedMetric := types.MetricData{
-				FetchResponse: pb.FetchResponse{
+				FetchResponse: types.FetchResponse{
 					Name:      originalMetric.Name,
 					StartTime: originalMetric.StartTime,
 					StopTime:  originalMetric.StopTime,
