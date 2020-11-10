@@ -158,11 +158,20 @@ func deferredAccessLogging(
 	logAsError bool,
 ) {
 	if functionCallStacks != nil && config.FunctionCalls.WriteLog {
-		calls := make([]*timer.FunctionCall, 0, 64)
+		totalCalls := make([]*timer.FunctionCall, 0, 64)
 		for _, stack := range functionCallStacks {
-			calls = append(calls, stack.GetCalls()...)
+			stackCalls := stack.GetCalls()
+			if len(stackCalls) == 0 || stackCalls[0].CallFinished == 0 {
+				continue
+			}
+			stackDuration := time.Duration(stackCalls[0].CallFinished - stackCalls[0].CallStarted)
+			if stackDuration < config.FunctionCalls.Threshold {
+				continue
+			}
+
+			totalCalls = append(totalCalls, stackCalls...)
 		}
-		accessLogDetails.FunctionCalls = calls
+		accessLogDetails.FunctionCalls = totalCalls
 	}
 
 	accessLogDetails.Runtime = time.Since(t).Seconds()
@@ -184,6 +193,10 @@ func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) 
 
 	for _, stack := range functionCallStacks {
 		for _, call := range stack.GetIsolatedCalls() {
+			if time.Duration(call.ExecutionTime) < config.FunctionCalls.Threshold {
+				continue
+			}
+
 			timeRangeMarks := call.TimeRangeMarks()
 			tags := fmt.Sprintf(
 				";hostname=%s;function=%s;range.requested=%d;range.days=%d;range.hours=%d;range.minutes=%d;range.seconds=%d",
@@ -282,6 +295,7 @@ type cacheConfig struct {
 type functionCallsConfig struct {
 	SendMetrics bool
 	WriteLog    bool
+	Threshold   time.Duration
 }
 
 type graphiteConfig struct {
@@ -385,6 +399,11 @@ var config = struct {
 	},
 	ExpireDelaySec:             10 * 60,
 	GraphiteWeb09Compatibility: false,
+	FunctionCalls: functionCallsConfig{
+		SendMetrics: true,
+		WriteLog:    false,
+		Threshold:   100 * time.Millisecond,
+	},
 
 	TagDB: tagdb.Config{
 		MaxConcurrentConnections: 10,

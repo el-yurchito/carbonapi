@@ -52,6 +52,11 @@ alwaysSendGlobsAsIs: false
 functionsConfigs:
     graphiteWeb: ./graphiteWeb.example.yaml
 maxBatchSize: 100
+# function calls timing stats
+functionCalls:
+  sendMetrics: true  # statsd only
+  writeLog: false  # call stats are attached to `access` logs
+  threshold: "100ms"  # don't send any stats at all if it took function less than this value to complete
 graphite:
     # Host:port where to send internal metrics
     # Empty = disabled
@@ -62,6 +67,10 @@ graphite:
     # {prefix} will be replaced with the content of {prefix}
     # {fqdn} will be repalced with fqdn
     pattern: "{prefix}.{fqdn}"
+statsd:
+  enabled: false
+  address: "localhost:2003"
+  prefix: "carbon.api"
 # Maximium idle connections to carbonzipper
 idleConnections: 10
 pidFile: ""
