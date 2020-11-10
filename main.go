@@ -184,7 +184,7 @@ func deferredAccessLogging(
 }
 
 func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) {
-	if functionCallStacks == nil || !config.FunctionCalls.SendMetrics {
+	if functionCallStacks == nil || !config.FunctionCalls.SendMetrics || statsdLimiter == nil {
 		return
 	}
 

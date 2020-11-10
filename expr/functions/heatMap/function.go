@@ -2,6 +2,7 @@ package heatMap
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
@@ -50,6 +51,7 @@ func (f *heatMap) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 		return nil, err
 	}
 
+	series = f.sortMetricData(series)
 	seriesQty := len(series)
 	result := make([]*types.MetricData, 0, seriesQty-1)
 
@@ -80,6 +82,60 @@ func (f *heatMap) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 	}
 
 	return result, nil
+}
+
+// sortMetricData returns *types.MetricData list sorted by sum of the first values
+func (f *heatMap) sortMetricData(list []*types.MetricData) []*types.MetricData {
+	// take 5 first not null values
+	const points = 5
+
+	// mate series with its weight (sum of first values)
+	type metricDataWeighted struct {
+		data   *types.MetricData
+		weight float64
+	}
+
+	seriesQty := len(list)
+	if seriesQty < 2 {
+		return list
+	}
+
+	listWeighted := make([]metricDataWeighted, seriesQty)
+	for j := 0; j < seriesQty; j++ {
+		listWeighted[j].data = list[j]
+	}
+
+	pointsFound := 0
+	valuesQty := len(list[0].Values)
+
+	for i := 0; i < valuesQty && pointsFound < points; i++ {
+		// make sure that each series has current point not null
+		absent := false
+		for j := 0; j < seriesQty && !absent; j++ {
+			absent = list[j].IsAbsent[i]
+		}
+		if absent {
+			continue
+		}
+
+		// accumulate sum of first not-null values
+		for j := 0; j < seriesQty; j++ {
+			listWeighted[j].weight += list[j].Values[i]
+		}
+		pointsFound++
+	}
+
+	// sort series by its weight
+	if pointsFound > 0 {
+		sort.SliceStable(listWeighted, func(i, j int) bool {
+			return listWeighted[i].weight < listWeighted[j].weight
+		})
+		for j := 0; j < seriesQty; j++ {
+			list[j] = listWeighted[j].data
+		}
+	}
+
+	return list
 }
 
 func (f *heatMap) validateNeighbourSeries(s1, s2 *types.MetricData) error {
