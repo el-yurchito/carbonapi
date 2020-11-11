@@ -15,4 +15,11 @@ message FetchResponse {
 
 message MultiFetchResponse {
     repeated FetchResponse metrics = 1;
+
+    repeated Error errors = 99;
+}
+
+message Error {
+    string target = 1;
+    string errorMessage = 2;
 }

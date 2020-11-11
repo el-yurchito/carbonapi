@@ -128,6 +128,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 	uuidString := uuid.NewV4().String()
 	ctx := util.SetUUID(r.Context(), uuidString)
+	w.Header().Set("X-Carbonapi-UUID", uuidString)
 
 	username, _, _ := r.BasicAuth()
 	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
@@ -513,7 +514,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 		body = types.MarshalJSON(results)
 	case protobufFormat, protobuf3Format:
-		body, err = types.MarshalProtobuf(results)
+		body, err = types.MarshalProtobuf(results, errors)
 		if err != nil {
 			logger.Info(
 				"request failed",

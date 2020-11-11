@@ -8,6 +8,8 @@ import (
 	"time"
 
 	pickle "github.com/lomik/og-rek"
+
+	"github.com/go-graphite/carbonapi/carbonzipperpb3"
 )
 
 var (
@@ -199,10 +201,14 @@ func MarshalPickle(results []*MetricData) []byte {
 }
 
 // MarshalProtobuf marshals metric data to protobuf
-func MarshalProtobuf(results []*MetricData) ([]byte, error) {
+func MarshalProtobuf(results []*MetricData, errors map[string]string) ([]byte, error) {
 	response := MultiFetchResponse{}
 	for _, metric := range results {
 		response.Metrics = append(response.Metrics, &metric.FetchResponse)
+	}
+	for target, errorMessage := range errors {
+		error := carbonzipperpb3.Error{Target: target, ErrorMessage: errorMessage}
+		response.Errors = append(response.Errors, &error)
 	}
 
 	b, err := response.Marshal()
