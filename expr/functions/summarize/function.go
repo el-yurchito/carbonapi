@@ -196,6 +196,7 @@ func (f *summarize) Description() map[string]types.FunctionDescription {
 						"last",
 						"max",
 						"median",
+						"p<PERCENTILE>",
 						"min",
 						"multiply",
 						"range",
