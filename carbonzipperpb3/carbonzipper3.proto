@@ -3,7 +3,7 @@ package carbonzipperpb3;
 
 //protoc --gofast_out=. carbonapi.proto
 
-message FetchResponse {
+message FetchResponseEx {
     string name = 1;
     int32 startTime = 2;
     int32 stopTime = 3;
@@ -13,8 +13,8 @@ message FetchResponse {
     string requestedTarget = 7;
 }
 
-message MultiFetchResponse {
-    repeated FetchResponse metrics = 1;
+message MultiFetchResponseEx {
+    repeated FetchResponseEx metrics = 1;
 
     repeated Error errors = 99;
 }
