@@ -132,6 +132,10 @@ func MarshalJSON(results []*MetricData) []byte {
 
 		b = append(b, `{"target":`...)
 		b = strconv.AppendQuoteToASCII(b, r.Name)
+		if r.RequestedTarget != "" {
+			b = append(b, `,"requestedTarget":`...)
+			b = strconv.AppendQuoteToASCII(b, r.RequestedTarget)
+		}
 		b = append(b, `,"datapoints":[`...)
 
 		var innerComma bool

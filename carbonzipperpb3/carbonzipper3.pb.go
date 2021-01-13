@@ -6,7 +6,7 @@ package carbonzipperpb3
 import (
 	encoding_binary "encoding/binary"
 	fmt "fmt"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -21,9 +21,9 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type FetchResponse struct {
+type FetchResponseEx struct {
 	Name                 string    `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	StartTime            int32     `protobuf:"varint,2,opt,name=startTime,proto3" json:"startTime,omitempty"`
 	StopTime             int32     `protobuf:"varint,3,opt,name=stopTime,proto3" json:"stopTime,omitempty"`
@@ -36,18 +36,18 @@ type FetchResponse struct {
 	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *FetchResponse) Reset()         { *m = FetchResponse{} }
-func (m *FetchResponse) String() string { return proto.CompactTextString(m) }
-func (*FetchResponse) ProtoMessage()    {}
-func (*FetchResponse) Descriptor() ([]byte, []int) {
+func (m *FetchResponseEx) Reset()         { *m = FetchResponseEx{} }
+func (m *FetchResponseEx) String() string { return proto.CompactTextString(m) }
+func (*FetchResponseEx) ProtoMessage()    {}
+func (*FetchResponseEx) Descriptor() ([]byte, []int) {
 	return fileDescriptor_95f14e18ab2e9726, []int{0}
 }
-func (m *FetchResponse) XXX_Unmarshal(b []byte) error {
+func (m *FetchResponseEx) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *FetchResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *FetchResponseEx) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_FetchResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_FetchResponseEx.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -57,87 +57,87 @@ func (m *FetchResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error
 		return b[:n], nil
 	}
 }
-func (m *FetchResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FetchResponse.Merge(m, src)
+func (m *FetchResponseEx) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FetchResponseEx.Merge(m, src)
 }
-func (m *FetchResponse) XXX_Size() int {
+func (m *FetchResponseEx) XXX_Size() int {
 	return m.Size()
 }
-func (m *FetchResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_FetchResponse.DiscardUnknown(m)
+func (m *FetchResponseEx) XXX_DiscardUnknown() {
+	xxx_messageInfo_FetchResponseEx.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_FetchResponse proto.InternalMessageInfo
+var xxx_messageInfo_FetchResponseEx proto.InternalMessageInfo
 
-func (m *FetchResponse) GetName() string {
+func (m *FetchResponseEx) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *FetchResponse) GetStartTime() int32 {
+func (m *FetchResponseEx) GetStartTime() int32 {
 	if m != nil {
 		return m.StartTime
 	}
 	return 0
 }
 
-func (m *FetchResponse) GetStopTime() int32 {
+func (m *FetchResponseEx) GetStopTime() int32 {
 	if m != nil {
 		return m.StopTime
 	}
 	return 0
 }
 
-func (m *FetchResponse) GetStepTime() int32 {
+func (m *FetchResponseEx) GetStepTime() int32 {
 	if m != nil {
 		return m.StepTime
 	}
 	return 0
 }
 
-func (m *FetchResponse) GetValues() []float64 {
+func (m *FetchResponseEx) GetValues() []float64 {
 	if m != nil {
 		return m.Values
 	}
 	return nil
 }
 
-func (m *FetchResponse) GetIsAbsent() []bool {
+func (m *FetchResponseEx) GetIsAbsent() []bool {
 	if m != nil {
 		return m.IsAbsent
 	}
 	return nil
 }
 
-func (m *FetchResponse) GetRequestedTarget() string {
+func (m *FetchResponseEx) GetRequestedTarget() string {
 	if m != nil {
 		return m.RequestedTarget
 	}
 	return ""
 }
 
-type MultiFetchResponse struct {
-	Metrics              []*FetchResponse `protobuf:"bytes,1,rep,name=metrics,proto3" json:"metrics,omitempty"`
-	Errors               []*Error         `protobuf:"bytes,99,rep,name=errors,proto3" json:"errors,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
-	XXX_unrecognized     []byte           `json:"-"`
-	XXX_sizecache        int32            `json:"-"`
+type MultiFetchResponseEx struct {
+	Metrics              []*FetchResponseEx `protobuf:"bytes,1,rep,name=metrics,proto3" json:"metrics,omitempty"`
+	Errors               []*Error           `protobuf:"bytes,99,rep,name=errors,proto3" json:"errors,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}           `json:"-"`
+	XXX_unrecognized     []byte             `json:"-"`
+	XXX_sizecache        int32              `json:"-"`
 }
 
-func (m *MultiFetchResponse) Reset()         { *m = MultiFetchResponse{} }
-func (m *MultiFetchResponse) String() string { return proto.CompactTextString(m) }
-func (*MultiFetchResponse) ProtoMessage()    {}
-func (*MultiFetchResponse) Descriptor() ([]byte, []int) {
+func (m *MultiFetchResponseEx) Reset()         { *m = MultiFetchResponseEx{} }
+func (m *MultiFetchResponseEx) String() string { return proto.CompactTextString(m) }
+func (*MultiFetchResponseEx) ProtoMessage()    {}
+func (*MultiFetchResponseEx) Descriptor() ([]byte, []int) {
 	return fileDescriptor_95f14e18ab2e9726, []int{1}
 }
-func (m *MultiFetchResponse) XXX_Unmarshal(b []byte) error {
+func (m *MultiFetchResponseEx) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MultiFetchResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MultiFetchResponseEx) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MultiFetchResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MultiFetchResponseEx.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -147,26 +147,26 @@ func (m *MultiFetchResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, 
 		return b[:n], nil
 	}
 }
-func (m *MultiFetchResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MultiFetchResponse.Merge(m, src)
+func (m *MultiFetchResponseEx) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MultiFetchResponseEx.Merge(m, src)
 }
-func (m *MultiFetchResponse) XXX_Size() int {
+func (m *MultiFetchResponseEx) XXX_Size() int {
 	return m.Size()
 }
-func (m *MultiFetchResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MultiFetchResponse.DiscardUnknown(m)
+func (m *MultiFetchResponseEx) XXX_DiscardUnknown() {
+	xxx_messageInfo_MultiFetchResponseEx.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MultiFetchResponse proto.InternalMessageInfo
+var xxx_messageInfo_MultiFetchResponseEx proto.InternalMessageInfo
 
-func (m *MultiFetchResponse) GetMetrics() []*FetchResponse {
+func (m *MultiFetchResponseEx) GetMetrics() []*FetchResponseEx {
 	if m != nil {
 		return m.Metrics
 	}
 	return nil
 }
 
-func (m *MultiFetchResponse) GetErrors() []*Error {
+func (m *MultiFetchResponseEx) GetErrors() []*Error {
 	if m != nil {
 		return m.Errors
 	}
@@ -229,37 +229,38 @@ func (m *Error) GetErrorMessage() string {
 }
 
 func init() {
-	proto.RegisterType((*FetchResponse)(nil), "carbonzipperpb3.FetchResponse")
-	proto.RegisterType((*MultiFetchResponse)(nil), "carbonzipperpb3.MultiFetchResponse")
+	proto.RegisterType((*FetchResponseEx)(nil), "carbonzipperpb3.FetchResponseEx")
+	proto.RegisterType((*MultiFetchResponseEx)(nil), "carbonzipperpb3.MultiFetchResponseEx")
 	proto.RegisterType((*Error)(nil), "carbonzipperpb3.Error")
 }
 
 func init() { proto.RegisterFile("carbonzipper3.proto", fileDescriptor_95f14e18ab2e9726) }
 
 var fileDescriptor_95f14e18ab2e9726 = []byte{
-	// 297 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x91, 0x31, 0x4f, 0xfb, 0x30,
-	0x10, 0xc5, 0xe5, 0x7f, 0xda, 0xb4, 0xbd, 0x7f, 0x51, 0x25, 0x23, 0x55, 0x16, 0x42, 0x51, 0x94,
-	0xc9, 0x53, 0x06, 0xba, 0xb0, 0x02, 0x82, 0xad, 0x8b, 0xd5, 0x2f, 0xe0, 0x84, 0x53, 0x89, 0xd4,
-	0xc6, 0xc6, 0xe7, 0x32, 0x30, 0xf0, 0xf9, 0x18, 0xd9, 0x58, 0x51, 0x3f, 0x09, 0xaa, 0xdd, 0x16,
-	0x52, 0x36, 0xbf, 0xf7, 0xbb, 0x27, 0xdd, 0x3d, 0xc3, 0x79, 0xad, 0x5d, 0x65, 0xda, 0xd7, 0xc6,
-	0x5a, 0x74, 0xb3, 0xd2, 0x3a, 0xe3, 0x0d, 0x9f, 0xfc, 0x36, 0x6d, 0x35, 0x2b, 0x3e, 0x19, 0x9c,
-	0x3d, 0xa0, 0xaf, 0x9f, 0x14, 0x92, 0x35, 0x2d, 0x21, 0xe7, 0xd0, 0x6b, 0xf5, 0x1a, 0x05, 0xcb,
-	0x99, 0x1c, 0xa9, 0xf0, 0xe6, 0x97, 0x30, 0x22, 0xaf, 0x9d, 0x5f, 0x34, 0x6b, 0x14, 0xff, 0x72,
-	0x26, 0xfb, 0xea, 0xc7, 0xe0, 0x17, 0x30, 0x24, 0x6f, 0x6c, 0x80, 0x49, 0x80, 0x47, 0x1d, 0x19,
-	0x46, 0xd6, 0x3b, 0xb0, 0xa8, 0xf9, 0x14, 0xd2, 0x17, 0xbd, 0xda, 0x20, 0x89, 0x7e, 0x9e, 0x48,
-	0xa6, 0xf6, 0x6a, 0x97, 0x69, 0xe8, 0xa6, 0x22, 0x6c, 0xbd, 0x48, 0xf3, 0x44, 0x0e, 0xd5, 0x51,
-	0x73, 0x09, 0x13, 0x87, 0xcf, 0x1b, 0x24, 0x8f, 0x8f, 0x0b, 0xed, 0x96, 0xe8, 0xc5, 0x20, 0x2c,
-	0x7a, 0x6a, 0x17, 0x6f, 0xc0, 0xe7, 0x9b, 0x95, 0x6f, 0xba, 0xd7, 0x5d, 0xc3, 0x60, 0x8d, 0xde,
-	0x35, 0x35, 0x09, 0x96, 0x27, 0xf2, 0xff, 0x55, 0x56, 0x9e, 0x54, 0x52, 0x76, 0x02, 0xea, 0x30,
-	0xce, 0x4b, 0x48, 0xd1, 0x39, 0xe3, 0x48, 0xd4, 0x21, 0x38, 0xfd, 0x13, 0xbc, 0xdf, 0x61, 0xb5,
-	0x9f, 0x2a, 0xee, 0xa0, 0x1f, 0x8c, 0xdd, 0x99, 0x3e, 0x6e, 0x1a, 0x2b, 0xdd, 0x2b, 0x5e, 0xc0,
-	0x38, 0x8c, 0xce, 0x91, 0x48, 0x2f, 0x63, 0xaf, 0x23, 0xd5, 0xf1, 0x6e, 0xc7, 0xef, 0xdb, 0x8c,
-	0x7d, 0x6c, 0x33, 0xf6, 0xb5, 0xcd, 0x58, 0x95, 0x86, 0x4f, 0x9c, 0x7d, 0x07, 0x00, 0x00, 0xff,
-	0xff, 0xf1, 0xbe, 0x26, 0xd5, 0xdb, 0x01, 0x00, 0x00,
+	// 306 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x91, 0xb1, 0x4e, 0xf3, 0x30,
+	0x14, 0x85, 0x7f, 0xff, 0x69, 0xd3, 0xf6, 0x82, 0x54, 0x64, 0x50, 0x65, 0x21, 0x14, 0x45, 0x99,
+	0x32, 0x65, 0xa0, 0x1b, 0x1b, 0xa0, 0xb2, 0x75, 0xb1, 0xfa, 0x02, 0x4e, 0xb8, 0x2a, 0x91, 0xda,
+	0xd8, 0xf8, 0xba, 0x08, 0x31, 0xf2, 0x14, 0x3c, 0x12, 0x23, 0x2b, 0x1b, 0x2a, 0x2f, 0x82, 0x6a,
+	0xb7, 0x05, 0xc2, 0xe6, 0x73, 0xbe, 0x7b, 0xa4, 0x7b, 0x8f, 0xe1, 0xb8, 0x52, 0xb6, 0xd4, 0xcd,
+	0x53, 0x6d, 0x0c, 0xda, 0x71, 0x61, 0xac, 0x76, 0x9a, 0x0f, 0x7f, 0x9a, 0xa6, 0x1c, 0x67, 0xef,
+	0x0c, 0x86, 0x37, 0xe8, 0xaa, 0x3b, 0x89, 0x64, 0x74, 0x43, 0x38, 0x79, 0xe4, 0x1c, 0x3a, 0x8d,
+	0x5a, 0xa2, 0x60, 0x29, 0xcb, 0x07, 0xd2, 0xbf, 0xf9, 0x19, 0x0c, 0xc8, 0x29, 0xeb, 0x66, 0xf5,
+	0x12, 0xc5, 0xff, 0x94, 0xe5, 0x5d, 0xf9, 0x6d, 0xf0, 0x53, 0xe8, 0x93, 0xd3, 0xc6, 0xc3, 0xc8,
+	0xc3, 0xbd, 0x0e, 0x0c, 0x03, 0xeb, 0xec, 0x58, 0xd0, 0x7c, 0x04, 0xf1, 0x83, 0x5a, 0xac, 0x90,
+	0x44, 0x37, 0x8d, 0x72, 0x26, 0xb7, 0x6a, 0x93, 0xa9, 0xe9, 0xb2, 0x24, 0x6c, 0x9c, 0x88, 0xd3,
+	0x28, 0xef, 0xcb, 0xbd, 0xe6, 0x39, 0x0c, 0x2d, 0xde, 0xaf, 0x90, 0x1c, 0xde, 0xce, 0x94, 0x9d,
+	0xa3, 0x13, 0x3d, 0xbf, 0x68, 0xdb, 0xce, 0x9e, 0x19, 0x9c, 0x4c, 0x57, 0x0b, 0x57, 0xb7, 0x0f,
+	0xbc, 0x80, 0xde, 0x12, 0x9d, 0xad, 0x2b, 0x12, 0x2c, 0x8d, 0xf2, 0x83, 0xf3, 0xb4, 0x68, 0xf5,
+	0x52, 0xb4, 0x22, 0x72, 0x17, 0xe0, 0x05, 0xc4, 0x68, 0xad, 0xb6, 0x24, 0x2a, 0x1f, 0x1d, 0xfd,
+	0x89, 0x4e, 0x36, 0x58, 0x6e, 0xa7, 0xb2, 0x6b, 0xe8, 0x7a, 0x63, 0x73, 0xab, 0x0b, 0xeb, 0x86,
+	0x5e, 0xb7, 0x8a, 0x67, 0x70, 0xe8, 0x47, 0xa7, 0x48, 0xa4, 0xe6, 0xa1, 0xdc, 0x81, 0xfc, 0xe5,
+	0x5d, 0x1d, 0xbd, 0xae, 0x13, 0xf6, 0xb6, 0x4e, 0xd8, 0xc7, 0x3a, 0x61, 0x2f, 0x9f, 0xc9, 0xbf,
+	0x32, 0xf6, 0xff, 0x39, 0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x28, 0x53, 0x5a, 0x16, 0xe6, 0x01,
+	0x00, 0x00,
 }
 
-func (m *FetchResponse) Marshal() (dAtA []byte, err error) {
+func (m *FetchResponseEx) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -269,12 +270,12 @@ func (m *FetchResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *FetchResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *FetchResponseEx) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *FetchResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *FetchResponseEx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -338,7 +339,7 @@ func (m *FetchResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MultiFetchResponse) Marshal() (dAtA []byte, err error) {
+func (m *MultiFetchResponseEx) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -348,12 +349,12 @@ func (m *MultiFetchResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MultiFetchResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MultiFetchResponseEx) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MultiFetchResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MultiFetchResponseEx) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -447,7 +448,7 @@ func encodeVarintCarbonzipper3(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *FetchResponse) Size() (n int) {
+func (m *FetchResponseEx) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -482,7 +483,7 @@ func (m *FetchResponse) Size() (n int) {
 	return n
 }
 
-func (m *MultiFetchResponse) Size() (n int) {
+func (m *MultiFetchResponseEx) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -532,7 +533,7 @@ func sovCarbonzipper3(x uint64) (n int) {
 func sozCarbonzipper3(x uint64) (n int) {
 	return sovCarbonzipper3(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *FetchResponse) Unmarshal(dAtA []byte) error {
+func (m *FetchResponseEx) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -555,10 +556,10 @@ func (m *FetchResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: FetchResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: FetchResponseEx: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: FetchResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: FetchResponseEx: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -812,10 +813,7 @@ func (m *FetchResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCarbonzipper3
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCarbonzipper3
 			}
 			if (iNdEx + skippy) > l {
@@ -831,7 +829,7 @@ func (m *FetchResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MultiFetchResponse) Unmarshal(dAtA []byte) error {
+func (m *MultiFetchResponseEx) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -854,10 +852,10 @@ func (m *MultiFetchResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MultiFetchResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MultiFetchResponseEx: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MultiFetchResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MultiFetchResponseEx: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -889,7 +887,7 @@ func (m *MultiFetchResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Metrics = append(m.Metrics, &FetchResponse{})
+			m.Metrics = append(m.Metrics, &FetchResponseEx{})
 			if err := m.Metrics[len(m.Metrics)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -934,10 +932,7 @@ func (m *MultiFetchResponse) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCarbonzipper3
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCarbonzipper3
 			}
 			if (iNdEx + skippy) > l {
@@ -1052,10 +1047,7 @@ func (m *Error) Unmarshal(dAtA []byte) error {
 			if err != nil {
 				return err
 			}
-			if skippy < 0 {
-				return ErrInvalidLengthCarbonzipper3
-			}
-			if (iNdEx + skippy) < 0 {
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
 				return ErrInvalidLengthCarbonzipper3
 			}
 			if (iNdEx + skippy) > l {

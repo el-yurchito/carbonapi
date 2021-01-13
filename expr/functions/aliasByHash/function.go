@@ -6,8 +6,8 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 
-	"strings"
 	"github.com/garyburd/redigo/redis"
+	"strings"
 )
 
 const DSN = "monitoring01:6379"

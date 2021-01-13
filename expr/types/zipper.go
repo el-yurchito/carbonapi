@@ -9,8 +9,8 @@ import (
 // these 2 types are exposed in order to use their patched version
 // RequestedTarget is added to FetchResponse comparing to original pb.FetchResponse
 type (
-	FetchResponse      = carbonzipperpb3.FetchResponse
-	MultiFetchResponse = carbonzipperpb3.MultiFetchResponse
+	FetchResponse      = carbonzipperpb3.FetchResponseEx
+	MultiFetchResponse = carbonzipperpb3.MultiFetchResponseEx
 )
 
 // CastFetchResponse converts original pb.FetchResponse to patched one

@@ -26,6 +26,7 @@ require (
 	github.com/garyburd/redigo v1.6.0
 	github.com/go-graphite/carbonzipper v0.0.0-20180216150814-54ed0747e074
 	github.com/gogo/protobuf v1.3.1
+	github.com/golang/protobuf v1.4.3
 	github.com/gonum/blas v0.0.0-20180125090452-e7c5890b24cf // indirect
 	github.com/gonum/floats v0.0.0-20180125090339-7de1f4ea7ab5 // indirect
 	github.com/gonum/internal v0.0.0-20180125090855-fda53f8d2571 // indirect

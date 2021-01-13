@@ -1,13 +1,13 @@
 package anomaly
 
 import (
+	"fmt"
+	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"strings"
-	"fmt"
 	"math"
-	"github.com/go-graphite/carbonapi/expr/helper"
+	"strings"
 )
 
 const anomalyPrefix = "resources.monitoring.anomaly_detector."
@@ -31,84 +31,84 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *anomaly) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-		arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
-		if err != nil {
-			return nil, err
-		}
-		joinType, err := e.GetStringNamedOrPosArgDefault("type", 1, "all")
-		if err != nil {
-			return nil, err
-		}
-		threshold, err := e.GetFloatNamedOrPosArgDefault("threshold", 2, math.NaN())
-		if err != nil {
-			return nil, err
-		}
+	arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
+	if err != nil {
+		return nil, err
+	}
+	joinType, err := e.GetStringNamedOrPosArgDefault("type", 1, "all")
+	if err != nil {
+		return nil, err
+	}
+	threshold, err := e.GetFloatNamedOrPosArgDefault("threshold", 2, math.NaN())
+	if err != nil {
+		return nil, err
+	}
 
-		offs, err := e.GetIntervalArgDefault(3, 1, -1)
+	offs, err := e.GetIntervalArgDefault(3, 1, -1)
 
-		if err != nil {
-			return nil, err
-		}
-		// extract anomaly metrics
-		nname := anomalyPrefix + e.Args()[0].Target()
-		anomReq := parser.MetricRequest{Metric: nname, From: from, Until: until}
-		anomalyData, ok := values[anomReq]
+	if err != nil {
+		return nil, err
+	}
+	// extract anomaly metrics
+	nname := anomalyPrefix + e.Args()[0].Target()
+	anomReq := parser.MetricRequest{Metric: nname, From: from, Until: until}
+	anomalyData, ok := values[anomReq]
 
-		anomalyMap := make(map[string]*types.MetricData)
-		if ok {
-			for _, d := range anomalyData {
-				if offs > 0 {
-					offPoints := (d.StopTime - offs - d.StartTime) / d.StepTime
-					if offPoints < 0 {
-						offPoints = 0
-					}
-					exclude := true
-					for _, v := range d.IsAbsent[offPoints:] {
-						if !v {
-							exclude = false
-							break
-						}
-					}
-					if exclude {
-						continue
-					}
+	anomalyMap := make(map[string]*types.MetricData)
+	if ok {
+		for _, d := range anomalyData {
+			if offs > 0 {
+				offPoints := (d.StopTime - offs - d.StartTime) / d.StepTime
+				if offPoints < 0 {
+					offPoints = 0
 				}
-				name := strings.TrimPrefix(d.Name, anomalyPrefix)
-				d.Name = fmt.Sprintf("[anomaly] %s", name)
-				anomalyMap[name] = d
-			}
-		}
-
-		var results []*types.MetricData
-		for _, a := range arg {
-			exclude := false
-			if !math.IsNaN(threshold) {
-				exclude = true
-				for i, v := range a.Values {
-					if !a.IsAbsent[i] && v > threshold {
+				exclude := true
+				for _, v := range d.IsAbsent[offPoints:] {
+					if !v {
 						exclude = false
 						break
 					}
 				}
-			}
-			if exclude {
-				continue
-			}
-			anomaly, hasAnomaly := anomalyMap[a.Name]
-			// include all metrics & anomalies
-			if joinType == "all" {
-				results = append(results, a)
-				if hasAnomaly {
-					results = append(results, anomaly)
+				if exclude {
+					continue
 				}
-			} else if joinType == "with_anomalies_only" && hasAnomaly {
-				results = append(results, a)
-				results = append(results, anomaly)
-			} else if joinType == "only_anomalies" && hasAnomaly {
-				results = append(results, anomaly)
+			}
+			name := strings.TrimPrefix(d.Name, anomalyPrefix)
+			d.Name = fmt.Sprintf("[anomaly] %s", name)
+			anomalyMap[name] = d
+		}
+	}
+
+	var results []*types.MetricData
+	for _, a := range arg {
+		exclude := false
+		if !math.IsNaN(threshold) {
+			exclude = true
+			for i, v := range a.Values {
+				if !a.IsAbsent[i] && v > threshold {
+					exclude = false
+					break
+				}
 			}
 		}
-		return results, nil
+		if exclude {
+			continue
+		}
+		anomaly, hasAnomaly := anomalyMap[a.Name]
+		// include all metrics & anomalies
+		if joinType == "all" {
+			results = append(results, a)
+			if hasAnomaly {
+				results = append(results, anomaly)
+			}
+		} else if joinType == "with_anomalies_only" && hasAnomaly {
+			results = append(results, a)
+			results = append(results, anomaly)
+		} else if joinType == "only_anomalies" && hasAnomaly {
+			results = append(results, anomaly)
+		}
+	}
+	return results, nil
 }
 
 const descr = `Принимает на вход метрику (или массив метрик), выводит помимо метрик их аномальные точки.
@@ -141,7 +141,7 @@ func (f *anomaly) Description() map[string]types.FunctionDescription {
 					},
 					Required: false,
 					Type:     types.String,
-					Default: types.NewSuggestion("all"),
+					Default:  types.NewSuggestion("all"),
 				},
 				// TODO add offset & threshold
 			},
