@@ -20,14 +20,14 @@ func GetOrder() interfaces.Order {
 func New(configFile string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &highest{}
-	functions := []string{"highestAverage", "highestCurrent", "highestMax"}
+	functions := []string{"highestAverage", "highestCurrent", "highestMax", "highestMin"}
 	for _, n := range functions {
 		res = append(res, interfaces.FunctionMetadata{Name: n, F: f})
 	}
 	return res
 }
 
-// highestAverage(seriesList, n) , highestCurrent(seriesList, n), highestMax(seriesList, n)
+// highestAverage(seriesList, n) , highestCurrent(seriesList, n), highestMax(seriesList, n), highestMin(seriesList, n)
 func (f *highest) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 
 	arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
@@ -57,6 +57,8 @@ func (f *highest) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 	switch e.Target() {
 	case "highestMax":
 		compute = helper.MaxValue
+	case "highestMin":
+		compute = helper.MinValue
 	case "highestAverage":
 		compute = helper.AvgValue
 	case "highestCurrent":
@@ -134,11 +136,30 @@ func (f *highest) Description() map[string]types.FunctionDescription {
 			},
 		},
 		"highestMax": {
-			Description: "Takes one metric or a wildcard seriesList followed by an integer N.\n\nOut of all metrics passed, draws only the N metrics with the highest maximum\nvalue in the time period specified.\n\nExample:\n\n.. code-block:: none\n\n  &target=highestMax(server*.instance*.threads.busy,5)\n\nDraws the top 5 servers who have had the most busy threads during the time\nperiod specified.\n\nThis is an alias for :py:func:`highest <highest>` with aggregation ``max``.",
+			Description: "Takes one metric or a wildcard seriesList followed by an integer N.\n\nOut of all metrics passed, draws only the N metrics with the highest maximum\nvalue in the time period specified.\n\nExample:\n\n.. code-block:: none\n\n  &target=highestMax(server*.instance*.threads.busy,5)\n\nDraws the top 5 servers that have had the most busy threads during the time\nperiod specified.\n\nThis is an alias for :py:func:`highest <highest>` with aggregation ``max``.",
 			Function:    "highestMax(seriesList, n)",
 			Group:       "Filter Series",
 			Module:      "graphite.render.functions",
 			Name:        "highestMax",
+			Params: []types.FunctionParam{
+				{
+					Name:     "seriesList",
+					Required: true,
+					Type:     types.SeriesList,
+				},
+				{
+					Name:     "n",
+					Required: true,
+					Type:     types.Integer,
+				},
+			},
+		},
+		"highestMin": {
+			Description: "Takes one metric or a wildcard seriesList followed by an integer N.\n\nOut of all metrics passed, draws only the N metrics with the highest minimum\nvalue in the time period specified.\n\nExample:\n\n.. code-block:: none\n\n  &target=highestMin(server*.instance*.threads.busy,5)\n\nDraws the top 5 servers that have had the highest minimal busy threads during the time\nperiod specified.\n\nThis is an alias for :py:func:`highest <highest>` with aggregation ``min``.",
+			Function:    "highestMin(seriesList, n)",
+			Group:       "Filter Series",
+			Module:      "graphite.render.functions",
+			Name:        "highestMin",
 			Params: []types.FunctionParam{
 				{
 					Name:     "seriesList",
