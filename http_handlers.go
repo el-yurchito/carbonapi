@@ -59,8 +59,11 @@ func initHandlers() *http.ServeMux {
 	r.HandleFunc("/functions", functionsHandler)
 	r.HandleFunc("/functions/", functionsHandler)
 
-	r.HandleFunc("/tags", tagHandler)
-	r.HandleFunc("/tags/", tagHandler)
+	r.HandleFunc("/tags", tagDBProxyHandler)
+	r.HandleFunc("/tags/", tagDBProxyHandler)
+
+	r.HandleFunc("/values", tagDBProxyHandler)
+	r.HandleFunc("/values/", tagDBProxyHandler)
 
 	r.HandleFunc("/", usageHandler)
 	return r
@@ -990,13 +993,14 @@ func functionsHandler(w http.ResponseWriter, r *http.Request) {
 	accessLogger.Info("request served", zap.Any("data", accessLogDetails))
 }
 
-func tagHandler(w http.ResponseWriter, r *http.Request) {
+func tagDBProxyHandler(w http.ResponseWriter, r *http.Request) {
 	if config.tagDBProxy != nil {
 		config.tagDBProxy.ServeHTTP(w, r)
-	} else {
-		w.Header().Set("Content-Type", contentTypeJSON)
-		w.Write([]byte{'[', ']'})
+		return
 	}
+
+	w.Header().Set("Content-Type", contentTypeJSON)
+	_, _ = w.Write([]byte{'[', ']'})
 }
 
 var usageMsg = []byte(`
