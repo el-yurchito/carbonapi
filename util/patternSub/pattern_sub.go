@@ -12,6 +12,7 @@ const (
 
 	sbtStart = "seriesByTag("
 	sbtEnd   = ")"
+	sbtSep   = "','"
 
 	argsSep = ","
 	quote   = "'"
@@ -149,7 +150,7 @@ func (pp *PatternProcessor) cleanArg(arg string) string {
 func (pp *PatternProcessor) cleanFunctionCall(pattern string) string {
 	pattern = strings.TrimPrefix(pattern, sbtStart)
 	pattern = strings.TrimSuffix(pattern, sbtEnd)
-	pattern = strings.Replace(pattern, " ", "", -1)
+	pattern = strings.ReplaceAll(pattern, " ", "")
 	return pattern
 }
 
@@ -175,7 +176,8 @@ func (pp *PatternProcessor) replacePrefixFunctionArg(pattern string) []Substitut
 	)
 
 	pattern = pp.cleanFunctionCall(pattern)
-	args = strings.Split(pattern, argsSep)
+	args = strings.Split(pattern, sbtSep)
+
 	for i, arg := range args {
 		arg = pp.cleanArg(arg)
 		name, value, sign, err := pp.splitArgTerm(arg)
