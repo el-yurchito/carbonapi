@@ -993,10 +993,11 @@ func functionsHandler(w http.ResponseWriter, r *http.Request) {
 func tagHandler(w http.ResponseWriter, r *http.Request) {
 	if config.tagDBProxy != nil {
 		config.tagDBProxy.ServeHTTP(w, r)
-	} else {
-		w.Header().Set("Content-Type", contentTypeJSON)
-		w.Write([]byte{'[', ']'})
+		return
 	}
+
+	w.Header().Set("Content-Type", contentTypeJSON)
+	_, _ = w.Write([]byte("[]"))
 }
 
 var usageMsg = []byte(`

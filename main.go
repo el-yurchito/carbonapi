@@ -541,8 +541,15 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 	expvar.Publish("config", expvar.Func(func() interface{} { return config }))
 
 	config.limiter = util.NewSimpleLimiter(config.Concurency)
+
+	configRewriteMap := make(map[string]string, len(config.Rewrite))
+	for _, rewriteEntry := range config.Rewrite {
+		configRewriteMap[rewriteEntry.From] = rewriteEntry.To
+	}
+	config.patternProcessor = patternSub.NewPatternProcessor(configRewriteMap)
+
 	if config.TagDB.Url != "" {
-		config.tagDBProxy, err = tagdb.NewHttp(&config.TagDB)
+		config.tagDBProxy, err = tagdb.NewHttp(&config.TagDB, config.patternProcessor)
 		if err != nil {
 			logger.Warn("failed to initialize http tag db",
 				zap.String("reason", "invalid url"),
@@ -550,12 +557,6 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 			)
 		}
 	}
-
-	configRewriteMap := make(map[string]string, len(config.Rewrite))
-	for _, rewriteEntry := range config.Rewrite {
-		configRewriteMap[rewriteEntry.From] = rewriteEntry.To
-	}
-	config.patternProcessor = patternSub.NewPatternProcessor(configRewriteMap)
 
 	config.zipper = zipper
 

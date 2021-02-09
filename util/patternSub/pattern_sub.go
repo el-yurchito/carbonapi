@@ -54,7 +54,7 @@ type PatternProcessor struct {
 type SubstituteInfo struct {
 	MetricSrc  string
 	MetricDst  string
-	isReplaced bool
+	IsReplaced bool
 	prefixSrc  string
 	prefixDst  string
 	tagInfo    *nameTagInfo
@@ -104,6 +104,36 @@ func NewPatternProcessor(config map[string]string) *PatternProcessor {
 	return result
 }
 
+// SplitArgTerm splits term like 'tag=value' and returns its parts
+func SplitArgTerm(term string) (tagName string, tagValue string, sign string, err error) {
+	sign = "="
+
+	parts := strings.SplitN(term, sign, 2)
+	if len(parts) != 2 {
+		err = fmt.Errorf("bad argument format: %#v (invalid number of parts)", term)
+		return
+	}
+
+	if len(parts[0]) > 0 && parts[0][len(parts[0])-1] == '!' { // optional `!` (`!=` or `!=~`)
+		sign = "!" + sign
+		parts[0] = parts[0][:len(parts[0])-1]
+	}
+
+	if len(parts[1]) > 0 && parts[1][0] == '~' { // optional `~` (`=~` or `!=~`)
+		sign = sign + "~"
+		parts[1] = parts[1][1:]
+	}
+
+	if !argsSigns[sign] {
+		err = fmt.Errorf("bad argument format: %#v (invalid sign)", term)
+		return
+	}
+
+	tagName = parts[0]
+	tagValue = parts[1]
+	return
+}
+
 func (pp *PatternProcessor) GetDefaultSubstituteMap() map[string]string {
 	return pp.prefix[""]
 }
@@ -122,7 +152,7 @@ func (pp *PatternProcessor) ReplacePrefix(pattern string) []SubstituteInfo {
 
 // RestoreMetricName rolls back prefix substitute of metric name
 func (pp *PatternProcessor) RestoreMetricName(metricName string, substituteInfo SubstituteInfo) string {
-	if !substituteInfo.isReplaced { // there wasn't any substitute - no need to roll anything back
+	if !substituteInfo.IsReplaced { // there wasn't any substitute - no need to roll anything back
 		return metricName
 	}
 
@@ -180,7 +210,7 @@ func (pp *PatternProcessor) replacePrefixFunctionArg(pattern string) []Substitut
 
 	for i, arg := range args {
 		arg = pp.cleanArg(arg)
-		name, value, sign, err := pp.splitArgTerm(arg)
+		name, value, sign, err := SplitArgTerm(arg)
 		if err != nil {
 			continue
 		}
@@ -227,7 +257,7 @@ func (pp *PatternProcessor) replacePrefixFunctionArg(pattern string) []Substitut
 			result = append(result, SubstituteInfo{
 				MetricSrc:  metricSrc,
 				MetricDst:  metricDst,
-				isReplaced: simpleReplacement.isReplaced,
+				IsReplaced: simpleReplacement.IsReplaced,
 				prefixSrc:  simpleReplacement.prefixSrc,
 				prefixDst:  simpleReplacement.prefixDst,
 				tagInfo:    tagInfo,
@@ -240,7 +270,7 @@ func (pp *PatternProcessor) replacePrefixFunctionArg(pattern string) []Substitut
 		return []SubstituteInfo{{
 			MetricSrc:  pattern,
 			MetricDst:  pattern,
-			isReplaced: false,
+			IsReplaced: false,
 			prefixSrc:  "",
 			prefixDst:  "",
 			tagInfo:    nil,
@@ -273,7 +303,7 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 			result = append(result, SubstituteInfo{
 				MetricSrc:  replaceFrom + patternSuffix,
 				MetricDst:  replaceTo + patternSuffix,
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  replaceFrom,
 				prefixDst:  replaceTo,
 			})
@@ -290,7 +320,7 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 				substituteInfo = &SubstituteInfo{
 					MetricSrc:  pattern,
 					MetricDst:  replaceTo + strings.TrimPrefix(pattern, replaceFrom),
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  replaceFrom,
 					prefixDst:  replaceTo,
 				}
@@ -302,7 +332,7 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 			substituteInfo = &SubstituteInfo{
 				MetricSrc:  pattern,
 				MetricDst:  pattern,
-				isReplaced: false,
+				IsReplaced: false,
 				prefixSrc:  "",
 				prefixDst:  "",
 			}
@@ -316,34 +346,4 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 // restoreMetricNameSimplePattern restores simple replacement of metric name
 func (pp *PatternProcessor) restoreMetricNameSimplePattern(metricName string, substituteInfo SubstituteInfo) string {
 	return substituteInfo.prefixSrc + strings.TrimPrefix(metricName, substituteInfo.prefixDst)
-}
-
-// splitArgTerm splits term like 'tag=value' and returns its parts
-func (pp *PatternProcessor) splitArgTerm(term string) (tagName string, tagValue string, sign string, err error) {
-	sign = "="
-
-	parts := strings.SplitN(term, sign, 2)
-	if len(parts) != 2 {
-		err = fmt.Errorf("bad argument format: %#v (invalid number of parts)", term)
-		return
-	}
-
-	if len(parts[0]) > 0 && parts[0][len(parts[0])-1] == '!' { // optional `!` (`!=` or `!=~`)
-		sign = "!" + sign
-		parts[0] = parts[0][:len(parts[0])-1]
-	}
-
-	if len(parts[1]) > 0 && parts[1][0] == '~' { // optional `~` (`=~` or `!=~`)
-		sign = sign + "~"
-		parts[1] = parts[1][1:]
-	}
-
-	if !argsSigns[sign] {
-		err = fmt.Errorf("bad argument format: %#v (invalid sign)", term)
-		return
-	}
-
-	tagName = parts[0]
-	tagValue = parts[1]
-	return
 }

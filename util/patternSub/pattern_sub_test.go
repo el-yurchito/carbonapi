@@ -108,7 +108,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "seriesByTag('tag1=value1')",
 				MetricDst:  "seriesByTag('tag1=value1')",
-				isReplaced: false,
+				IsReplaced: false,
 				prefixSrc:  "",
 				prefixDst:  "",
 				tagInfo:    nil,
@@ -123,7 +123,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "seriesByTag('tag1=value1','tag2=value2','tag3=value3')",
 				MetricDst:  "seriesByTag('tag1=value1','tag2=value2','tag3=value3')",
-				isReplaced: false,
+				IsReplaced: false,
 				prefixSrc:  "",
 				prefixDst:  "",
 				tagInfo:    nil,
@@ -138,7 +138,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "seriesByTag('name=a.b.c.d')",
 				MetricDst:  "seriesByTag('name=a.b.c.d')",
-				isReplaced: false,
+				IsReplaced: false,
 				prefixSrc:  "",
 				prefixDst:  "",
 				tagInfo: &nameTagInfo{
@@ -158,7 +158,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "seriesByTag('name=prefix2.from2.something.else')",
 				MetricDst:  "seriesByTag('name=prefix2.to2.something.else')",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix2.from2.",
 				prefixDst:  "prefix2.to2.",
 				tagInfo: &nameTagInfo{
@@ -176,7 +176,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "seriesByTag('tag1=value1','tag2=value2','name!=prefix1.from1.something.else','tag4=value4')",
 				MetricDst:  "seriesByTag('tag1=value1','tag2=value2','name!=prefix1.to1.something.else','tag4=value4')",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix1.from1.",
 				prefixDst:  "prefix1.to1.",
 				tagInfo: &nameTagInfo{
@@ -194,7 +194,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "seriesByTag('name=~prefix2.from2.something.else','tag1=value1')",
 				MetricDst:  "seriesByTag('name=~something.else','tag1=value1')",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix2.from2.",
 				prefixDst:  "",
 				tagInfo: &nameTagInfo{
@@ -216,7 +216,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 				{
 					MetricSrc:  "seriesByTag('tag1=value1','name!=~a.b.c.d.from1.')",
 					MetricDst:  "seriesByTag('tag1=value1','name!=~a.b.c.d.to1.')",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from1.",
 					prefixDst:  "a.b.c.d.to1.",
 					tagInfo: &nameTagInfo{
@@ -227,7 +227,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 				{
 					MetricSrc:  "seriesByTag('tag1=value1','name!=~a.b.c.d.from2.')",
 					MetricDst:  "seriesByTag('tag1=value1','name!=~a.b.c.d.to2.')",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from2.",
 					prefixDst:  "a.b.c.d.to2.",
 					tagInfo: &nameTagInfo{
@@ -238,7 +238,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 				{
 					MetricSrc:  "seriesByTag('tag1=value1','name!=~a.b.c.d.from3.')",
 					MetricDst:  "seriesByTag('tag1=value1','name!=~a.b.c.d.to3.')",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from3.",
 					prefixDst:  "a.b.c.d.to3.",
 					tagInfo: &nameTagInfo{
@@ -258,7 +258,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 				{
 					MetricSrc:  "seriesByTag('name=prefix.from1.something.else')",
 					MetricDst:  "seriesByTag('name=prefix.to1.something.else')",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "prefix.from1.",
 					prefixDst:  "prefix.to1.",
 					tagInfo: &nameTagInfo{
@@ -269,7 +269,7 @@ func TestPatternProcessor_ReplacePrefixFunctionArg(t *testing.T) {
 				{
 					MetricSrc:  "seriesByTag('name=prefix.from2.something.else')",
 					MetricDst:  "seriesByTag('name=prefix.to2.something.else')",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "prefix.from2.",
 					prefixDst:  "prefix.to2.",
 					tagInfo: &nameTagInfo{
@@ -308,7 +308,7 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "a.b.c.d",
 				MetricDst:  "a.b.c.d",
-				isReplaced: false,
+				IsReplaced: false,
 				prefixSrc:  "",
 				prefixDst:  "",
 			}},
@@ -329,7 +329,7 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "prefix1.from.something.else",
 				MetricDst:  "prefix2.to.something.else",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix1.from.",
 				prefixDst:  "prefix2.to.",
 			}},
@@ -346,7 +346,7 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "prefix1.from.",
 				MetricDst:  "prefix2.to.",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix1.from.",
 				prefixDst:  "prefix2.to.",
 			}},
@@ -363,7 +363,7 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "prefix1.from.something.else",
 				MetricDst:  "something.else",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix1.from.",
 				prefixDst:  "",
 			}},
@@ -380,7 +380,7 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 			expected: []SubstituteInfo{{
 				MetricSrc:  "prefix1.from.",
 				MetricDst:  "",
-				isReplaced: true,
+				IsReplaced: true,
 				prefixSrc:  "prefix1.from.",
 				prefixDst:  "",
 			}},
@@ -402,21 +402,21 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 				{
 					MetricSrc:  "prefix.from1.something.else",
 					MetricDst:  "prefix.to1.something.else",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "prefix.from1.",
 					prefixDst:  "prefix.to1.",
 				},
 				{
 					MetricSrc:  "prefix.from2.something.else",
 					MetricDst:  "prefix.to2.something.else",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "prefix.from2.",
 					prefixDst:  "prefix.to2.",
 				},
 				{
 					MetricSrc:  "prefix.from3.something.else",
 					MetricDst:  "prefix.to3.something.else",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "prefix.from3.",
 					prefixDst:  "prefix.to3.",
 				},
@@ -435,21 +435,21 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 				{
 					MetricSrc:  "a.b.c.d.from1.",
 					MetricDst:  "a.b.c.d.to1.",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from1.",
 					prefixDst:  "a.b.c.d.to1.",
 				},
 				{
 					MetricSrc:  "a.b.c.d.from2.",
 					MetricDst:  "a.b.c.d.to2.",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from2.",
 					prefixDst:  "a.b.c.d.to2.",
 				},
 				{
 					MetricSrc:  "a.b.c.d.from3.",
 					MetricDst:  "a.b.c.d.to3.",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from3.",
 					prefixDst:  "a.b.c.d.to3.",
 				},
@@ -467,14 +467,14 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 				{
 					MetricSrc:  "a.b.c.d.from1.something.else",
 					MetricDst:  "a.b.c.d.to1.something.else",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from1.",
 					prefixDst:  "a.b.c.d.to1.",
 				},
 				{
 					MetricSrc:  "a.b.c.d.from2.something.else",
 					MetricDst:  "something.else",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from2.",
 					prefixDst:  "",
 				},
@@ -492,14 +492,14 @@ func TestPatternProcessor_ReplacePrefixSimplePattern(t *testing.T) {
 				{
 					MetricSrc:  "a.b.c.d.from1.",
 					MetricDst:  "a.b.c.d.to1.",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from1.",
 					prefixDst:  "a.b.c.d.to1.",
 				},
 				{
 					MetricSrc:  "a.b.c.d.from2.",
 					MetricDst:  "",
-					isReplaced: true,
+					IsReplaced: true,
 					prefixSrc:  "a.b.c.d.from2.",
 					prefixDst:  "",
 				},
