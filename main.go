@@ -18,6 +18,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/facebookgo/pidfile"
 	"github.com/go-graphite/carbonzipper/cache"
@@ -26,10 +27,10 @@ import (
 	"github.com/go-graphite/carbonzipper/pathcache"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	"github.com/gorilla/handlers"
-	"github.com/lomik/zapwriter"
 	"github.com/peterbourgon/g2g"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/go-graphite/carbonapi/carbonapipb"
 	"github.com/go-graphite/carbonapi/expr/functions"
@@ -174,12 +175,26 @@ func deferredAccessLogging(
 		accessLogDetails.FunctionCalls = totalCalls
 	}
 
+	ald := accessLogDetails  // just to make code shorter
+	fieldsToLog :=  []zapcore.Field{
+		zap.String("handler", ald.Handler),
+		zap.String("carbonapi_uuid", ald.CarbonapiUuid),
+		zap.String("peer_ip", ald.PeerIp),
+		zap.Strings("targets", ald.Targets),
+		zap.Strings("metrics", ald.Metrics),
+		zap.Float64("runtime", ald.Runtime),
+		zap.Int32("http_code", ald.HttpCode),
+		zap.Int32("from", ald.From),
+		zap.Int32("until", ald.Until),
+	}
+	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
+
 	accessLogDetails.Runtime = time.Since(t).Seconds()
 	if logAsError {
-		accessLogger.Error("request failed", zap.Any("data", *accessLogDetails))
+		accessLogger.Error("request failed", fieldsToLog...)
 	} else {
 		accessLogDetails.HttpCode = http.StatusOK
-		accessLogger.Info("request served", zap.Any("data", *accessLogDetails))
+		accessLogger.Info("request served", fieldsToLog...)
 	}
 }
 

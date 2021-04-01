@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PAFomin-at-avito/zapwriter"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/go-graphite/carbonzipper/intervalset"
 	pickle "github.com/lomik/og-rek"
-	"github.com/lomik/zapwriter"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
 

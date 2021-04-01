@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/go-graphite/carbonzipper/limiter"
-	"github.com/lomik/zapwriter"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
