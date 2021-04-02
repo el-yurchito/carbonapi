@@ -6,11 +6,11 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"github.com/lomik/zapwriter"
 	"go.uber.org/zap"
 )
 

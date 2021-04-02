@@ -5,9 +5,10 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa
+	github.com/PAFomin-at-avito/zapwriter v0.0.0-20210402162258-8ce7ee5ec600
 	github.com/aclements/go-moremath v0.0.0-20170210193428-033754ab1fee // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d // indirect
-	github.com/davecgh/go-spew v1.1.0
+	github.com/davecgh/go-spew v1.1.1
 	github.com/dgryski/go-expirecache v0.0.0-20170314133854-743ef98b2adb // indirect
 	github.com/dgryski/go-onlinestats v0.0.0-20170612111826-1c7d19468768
 	github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4
@@ -35,25 +36,20 @@ require (
 	github.com/gorilla/handlers v1.3.0
 	github.com/hashicorp/hcl v0.0.0-20171017181929-23c074d0eceb // indirect
 	github.com/lomik/og-rek v0.0.0-20170411191824-628eefeb8d80
-	github.com/lomik/zapwriter v0.0.0-20180311085200-3b568a1c8958
 	github.com/magiconair/properties v1.7.6 // indirect
 	github.com/mitchellh/mapstructure v0.0.0-20180220230111-00c29f56e238 // indirect
 	github.com/mjibson/go-dsp v0.0.0-20170104183934-49dba8372707
 	github.com/pelletier/go-toml v1.1.0 // indirect
 	github.com/peterbourgon/g2g v0.0.0-20161124161852-0c2bab2b173d
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/afero v1.0.2 // indirect
 	github.com/spf13/cast v1.2.0 // indirect
 	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
 	github.com/spf13/pflag v1.0.0 // indirect
 	github.com/spf13/viper v1.0.0
-	github.com/stretchr/testify v1.2.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tebeka/strftime v0.1.5
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f
-	go.uber.org/atomic v1.3.1 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.7.1
 	golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 // indirect
 	golang.org/x/text v0.3.0 // indirect
