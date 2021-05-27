@@ -2,12 +2,13 @@ package anomaly
 
 import (
 	"fmt"
+	"math"
+	"strings"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"math"
-	"strings"
 )
 
 const anomalyPrefix = "resources.monitoring.anomaly_detector."
@@ -20,7 +21,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &anomaly{}
 	functions := []string{"anomaly"}
@@ -31,7 +32,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *anomaly) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
-	arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
+	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
 	}
@@ -45,25 +46,23 @@ func (f *anomaly) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 	}
 
 	offs, err := e.GetIntervalArgDefault(3, 1, -1)
-
 	if err != nil {
 		return nil, err
 	}
-	// extract anomaly metrics
-	nname := anomalyPrefix + e.Args()[0].Target()
-	anomReq := parser.MetricRequest{Metric: nname, From: from, Until: until}
-	anomalyData, ok := values[anomReq]
 
+	// extract anomaly metrics
 	anomalyMap := make(map[string]*types.MetricData)
-	if ok {
-		for _, d := range anomalyData {
+	for _, mr := range e.Args()[0].Metrics() {
+		metric := anomalyPrefix + mr.Metric
+		for _, data := range values[parser.MetricRequest{Metric: metric, From: from, Until: until}] {
 			if offs > 0 {
-				offPoints := (d.StopTime - offs - d.StartTime) / d.StepTime
+				offPoints := (data.StopTime - offs - data.StartTime) / data.StepTime
 				if offPoints < 0 {
 					offPoints = 0
 				}
+
 				exclude := true
-				for _, v := range d.IsAbsent[offPoints:] {
+				for _, v := range data.IsAbsent[offPoints:] {
 					if !v {
 						exclude = false
 						break
@@ -73,14 +72,15 @@ func (f *anomaly) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 					continue
 				}
 			}
-			name := strings.TrimPrefix(d.Name, anomalyPrefix)
-			d.Name = fmt.Sprintf("[anomaly] %s", name)
-			anomalyMap[name] = d
+
+			name := strings.TrimPrefix(data.Name, anomalyPrefix)
+			data.Name = fmt.Sprintf("[anomaly] %s", name)
+			anomalyMap[name] = data
 		}
 	}
 
 	var results []*types.MetricData
-	for _, a := range arg {
+	for _, a := range args {
 		exclude := false
 		if !math.IsNaN(threshold) {
 			exclude = true

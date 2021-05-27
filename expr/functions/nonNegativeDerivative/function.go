@@ -17,7 +17,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &nonNegativeDerivative{}
 	functions := []string{"nonNegativeDerivative"}
@@ -67,7 +67,7 @@ func (f *nonNegativeDerivative) Do(e parser.Expr, from, until int32, values map[
 			if diff >= 0 {
 				r.Values[i] = diff
 			} else if !math.IsNaN(maxValue) && maxValue >= v {
-				r.Values[i] = ((maxValue - prev) + v + 1)
+				r.Values[i] = (maxValue - prev) + v + 1
 			} else {
 				r.Values[i] = 0
 				r.IsAbsent[i] = true
