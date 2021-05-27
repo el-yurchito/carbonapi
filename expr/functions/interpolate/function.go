@@ -5,7 +5,7 @@ import (
 	"math"
 	"runtime/debug"
 
-	"github.com/lomik/zapwriter"
+	"github.com/PAFomin-at-avito/zapwriter"
 	"go.uber.org/zap"
 
 	"github.com/go-graphite/carbonapi/expr/helper"

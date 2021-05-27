@@ -18,6 +18,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/facebookgo/pidfile"
 	"github.com/go-graphite/carbonzipper/cache"
@@ -26,10 +27,10 @@ import (
 	"github.com/go-graphite/carbonzipper/pathcache"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	"github.com/gorilla/handlers"
-	"github.com/lomik/zapwriter"
 	"github.com/peterbourgon/g2g"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/go-graphite/carbonapi/carbonapipb"
 	"github.com/go-graphite/carbonapi/expr/functions"
@@ -174,12 +175,53 @@ func deferredAccessLogging(
 		accessLogDetails.FunctionCalls = totalCalls
 	}
 
-	accessLogDetails.Runtime = time.Since(t).Seconds()
+	ald := accessLogDetails // just to make code shorter
+	ald.Runtime = time.Since(t).Seconds()
+	if !logAsError {
+		ald.HttpCode = http.StatusOK
+	}
+	fieldsToLog := make([]zapcore.Field, 0, 10)
+	fieldsToLog = append(fieldsToLog,
+		zap.String("handler", ald.Handler),
+		zap.String("carbonapi_uuid", ald.CarbonapiUuid),
+		zap.String("peer_ip", ald.PeerIp),
+	)
+	if len(ald.Targets) > 0 {
+		fieldsToLog = append(fieldsToLog,
+			zap.Strings("targets", ald.Targets),
+		)
+	}
+	if len(ald.Metrics) > 0 {
+		fieldsToLog = append(fieldsToLog,
+			zap.Strings("metrics", ald.Metrics),
+		)
+	}
+	if ald.Runtime != 0 {
+		fieldsToLog = append(fieldsToLog,
+			zap.Float64("runtime", ald.Runtime),
+		)
+	}
+	if ald.HttpCode != 0 {
+		fieldsToLog = append(fieldsToLog,
+			zap.Int32("http_code", ald.HttpCode),
+		)
+	}
+	if ald.From != 0 {
+		fieldsToLog = append(fieldsToLog,
+			zap.Int32("from", ald.From),
+		)
+	}
+	if ald.Until != 0 {
+		fieldsToLog = append(fieldsToLog,
+			zap.Int32("until", ald.Until),
+		)
+	}
+	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
+
 	if logAsError {
-		accessLogger.Error("request failed", zap.Any("data", *accessLogDetails))
+		accessLogger.Error("request failed", fieldsToLog...)
 	} else {
-		accessLogDetails.HttpCode = http.StatusOK
-		accessLogger.Info("request served", zap.Any("data", *accessLogDetails))
+		accessLogger.Info("request served", fieldsToLog...)
 	}
 }
 
