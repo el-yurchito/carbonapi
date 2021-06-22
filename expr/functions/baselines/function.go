@@ -115,13 +115,32 @@ func (f *baselines) Do(e parser.Expr, from, until int32, values map[parser.Metri
 				r.Values[i] = helper.Percentile(tmp[i][0:lengths[i]], 50, true)
 				totalSum += r.Values[i]
 				totalNotAbsent++
+
 				if isAberration {
 					if current[name].IsAbsent[i] {
 						r.IsAbsent[i] = true
 					}
-					if !r.IsAbsent[i] && r.Values[i] != 0 {
-						r.Values[i] = current[name].Values[i] / r.Values[i]
+					if r.IsAbsent[i] {
+						continue
 					}
+
+					currValue := current[name].Values[i]
+					if r.Values[i] != 0 {
+						// calculate aberration: current to median ratio
+						r.Values[i] = currValue / r.Values[i]
+						continue
+					}
+
+					if currValue != 0 {
+						// non-zero to zero ratio is NAN
+						r.IsAbsent[i] = true
+						continue
+					}
+
+					// both current and median values are zero
+					// that means there isn't any aberration
+					// which results to 1
+					r.Values[i] = 1
 				}
 			} else {
 				r.IsAbsent[i] = true
