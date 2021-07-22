@@ -39,7 +39,7 @@ func (f *transformNull) Do(e parser.Expr, from, until int32, values map[parser.M
 		return nil, err
 	}
 
-	smoothTail, err := e.GetBoolNamedOrPosArgDefault("smoothTail", 1, true)
+	smoothTail, err := e.GetBoolNamedOrPosArgDefault("smoothTail", 2, true)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +73,11 @@ func (f *transformNull) Do(e parser.Expr, from, until int32, values map[parser.M
 				continue
 			}
 
-			if smoothTail && ((i == valuesQty-1) || (valuesQty > 100 && i == valuesQty-2)) {
-				// considered last one or two points absent, if they are absent in source series
+			if smoothTail && i == valuesQty-1 {
+				// the last point is absent
 				r.IsAbsent[i] = true
 			} else {
-				// all other cases: put default value
+				// default value, the point isn't absent
 				r.Values[i] = defv
 			}
 		}
