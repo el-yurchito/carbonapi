@@ -2,6 +2,7 @@ package transformNull
 
 import (
 	"fmt"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -16,7 +17,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &transformNull{}
 	functions := []string{"transformNull"}
@@ -26,13 +27,19 @@ func New(configFile string) []interfaces.FunctionMetadata {
 	return res
 }
 
-// transformNull(seriesList, default=0)
+// Do example is: transformNull(seriesList, default=0, smoothTail=true)
 func (f *transformNull) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	arg, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
 	}
+
 	defv, err := e.GetFloatNamedOrPosArgDefault("default", 1, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	smoothTail, err := e.GetBoolNamedOrPosArgDefault("smoothTail", 2, true)
 	if err != nil {
 		return nil, err
 	}
@@ -42,14 +49,12 @@ func (f *transformNull) Do(e parser.Expr, from, until int32, values map[parser.M
 		ok = len(e.Args()) > 1
 	}
 
-	// FIXME(civil): support referenceSeries
-
 	var results []*types.MetricData
-
 	for _, a := range arg {
-
 		var name string
-		if ok {
+		if !smoothTail {
+			name = fmt.Sprintf("transformNull(%s,%g,%v)", a.Name, defv, smoothTail)
+		} else if ok {
 			name = fmt.Sprintf("transformNull(%s,%g)", a.Name, defv)
 		} else {
 			name = fmt.Sprintf("transformNull(%s)", a.Name)
@@ -58,16 +63,24 @@ func (f *transformNull) Do(e parser.Expr, from, until int32, values map[parser.M
 		r := *a
 		r.Name = name
 		r.Values = make([]float64, len(a.Values))
-		r.IsAbsent = make([]bool, len(a.Values))
+		r.IsAbsent = make([]bool, len(a.Values)) // all points are considered not to be absent by default
 
-		for i, v := range a.Values {
-			if a.IsAbsent[i] {
-				v = defv
+		valuesQty := len(a.Values)
+		for i, val := range a.Values {
+			if !a.IsAbsent[i] {
+				// don't modify actual (present) points
+				r.Values[i] = val
+				continue
 			}
 
-			r.Values[i] = v
+			if smoothTail && i == valuesQty-1 {
+				// the last point is absent
+				r.IsAbsent[i] = true
+			} else {
+				// default value, the point isn't absent
+				r.Values[i] = defv
+			}
 		}
-
 		results = append(results, &r)
 	}
 	return results, nil
@@ -77,11 +90,22 @@ func (f *transformNull) Do(e parser.Expr, from, until int32, values map[parser.M
 func (f *transformNull) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
 		"transformNull": {
-			Description: "Takes a metric or wildcard seriesList and replaces null values with the value\nspecified by `default`.  The value 0 used if not specified.  The optional\nreferenceSeries, if specified, is a metric or wildcard series list that governs\nwhich time intervals nulls should be replaced.  If specified, nulls are replaced\nonly in intervals where a non-null is found for the same interval in any of\nreferenceSeries.  This method compliments the drawNullAsZero function in\ngraphical mode, but also works in text-only mode.\n\nExample:\n\n.. code-block:: none\n\n  &target=transformNull(webapp.pages.*.views,-1)\n\nThis would take any page that didn't have values and supply negative 1 as a default.\nAny other numeric value may be used as well.",
-			Function:    "transformNull(seriesList, default=0, referenceSeries=None)",
-			Group:       "Transform",
-			Module:      "graphite.render.functions",
-			Name:        "transformNull",
+			Description: `Takes a metric or wildcard seriesList and replaces null values with the value
+specified by 'default'.  The value 0 used if not specified.  
+Parameter 'smoothTail' (true by default) leaves last point absent (if it is actually absent in source series).
+
+Example:
+
+.. code-block:: none
+
+  &target=transformNull(webapp.pages.*.views,-1)
+
+This would take any page that didn't have values and supply negative 1 as a default.
+Any other numeric value may be used as well.`,
+			Function: "transformNull(seriesList, default=0, referenceSeries=None)",
+			Group:    "Transform",
+			Module:   "graphite.render.functions",
+			Name:     "transformNull",
 			Params: []types.FunctionParam{
 				{
 					Name:     "seriesList",
@@ -89,15 +113,17 @@ func (f *transformNull) Description() map[string]types.FunctionDescription {
 					Type:     types.SeriesList,
 				},
 				{
-					Default: types.NewSuggestion(0),
-					Name:    "default",
-					Type:    types.Float,
+					Default:  types.NewSuggestion(0),
+					Name:     "default",
+					Required: false,
+					Type:     types.Float,
 				},
-				/*				{
-									Name: "referenceSeries",
-									Type: types.SeriesList,
-								},
-				*/
+				{
+					Default:  types.NewSuggestion(true),
+					Name:     "smoothTail",
+					Required: false,
+					Type:     types.Boolean,
+				},
 			},
 		},
 	}
