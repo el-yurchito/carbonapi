@@ -291,24 +291,25 @@ func (f *asPercent) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			results = append(results, &r)
 		}
 
-		for i := range results[0].Values {
+		if len(results) > 0 {
+			for i := range results[0].Values {
+				total := getTotal(i)
+				for j := range results {
+					r := results[j]
+					a := arg[j]
 
-			total := getTotal(i)
+					if a.IsAbsent[i] || math.IsNaN(total) || total == 0 {
+						r.Values[i] = 0
+						r.IsAbsent[i] = true
+						continue
+					}
 
-			for j := range results {
-				r := results[j]
-				a := arg[j]
-
-				if a.IsAbsent[i] || math.IsNaN(total) || total == 0 {
-					r.Values[i] = 0
-					r.IsAbsent[i] = true
-					continue
+					r.Values[i] = (a.Values[i] / total) * 100
 				}
-
-				r.Values[i] = (a.Values[i] / total) * 100
 			}
 		}
 	}
+
 	return results, nil
 }
 
