@@ -228,6 +228,17 @@ func deferredAccessLogging(
 		zap.Any(headerSource, req.Header.Get(headerSource)),
 	)
 
+	if ald.Handler == "render" {
+		headers := make(map[string]string, len(req.Header))
+		for key := range req.Header {
+			headers[key] = req.Header.Get(key)
+		}
+		accessLogger.Info(
+			"request headers data (debug)",
+			zap.Any("headers_data", headers),
+		)
+	}
+
 	if logAsError {
 		accessLogger.Error("request failed", fieldsToLog...)
 	} else {
