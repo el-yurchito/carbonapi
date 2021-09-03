@@ -248,7 +248,9 @@ func deferredAccessLogging(
 	}
 
 	// send metrics as well
-	deferredHandlerMetrics(ald.Handler, int(ald.HttpCode), req, reqStarted)
+	if ald.Handler == "render" {
+		deferredHandlerMetrics(ald.Handler, int(ald.HttpCode), req, reqStarted)
+	}
 }
 
 func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) {
@@ -755,23 +757,22 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 		}
 	}
 
+	hostname, _ = os.Hostname()
+	hostname = strings.Replace(hostname, ".", "_", -1)
+
 	logger.Info("starting carbonapi",
 		zap.String("build_version", BuildVersion),
 		zap.Any("config", config),
 	)
 
 	if host != "" {
-		// register our metrics with graphite
-		graphite := g2g.NewGraphite(host, config.Graphite.Interval, 10*time.Second)
-
-		hostname, _ = os.Hostname()
-		hostname = strings.Replace(hostname, ".", "_", -1)
-
 		prefix := config.Graphite.Prefix
-
 		pattern := config.Graphite.Pattern
 		pattern = strings.Replace(pattern, "{prefix}", prefix, -1)
 		pattern = strings.Replace(pattern, "{fqdn}", hostname, -1)
+
+		// register our metrics with graphite
+		graphite := g2g.NewGraphite(host, config.Graphite.Interval, 10*time.Second)
 
 		graphite.Register(fmt.Sprintf("%s.requests", pattern), apiMetrics.Requests)
 		graphite.Register(fmt.Sprintf("%s.request_cache_hits", pattern), apiMetrics.RequestCacheHits)
