@@ -33,6 +33,7 @@ message AccessLogDetails {
     bool from_cache = 27;
     int64 zipper_requests = 28;
     repeated FunctionCall function_calls = 29;
+    string some_headers = 30;
 }
 
 message FunctionCall {

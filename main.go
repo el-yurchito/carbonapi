@@ -226,7 +226,6 @@ func deferredAccessLogging(
 			zap.Int32("until", ald.Until),
 		)
 	}
-	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
 
 	// some grafana-related headers
 	headers := make(map[string]string, 8)
@@ -237,9 +236,10 @@ func deferredAccessLogging(
 		}
 	}
 	if text, err := json.Marshal(headers); err == nil {
-		fieldsToLog = append(fieldsToLog, zap.String("some_headers", string(text)))
+		ald.SomeHeaders = string(text)
 	}
 
+	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
 	logger := zapwriter.Logger("access")
 	if logAsError {
 		logger.Error("request failed", fieldsToLog...)
