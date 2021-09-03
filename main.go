@@ -151,11 +151,16 @@ func buildParseErrorString(target, e string, err error) string {
 	return msg
 }
 
+const (
+	headerSource = "X-Source"
+)
+
 func deferredAccessLogging(
 	accessLogger *zap.Logger,
 	accessLogDetails *carbonapipb.AccessLogDetails,
 	functionCallStacks []*timer.FunctionCallStack,
-	t time.Time,
+	req *http.Request,
+	reqStarted time.Time,
 	logAsError bool,
 ) {
 	if functionCallStacks != nil && config.FunctionCalls.WriteLog {
@@ -176,10 +181,11 @@ func deferredAccessLogging(
 	}
 
 	ald := accessLogDetails // just to make code shorter
-	ald.Runtime = time.Since(t).Seconds()
+	ald.Runtime = time.Since(reqStarted).Seconds()
 	if !logAsError {
 		ald.HttpCode = http.StatusOK
 	}
+
 	fieldsToLog := make([]zapcore.Field, 0, 10)
 	fieldsToLog = append(fieldsToLog,
 		zap.String("handler", ald.Handler),
@@ -216,7 +222,11 @@ func deferredAccessLogging(
 			zap.Int32("until", ald.Until),
 		)
 	}
-	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
+	fieldsToLog = append(
+		fieldsToLog,
+		zap.Any("data", *ald),
+		zap.Any(headerSource, req.Header.Get(headerSource)),
+	)
 
 	if logAsError {
 		accessLogger.Error("request failed", fieldsToLog...)

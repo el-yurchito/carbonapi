@@ -159,7 +159,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer func() {
 		deferredFunctionCallMetrics(functionCallStacks)
-		deferredAccessLogging(accessLogger, &accessLogDetails, functionCallStacks, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, functionCallStacks, r, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)
@@ -581,7 +581,7 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, nil, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, nil, r, t0, logAsError)
 	}()
 
 	if query == "" {
@@ -769,7 +769,7 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, nil, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, nil, r, t0, logAsError)
 	}()
 
 	var (
@@ -819,49 +819,50 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 
 func lbcheckHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
-	accessLogger := zapwriter.Logger("access")
-
-	w.Write([]byte("Ok\n"))
+	_, _ = w.Write([]byte("Ok\n"))
 
 	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-
-	var accessLogDetails = carbonapipb.AccessLogDetails{
-		Handler:  "lbcheck",
-		Url:      r.URL.RequestURI(),
-		PeerIp:   srcIP,
-		PeerPort: srcPort,
-		Host:     r.Host,
-		Referer:  r.Referer(),
-		Runtime:  time.Since(t0).Seconds(),
-		HttpCode: http.StatusOK,
-		Uri:      r.RequestURI,
-	}
-	accessLogger.Info("request served", zap.Any("data", accessLogDetails))
+	zapwriter.Logger("access").Info(
+		"request served",
+		zap.Any("data", carbonapipb.AccessLogDetails{
+			Handler:  "lbcheck",
+			Url:      r.URL.RequestURI(),
+			PeerIp:   srcIP,
+			PeerPort: srcPort,
+			Host:     r.Host,
+			Referer:  r.Referer(),
+			Runtime:  time.Since(t0).Seconds(),
+			HttpCode: http.StatusOK,
+			Uri:      r.RequestURI,
+		}),
+		zap.Any(headerSource, r.Header.Get(headerSource)),
+	)
 }
 
 func versionHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
-	accessLogger := zapwriter.Logger("access")
-
 	if config.GraphiteWeb09Compatibility {
-		w.Write([]byte("0.9.15\n"))
+		_, _ = w.Write([]byte("0.9.15\n"))
 	} else {
-		w.Write([]byte("1.0.0\n"))
+		_, _ = w.Write([]byte("1.0.0\n"))
 	}
 
 	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-	var accessLogDetails = carbonapipb.AccessLogDetails{
-		Handler:  "version",
-		Url:      r.URL.RequestURI(),
-		PeerIp:   srcIP,
-		PeerPort: srcPort,
-		Host:     r.Host,
-		Referer:  r.Referer(),
-		Runtime:  time.Since(t0).Seconds(),
-		HttpCode: http.StatusOK,
-		Uri:      r.RequestURI,
-	}
-	accessLogger.Info("request served", zap.Any("data", accessLogDetails))
+	zapwriter.Logger("access").Info(
+		"request served",
+		zap.Any("data", carbonapipb.AccessLogDetails{
+			Handler:  "version",
+			Url:      r.URL.RequestURI(),
+			PeerIp:   srcIP,
+			PeerPort: srcPort,
+			Host:     r.Host,
+			Referer:  r.Referer(),
+			Runtime:  time.Since(t0).Seconds(),
+			HttpCode: http.StatusOK,
+			Uri:      r.RequestURI,
+		}),
+		zap.Any(headerSource, r.Header.Get(headerSource)),
+	)
 }
 
 func functionsHandler(w http.ResponseWriter, r *http.Request) {
@@ -885,7 +886,7 @@ func functionsHandler(w http.ResponseWriter, r *http.Request) {
 
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, nil, t0, logAsError)
+		deferredAccessLogging(accessLogger, &accessLogDetails, nil, r, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)
@@ -983,11 +984,7 @@ func functionsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(b)
-	accessLogDetails.Runtime = time.Since(t0).Seconds()
-	accessLogDetails.HttpCode = http.StatusOK
-
-	accessLogger.Info("request served", zap.Any("data", accessLogDetails))
+	_, _ = w.Write(b)
 }
 
 func tagHandler(w http.ResponseWriter, r *http.Request) {
