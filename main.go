@@ -288,7 +288,7 @@ func deferredHandlerMetrics(handlerName string, httpStatus int, req *http.Reques
 	defer client.Release()
 
 	tags := fmt.Sprintf(
-		"hostname=%s;handler-name=%s;http-status=%d;header-x-source=%s",
+		";hostname=%s;handler-name=%s;http-status=%d;header-x-source=%s",
 		hostname, handlerName, httpStatus,
 		req.Header.Get(reqHeaderSource),
 	)
