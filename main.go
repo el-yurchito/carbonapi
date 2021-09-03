@@ -152,7 +152,7 @@ func buildParseErrorString(target, e string, err error) string {
 }
 
 const (
-	headerSource = "X-Source"
+	reqHeaderSource = "X-Source"
 )
 
 func deferredAccessLogging(
@@ -222,22 +222,17 @@ func deferredAccessLogging(
 			zap.Int32("until", ald.Until),
 		)
 	}
-	fieldsToLog = append(
-		fieldsToLog,
-		zap.Any("data", *ald),
-		zap.Any(headerSource, req.Header.Get(headerSource)),
-	)
+	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
 
-	if ald.Handler == "render" {
-		headers := make(map[string]string, len(req.Header))
-		for key := range req.Header {
-			headers[key] = req.Header.Get(key)
+	// some grafana-related headers
+	headers := make(map[string]string, 8)
+	headers[reqHeaderSource] = req.Header.Get(reqHeaderSource)
+	for _, name := range [...]string{"X-Dashboard-Id", "X-Forwarded-For", "X-Panel-Id", "X-Real-Ip"} {
+		if value := req.Header.Get(name); value != "" {
+			headers[name] = value
 		}
-		accessLogger.Info(
-			"request headers data (debug)",
-			zap.Any("headers_data", headers),
-		)
 	}
+	fieldsToLog = append(fieldsToLog, zap.Any("some_headers", headers))
 
 	if logAsError {
 		accessLogger.Error("request failed", fieldsToLog...)

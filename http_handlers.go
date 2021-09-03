@@ -835,7 +835,7 @@ func lbcheckHandler(w http.ResponseWriter, r *http.Request) {
 			HttpCode: http.StatusOK,
 			Uri:      r.RequestURI,
 		}),
-		zap.Any(headerSource, r.Header.Get(headerSource)),
+		zap.Any(reqHeaderSource, r.Header.Get(reqHeaderSource)),
 	)
 }
 
@@ -861,7 +861,7 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 			HttpCode: http.StatusOK,
 			Uri:      r.RequestURI,
 		}),
-		zap.Any(headerSource, r.Header.Get(headerSource)),
+		zap.Any(reqHeaderSource, r.Header.Get(reqHeaderSource)),
 	)
 }
 
