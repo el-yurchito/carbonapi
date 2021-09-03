@@ -130,36 +130,19 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := util.SetUUID(r.Context(), uuidString)
 	w.Header().Set("X-Carbonapi-UUID", uuidString)
 
-	username, _, _ := r.BasicAuth()
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
+	accessLogDetails := carbonapipb.AccessLogDetails{
+		Handler:       "render",
+		CarbonapiUuid: uuidString,
+	}
 
 	var (
-		accessLogDetails = carbonapipb.AccessLogDetails{
-			Handler:       "render",
-			Username:      username,
-			CarbonapiUuid: uuidString,
-			Url:           r.URL.RequestURI(),
-			PeerIp:        srcIP,
-			PeerPort:      srcPort,
-			Host:          r.Host,
-			Referer:       r.Referer(),
-			Uri:           r.RequestURI,
-		}
 		functionCallStacks []*timer.FunctionCallStack
-
-		accessLogger, logger *zap.Logger
-		logAsError           bool
-	)
-
-	accessLogger = zapwriter.Logger("access")
-	logger = zapwriter.Logger("render").With(
-		zap.String("carbonapi_uuid", uuidString),
-		zap.String("username", username),
+		logAsError         bool
 	)
 
 	defer func() {
 		deferredFunctionCallMetrics(functionCallStacks)
-		deferredAccessLogging(accessLogger, &accessLogDetails, functionCallStacks, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, functionCallStacks, r, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)
@@ -195,6 +178,9 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cacheTimeout := config.Cache.DefaultTimeoutSec
+	logger := zapwriter.Logger("render").With(
+		zap.String("carbonapi_uuid", uuidString),
+	)
 
 	if tstr := r.FormValue("cacheTimeout"); tstr != "" {
 		t, err := strconv.Atoi(tstr)
@@ -556,32 +542,19 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 func findHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
 	uuidString := uuid.NewV4().String()
-
 	ctx := util.SetUUID(r.Context(), uuidString)
-	username, _, _ := r.BasicAuth()
 
 	format := r.FormValue("format")
 	jsonp := r.FormValue("jsonp")
-
 	query := r.FormValue("query")
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
 
-	accessLogger := zapwriter.Logger("access")
-	var accessLogDetails = carbonapipb.AccessLogDetails{
+	accessLogDetails := carbonapipb.AccessLogDetails{
 		Handler:       "find",
-		Username:      username,
 		CarbonapiUuid: uuidString,
-		Url:           r.URL.RequestURI(),
-		PeerIp:        srcIP,
-		PeerPort:      srcPort,
-		Host:          r.Host,
-		Referer:       r.Referer(),
-		Uri:           r.RequestURI,
 	}
-
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, nil, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, nil, r, t0, logAsError)
 	}()
 
 	if query == "" {
@@ -743,33 +716,21 @@ func findList(globs pb.GlobResponse) ([]byte, error) {
 func infoHandler(w http.ResponseWriter, r *http.Request) {
 	t0 := time.Now()
 	uuidString := uuid.NewV4().String()
-
 	ctx := util.SetUUID(r.Context(), uuidString)
-	username, _, _ := r.BasicAuth()
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-	format := r.FormValue("format")
 
+	format := r.FormValue("format")
 	if format == "" {
 		format = jsonFormat
 	}
 
-	accessLogger := zapwriter.Logger("access")
-	var accessLogDetails = carbonapipb.AccessLogDetails{
+	accessLogDetails := carbonapipb.AccessLogDetails{
 		Handler:       "info",
-		Username:      username,
 		CarbonapiUuid: uuidString,
-		Url:           r.URL.RequestURI(),
-		PeerIp:        srcIP,
-		PeerPort:      srcPort,
-		Host:          r.Host,
-		Referer:       r.Referer(),
 		Format:        format,
-		Uri:           r.RequestURI,
 	}
-
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, nil, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, nil, r, t0, logAsError)
 	}()
 
 	var (
@@ -818,75 +779,30 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func lbcheckHandler(w http.ResponseWriter, r *http.Request) {
-	t0 := time.Now()
-	_, _ = w.Write([]byte("Ok\n"))
+	ald := carbonapipb.AccessLogDetails{Handler: "lbcheck"}
+	defer deferredAccessLogging(&ald, nil, r, time.Now(), false)
 
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-	zapwriter.Logger("access").Info(
-		"request served",
-		zap.Any("data", carbonapipb.AccessLogDetails{
-			Handler:  "lbcheck",
-			Url:      r.URL.RequestURI(),
-			PeerIp:   srcIP,
-			PeerPort: srcPort,
-			Host:     r.Host,
-			Referer:  r.Referer(),
-			Runtime:  time.Since(t0).Seconds(),
-			HttpCode: http.StatusOK,
-			Uri:      r.RequestURI,
-		}),
-		zap.Any(reqHeaderSource, r.Header.Get(reqHeaderSource)),
-	)
+	_, _ = w.Write([]byte("Ok\n"))
 }
 
 func versionHandler(w http.ResponseWriter, r *http.Request) {
-	t0 := time.Now()
+	ald := carbonapipb.AccessLogDetails{Handler: "version"}
+	defer deferredAccessLogging(&ald, nil, r, time.Now(), false)
+
 	if config.GraphiteWeb09Compatibility {
 		_, _ = w.Write([]byte("0.9.15\n"))
 	} else {
 		_, _ = w.Write([]byte("1.0.0\n"))
 	}
-
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-	zapwriter.Logger("access").Info(
-		"request served",
-		zap.Any("data", carbonapipb.AccessLogDetails{
-			Handler:  "version",
-			Url:      r.URL.RequestURI(),
-			PeerIp:   srcIP,
-			PeerPort: srcPort,
-			Host:     r.Host,
-			Referer:  r.Referer(),
-			Runtime:  time.Since(t0).Seconds(),
-			HttpCode: http.StatusOK,
-			Uri:      r.RequestURI,
-		}),
-		zap.Any(reqHeaderSource, r.Header.Get(reqHeaderSource)),
-	)
 }
 
 func functionsHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement helper for specific functions
 	t0 := time.Now()
-	username, _, _ := r.BasicAuth()
-
-	srcIP, srcPort := splitRemoteAddr(r.RemoteAddr)
-
-	accessLogger := zapwriter.Logger("access")
-	var accessLogDetails = carbonapipb.AccessLogDetails{
-		Handler:  "functions",
-		Username: username,
-		Url:      r.URL.RequestURI(),
-		PeerIp:   srcIP,
-		PeerPort: srcPort,
-		Host:     r.Host,
-		Referer:  r.Referer(),
-		Uri:      r.RequestURI,
-	}
-
+	accessLogDetails := carbonapipb.AccessLogDetails{Handler: "functions"}
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(accessLogger, &accessLogDetails, nil, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, nil, r, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)

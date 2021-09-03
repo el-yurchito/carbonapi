@@ -156,16 +156,15 @@ const (
 )
 
 func deferredAccessLogging(
-	accessLogger *zap.Logger,
-	accessLogDetails *carbonapipb.AccessLogDetails,
-	functionCallStacks []*timer.FunctionCallStack,
+	ald *carbonapipb.AccessLogDetails,
+	stacks []*timer.FunctionCallStack,
 	req *http.Request,
 	reqStarted time.Time,
 	logAsError bool,
 ) {
-	if functionCallStacks != nil && config.FunctionCalls.WriteLog {
+	if config.FunctionCalls.WriteLog && len(stacks) > 0 {
 		totalCalls := make([]*timer.FunctionCall, 0, 64)
-		for _, stack := range functionCallStacks {
+		for _, stack := range stacks {
 			stackCalls := stack.GetCalls()
 			if len(stackCalls) == 0 || stackCalls[0].CallFinished == 0 {
 				continue
@@ -177,16 +176,21 @@ func deferredAccessLogging(
 
 			totalCalls = append(totalCalls, stackCalls...)
 		}
-		accessLogDetails.FunctionCalls = totalCalls
+		ald.FunctionCalls = totalCalls
 	}
 
-	ald := accessLogDetails // just to make code shorter
+	ald.Host = req.Host
+	ald.PeerIp, ald.PeerPort = splitRemoteAddr(req.RemoteAddr)
+	ald.Referer = req.Referer()
 	ald.Runtime = time.Since(reqStarted).Seconds()
+	ald.Uri = req.RequestURI
+	ald.Url = req.URL.RequestURI()
+
 	if !logAsError {
 		ald.HttpCode = http.StatusOK
 	}
 
-	fieldsToLog := make([]zapcore.Field, 0, 10)
+	fieldsToLog := make([]zapcore.Field, 0, 11)
 	fieldsToLog = append(fieldsToLog,
 		zap.String("handler", ald.Handler),
 		zap.String("carbonapi_uuid", ald.CarbonapiUuid),
@@ -232,13 +236,19 @@ func deferredAccessLogging(
 			headers[name] = value
 		}
 	}
-	fieldsToLog = append(fieldsToLog, zap.Any("some_headers", headers))
-
-	if logAsError {
-		accessLogger.Error("request failed", fieldsToLog...)
-	} else {
-		accessLogger.Info("request served", fieldsToLog...)
+	if text, err := json.Marshal(headers); err == nil {
+		fieldsToLog = append(fieldsToLog, zap.String("some_headers", string(text)))
 	}
+
+	logger := zapwriter.Logger("access")
+	if logAsError {
+		logger.Error("request failed", fieldsToLog...)
+	} else {
+		logger.Info("request served", fieldsToLog...)
+	}
+
+	// send metrics as well
+	deferredHandlerMetrics(ald.Handler, int(ald.HttpCode), req, reqStarted)
 }
 
 func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) {
@@ -271,6 +281,30 @@ func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) 
 			client.Timing("function-calls.time.interval"+tags, timeRangeMarks.Range)
 		}
 	}
+}
+
+func deferredHandlerMetrics(handlerName string, httpStatus int, req *http.Request, reqStarted time.Time) {
+	client := statsdLimiter.Get()
+	defer client.Release()
+
+	tags := fmt.Sprintf(
+		"hostname=%s;handler-name=%s;http-status=%d;header-x-source=%s",
+		hostname, handlerName, httpStatus,
+		req.Header.Get(reqHeaderSource),
+	)
+	for _, name := range [...]string{"X-Dashboard-Id", "X-Panel-Id", "X-Real-Ip"} {
+		if value := req.Header.Get(name); value != "" {
+			tags += fmt.Sprintf(
+				";header-%s=%s",
+				strings.ToLower(name), value,
+			)
+		}
+	}
+
+	client.Timing(
+		"handler-stats.response-time"+tags,
+		int64(time.Since(reqStarted)),
+	)
 }
 
 type treejson struct {

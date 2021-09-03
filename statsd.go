@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	flushPeriod = 10 * time.Second
+	flushPeriod = 200 * time.Millisecond
 	poolSize    = 16
 )
 
