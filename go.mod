@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa
-	github.com/PAFomin-at-avito/zapwriter v0.0.0-20210402162258-8ce7ee5ec600
+	github.com/PAFomin-at-avito/zapwriter v0.0.0-20210906122802-230580a05953
 	github.com/aclements/go-moremath v0.0.0-20170210193428-033754ab1fee // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d // indirect
 	github.com/davecgh/go-spew v1.1.1

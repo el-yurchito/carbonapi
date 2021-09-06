@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa h1:bV0zbEchxY6+/yBbwqBAtdLyCPRDJtkp0qRRaK2BseI=
 github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa/go.mod h1:zsfWLaDctbM7aV1TsQAwkVswuKQ0k7PK4rjC1VZqpbI=
-github.com/PAFomin-at-avito/zapwriter v0.0.0-20210402162258-8ce7ee5ec600 h1:kHvZ5nqRVtFZ1o+hj65FsckRiS5ZZa0I2klD912cNNQ=
-github.com/PAFomin-at-avito/zapwriter v0.0.0-20210402162258-8ce7ee5ec600/go.mod h1:gDK4dE8CkK9d59qdOEVqFuW2k1PDijRK0qHfmiQqtqM=
+github.com/PAFomin-at-avito/zapwriter v0.0.0-20210906122802-230580a05953 h1:ZrVViCrTh7DPBE/XAcoiU/mAXpfgKYlAHKi36jI4JH4=
+github.com/PAFomin-at-avito/zapwriter v0.0.0-20210906122802-230580a05953/go.mod h1:gDK4dE8CkK9d59qdOEVqFuW2k1PDijRK0qHfmiQqtqM=
 github.com/aclements/go-moremath v0.0.0-20170210193428-033754ab1fee h1:U/M5WeoRJXGbprTIaGaw8egvYgNU8eXlS727Y4QM1tA=
 github.com/aclements/go-moremath v0.0.0-20170210193428-033754ab1fee/go.mod h1:idZL3yvz4kzx1dsBOAC+oYv6L92P1oFEhUXUB1A/lwQ=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d h1:7IjN4QP3c38xhg6wz8R3YjoU+6S9e7xBc0DAVLLIpHE=
