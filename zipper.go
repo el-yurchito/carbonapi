@@ -104,3 +104,8 @@ func (z zipper) Render(ctx context.Context, metric string, from, until int32) ([
 
 	return result, nil
 }
+
+type upstreamError interface {
+	error
+	HttpStatus() int
+}

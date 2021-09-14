@@ -25,7 +25,7 @@ require (
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/fsnotify/fsnotify v1.4.7 // indirect
 	github.com/garyburd/redigo v1.6.0
-	github.com/go-graphite/carbonzipper v0.0.0-20180216150814-54ed0747e074
+	github.com/go-graphite/carbonzipper v0.0.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.3
 	github.com/gonum/blas v0.0.0-20180125090452-e7c5890b24cf // indirect
@@ -56,3 +56,5 @@ require (
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0
 	gopkg.in/yaml.v2 v2.1.1 // indirect
 )
+
+replace github.com/go-graphite/carbonzipper => github.com/el-yurchito/carbonzipper v0.0.0-20210914170001-6e0cc90f4cf2

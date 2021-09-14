@@ -418,6 +418,21 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 					"render error occurred while fetching data",
 					zap.Any("errors", errors),
 				)
+
+				// propagate upstream error, in case it has occurred
+				for i := range errors {
+					if err, ok := errors[i].(upstreamError); ok {
+						msg := err.Error()
+						status := err.HttpStatus()
+
+						http.Error(w, msg, status)
+						accessLogDetails.Reason = msg
+						accessLogDetails.HttpCode = int32(status)
+						logAsError = true
+
+						return
+					}
+				}
 			}
 
 			currentFetchedMetrics := metricValues[mfetch]
