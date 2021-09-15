@@ -425,7 +425,18 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 						msg := err.Error()
 						status := err.HttpStatus()
 
-						http.Error(w, msg, status)
+						if format == jsonFormat {
+							w.WriteHeader(status)
+
+							response := struct {
+								Msg string `json:"upstream_error"`
+							}{Msg: msg}
+							text, _ := json.Marshal(response)
+							writeResponse(w, text, format, jsonp)
+						} else {
+							http.Error(w, msg, status)
+						}
+
 						accessLogDetails.Reason = msg
 						accessLogDetails.HttpCode = int32(status)
 						logAsError = true
