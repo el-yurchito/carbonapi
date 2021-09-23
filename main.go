@@ -410,6 +410,11 @@ type statsdConfig struct {
 	Prefix  string
 }
 
+type upstreamsConfig struct {
+	realZipper.Config `mapstructure:",squash"`
+	HealthChecks      []string `mapstructure:"health_checks"`
+}
+
 var config = struct {
 	ExtrapolateExperiment      bool                `mapstructure:"extrapolateExperiment"`
 	Logger                     []zapwriter.Config  `mapstructure:"logger"`
@@ -427,7 +432,7 @@ var config = struct {
 	AlwaysSendGlobsAsIs        bool                `mapstructure:"alwaysSendGlobsAsIs"`
 	MaxBatchSize               int                 `mapstructure:"maxBatchSize"`
 	Zipper                     string              `mapstructure:"zipper"`
-	Upstreams                  realZipper.Config   `mapstructure:"upstreams"`
+	Upstreams                  upstreamsConfig     `mapstructure:"upstreams"`
 	ExpireDelaySec             int32               `mapstructure:"expireDelaySec"`
 	GraphiteWeb09Compatibility bool                `mapstructure:"graphite09compat"`
 	IgnoreClientTimeout        bool                `mapstructure:"ignoreClientTimeout"`
@@ -481,15 +486,17 @@ var config = struct {
 	defaultTimeZone: time.Local,
 	Logger:          []zapwriter.Config{defaultLoggerConfig},
 
-	Upstreams: realZipper.Config{
-		Timeouts: realZipper.Timeouts{
-			Global:       10000 * time.Second,
-			AfterStarted: 2 * time.Second,
-			Connect:      200 * time.Millisecond,
-		},
-		KeepAliveInterval: 30 * time.Second,
+	Upstreams: upstreamsConfig{
+		Config: realZipper.Config{
+			Timeouts: realZipper.Timeouts{
+				Global:       10000 * time.Second,
+				AfterStarted: 2 * time.Second,
+				Connect:      200 * time.Millisecond,
+			},
+			KeepAliveInterval: 30 * time.Second,
 
-		MaxIdleConnsPerHost: 100,
+			MaxIdleConnsPerHost: 100,
+		},
 	},
 	ExpireDelaySec:             10 * 60,
 	GraphiteWeb09Compatibility: false,
@@ -979,7 +986,7 @@ func main() {
 	flag.Parse()
 	setUpViper(logger, configPath, *envPrefix)
 	setUpConfigUpstreams(logger)
-	zipper := newZipper(zipperStats, &config.Upstreams, config.IgnoreClientTimeout, logger.With(zap.String("handler", "zipper")))
+	zipper := newZipper(zipperStats, &config.Upstreams.Config, config.IgnoreClientTimeout, logger.With(zap.String("handler", "zipper")))
 	setUpConfig(logger, zipper)
 
 	r := initHandlers()

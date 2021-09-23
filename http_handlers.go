@@ -53,6 +53,9 @@ func initHandlers() *http.ServeMux {
 
 	r.HandleFunc("/lb_check", lbcheckHandler)
 
+	r.HandleFunc("/health-check", backendHealthHandler)
+	r.HandleFunc("/health-check/", backendHealthHandler)
+
 	r.HandleFunc("/version", versionHandler)
 	r.HandleFunc("/version/", versionHandler)
 
@@ -820,6 +823,16 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		_, _ = w.Write([]byte("1.0.0\n"))
 	}
+}
+
+func backendHealthHandler(writer http.ResponseWriter, request *http.Request) {
+	backend, _ := strconv.Atoi(request.FormValue("backend"))
+	proxy, err := newHealthCheckProxy(backend)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	proxy.ServeHTTP(writer, request)
 }
 
 func functionsHandler(w http.ResponseWriter, r *http.Request) {
