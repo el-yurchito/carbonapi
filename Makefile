@@ -8,6 +8,9 @@ VERSION ?= $(shell git describe --abbrev=4 --dirty --always --tags)
 GO ?= go
 
 carbonapi:
+	$(GO) build -ldflags '-X main.BuildVersion=$(VERSION)'
+
+carbonapi-with-cairo:
 	PKG_CONFIG_PATH="$(EXTRA_PKG_CONFIG_PATH)" $(GO) build -v -tags cairo -ldflags '-X main.BuildVersion=$(VERSION)'
 
 nocairo:
