@@ -141,8 +141,8 @@ func (e *expr) Metrics() []MetricRequest {
 		}
 
 		switch e.target {
-		case "seriesByTag":
-			// pass seriesByTag to backend as is
+		case "seriesByTag", "groupWithSql":
+			// pass seriesByTag and groupWithSql to backend as is
 			r = append(r, MetricRequest{Metric: e.ToString()})
 		case "slo", "sloErrorBudget":
 			if !e.isAdjusted { // avoid multiple boundaries overriding
