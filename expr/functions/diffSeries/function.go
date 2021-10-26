@@ -2,11 +2,11 @@ package diffSeries
 
 import (
 	"fmt"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
-	"strings"
 )
 
 type diffSeries struct {
@@ -17,7 +17,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &diffSeries{}
 	functions := []string{"diffSeries"}
@@ -28,7 +28,7 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 // diffSeries(*seriesLists)
-func (f *diffSeries) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+func (f *diffSeries) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) (result []*types.MetricData, err error) {
 	minuends, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
@@ -36,50 +36,47 @@ func (f *diffSeries) Do(e parser.Expr, from, until int32, values map[parser.Metr
 
 	subtrahends, err := helper.GetSeriesArgs(e.Args()[1:], from, until, values)
 	if err != nil {
-		if len(minuends) < 2 {
-			return nil, err
-		}
-		subtrahends = minuends[1:]
-		err = nil
+		return nil, err
 	}
 
-	// We need to rewrite name if there are some missing metrics
-	if len(subtrahends)+len(minuends) < len(e.Args()) {
-		args := []string{
-			helper.RemoveEmptySeriesFromName(minuends),
-			helper.RemoveEmptySeriesFromName(subtrahends),
-		}
-		e.SetRawArgs(strings.Join(args, ","))
+	var (
+		arg2Name string
+		subsQty  int
+	)
+	if subsQty = len(subtrahends); subsQty == 0 {
+		arg2Name = "nil"
+	} else if subsQty == 1 {
+		arg2Name = subtrahends[0].Name
+	} else {
+		arg2Name = helper.RemoveEmptySeriesFromName(subtrahends)
 	}
 
-	minuend := minuends[0]
+	result = make([]*types.MetricData, len(minuends))
+	for i, minuend := range minuends {
+		r := *minuend
+		r.Name = fmt.Sprintf("diffSeries(%s,%s)", minuend.Name, arg2Name)
+		r.IsAbsent = make([]bool, len(minuend.Values))
+		r.Values = make([]float64, len(minuend.Values))
 
-	// FIXME: need more error checking on minuend, subtrahends here
-	r := *minuend
-	r.Name = fmt.Sprintf("diffSeries(%s)", e.RawArgs())
-	r.Values = make([]float64, len(minuend.Values))
-	r.IsAbsent = make([]bool, len(minuend.Values))
-
-	for i, v := range minuend.Values {
-
-		if minuend.IsAbsent[i] {
-			r.IsAbsent[i] = true
-			continue
-		}
-
-		var sub float64
-		for _, s := range subtrahends {
-			iSubtrahend := (int32(i) * minuend.StepTime) / s.StepTime
-
-			if s.IsAbsent[iSubtrahend] {
+		for j := range minuend.Values {
+			if minuend.IsAbsent[j] {
+				r.IsAbsent[j] = true
 				continue
 			}
-			sub += s.Values[iSubtrahend]
-		}
 
-		r.Values[i] = v - sub
+			var subsSum float64
+			for _, sub := range subtrahends {
+				jSub := (int32(j) * minuend.StepTime) / sub.StepTime
+				if sub.IsAbsent[jSub] {
+					continue
+				}
+				subsSum += sub.Values[jSub]
+			}
+			r.Values[j] = minuend.Values[j] - subsSum
+		}
+		result[i] = &r
 	}
-	return []*types.MetricData{&r}, err
+	return result, nil
 }
 
 // Description is auto-generated description, based on output of https://github.com/graphite-project/graphite-web

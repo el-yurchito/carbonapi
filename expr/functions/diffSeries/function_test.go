@@ -1,6 +1,7 @@
 package diffSeries
 
 import (
+	"math"
 	"testing"
 	"time"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	th "github.com/go-graphite/carbonapi/tests"
-	"math"
 )
 
 func init() {
@@ -71,36 +71,6 @@ func TestDiffSeries(t *testing.T) {
 			},
 			[]*types.MetricData{types.MakeMetricData("diffSeries(metric1,metric2,metric3)",
 				[]float64{1, math.NaN(), math.NaN(), 3, 4, 1}, 1, now32)},
-			nil,
-		},
-		{
-			parser.NewExpr("diffSeries",
-
-				"metric*",
-			),
-			map[parser.MetricRequest][]*types.MetricData{
-				{"metric*", 0, 1}: {
-					types.MakeMetricData("metric1", []float64{1, math.NaN(), math.NaN(), 3, 4, 12}, 1, now32),
-					types.MakeMetricData("metric2", []float64{2, math.NaN(), 3, math.NaN(), 0, 6}, 1, now32),
-				},
-			},
-			[]*types.MetricData{types.MakeMetricData("diffSeries(metric*)",
-				[]float64{-1, math.NaN(), math.NaN(), 3, 4, 6}, 1, now32)},
-			nil,
-		},
-		{
-			parser.NewExpr("diffSeries",
-
-				"metric*",
-			),
-			map[parser.MetricRequest][]*types.MetricData{
-				{"metric*", 0, 1}: {
-					types.MakeMetricData("metric1", []float64{1, 2, math.NaN(), 3, 4, math.NaN()}, 1, now32),
-					types.MakeMetricData("metric2", []float64{5, math.NaN(), 6}, 2, now32),
-				},
-			},
-			[]*types.MetricData{types.MakeMetricData("diffSeries(metric*)",
-				[]float64{-4, -3, math.NaN(), 3, -2, math.NaN()}, 1, now32)},
 			nil,
 		},
 	}
