@@ -23,6 +23,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/cactiStyle"
 	"github.com/go-graphite/carbonapi/expr/functions/cairo"
 	"github.com/go-graphite/carbonapi/expr/functions/changed"
+	"github.com/go-graphite/carbonapi/expr/functions/compareWithThreshold"
 	"github.com/go-graphite/carbonapi/expr/functions/consolidateBy"
 	"github.com/go-graphite/carbonapi/expr/functions/constantLine"
 	"github.com/go-graphite/carbonapi/expr/functions/countSeries"
@@ -118,7 +119,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 103)
+	funcs := make([]initFunc, 0, 104)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -157,6 +158,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "cairo", order: cairo.GetOrder(), f: cairo.New})
 
 	funcs = append(funcs, initFunc{name: "changed", order: changed.GetOrder(), f: changed.New})
+
+	funcs = append(funcs, initFunc{name: "compareWithThreshold", order: compareWithThreshold.GetOrder(), f: compareWithThreshold.New})
 
 	funcs = append(funcs, initFunc{name: "consolidateBy", order: consolidateBy.GetOrder(), f: consolidateBy.New})
 
