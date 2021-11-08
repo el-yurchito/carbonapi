@@ -1,6 +1,7 @@
 package compareWithThreshold
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -45,19 +46,30 @@ func (f *compareWithThreshold) Do(e parser.Expr, from, until int32, values map[p
 	var results []*types.MetricData
 
 	for _, a := range args {
-		// try to find a threshold with matching name
-		var threshold *types.MetricData
-
+		var isTagged bool
 		nameEndsAt := strings.IndexByte(a.Name, ';')
 		if nameEndsAt == -1 {
-			continue
+			isTagged = false
+		} else {
+			isTagged = true
 		}
-		tags := a.Name[nameEndsAt:]
-		for _, th := range thresholds {
-			// check that `th.Name` matches `someStringWithoutSemicolon;tags`
-			if strings.HasSuffix(th.Name, tags) && strings.IndexByte(strings.TrimSuffix(th.Name, tags), ';') == -1 {
-				threshold = th
-				break
+
+		// try to find a threshold with matching tags
+		var threshold *types.MetricData
+		if isTagged {
+			tags := a.Name[nameEndsAt:]
+			for _, th := range thresholds {
+				if strings.HasSuffix(th.Name, tags) && strings.IndexByte(strings.TrimSuffix(th.Name, tags), ';') == -1 {
+					threshold = th
+					break
+				}
+			}
+		} else {
+			for _, th := range thresholds {
+				if th.Name == a.Name {
+					threshold = th
+					break
+				}
 			}
 		}
 
@@ -89,6 +101,30 @@ func (f *compareWithThreshold) Do(e parser.Expr, from, until int32, values map[p
 	}
 
 	return results, nil
+}
+
+type tags map[string]string
+
+func parseTags(metricName string) (tags, error) {
+	result := make(tags)
+	pieces := strings.Split(metricName, ";")
+	result["name"] = pieces[0]
+	for i := 1; i < len(pieces); i++ {
+		keyValue := strings.SplitN(pieces[i], "=", 2)
+		if len(keyValue) != 2 {
+			return nil, fmt.Errorf("malformed piece: %s", pieces[i])
+		}
+		result[keyValue[0]] = keyValue[1]
+	}
+	return result, nil
+}
+func (t tags) IsSubset(other tags) bool {
+	for tag, value := range t {
+		if otherValue, ok := other[tag]; !ok || otherValue != value {
+			return false
+		}
+	}
+	return true
 }
 
 // Description is auto-generated description, based on output of https://github.com/graphite-project/graphite-web
