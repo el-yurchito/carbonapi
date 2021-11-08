@@ -1,4 +1,4 @@
-package compareWithThreshold
+package threshold
 
 import (
 	"math"
@@ -22,12 +22,12 @@ func init() {
 	}
 }
 
-func TestCompareWithThreshold_Tagged(t *testing.T) {
+func TestThreshold_Tagged(t *testing.T) {
 	now32 := int32(time.Now().Unix())
 
 	tests := []th.EvalTestItem{
 		{
-			parser.NewExpr("compareWithThreshold",
+			parser.NewExpr("threshold",
 				"seriesByTag('name=series')",
 				"seriesByTag('name=series_threshold')",
 				10,
@@ -63,12 +63,12 @@ func TestCompareWithThreshold_Tagged(t *testing.T) {
 
 }
 
-func TestCompareWithThreshold_Untagged(t *testing.T) {
+func TestThreshold_Untagged(t *testing.T) {
 	now32 := int32(time.Now().Unix())
 
 	tests := []th.EvalTestItem{
 		{
-			parser.NewExpr("compareWithThreshold",
+			parser.NewExpr("threshold",
 				"series.*.*",
 				"__thresholds",
 				10,
