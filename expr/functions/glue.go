@@ -23,7 +23,6 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/cactiStyle"
 	"github.com/go-graphite/carbonapi/expr/functions/cairo"
 	"github.com/go-graphite/carbonapi/expr/functions/changed"
-	"github.com/go-graphite/carbonapi/expr/functions/compareWithThreshold"
 	"github.com/go-graphite/carbonapi/expr/functions/consolidateBy"
 	"github.com/go-graphite/carbonapi/expr/functions/constantLine"
 	"github.com/go-graphite/carbonapi/expr/functions/countSeries"
@@ -100,6 +99,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/sum"
 	"github.com/go-graphite/carbonapi/expr/functions/sumSeriesWithWildcards"
 	"github.com/go-graphite/carbonapi/expr/functions/summarize"
+	"github.com/go-graphite/carbonapi/expr/functions/threshold"
 	"github.com/go-graphite/carbonapi/expr/functions/timeFunction"
 	"github.com/go-graphite/carbonapi/expr/functions/timeShift"
 	"github.com/go-graphite/carbonapi/expr/functions/timeShiftByMetric"
@@ -158,8 +158,6 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "cairo", order: cairo.GetOrder(), f: cairo.New})
 
 	funcs = append(funcs, initFunc{name: "changed", order: changed.GetOrder(), f: changed.New})
-
-	funcs = append(funcs, initFunc{name: "compareWithThreshold", order: compareWithThreshold.GetOrder(), f: compareWithThreshold.New})
 
 	funcs = append(funcs, initFunc{name: "consolidateBy", order: consolidateBy.GetOrder(), f: consolidateBy.New})
 
@@ -312,6 +310,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "sumSeriesWithWildcards", order: sumSeriesWithWildcards.GetOrder(), f: sumSeriesWithWildcards.New})
 
 	funcs = append(funcs, initFunc{name: "summarize", order: summarize.GetOrder(), f: summarize.New})
+
+	funcs = append(funcs, initFunc{name: "threshold", order: threshold.GetOrder(), f: threshold.New})
 
 	funcs = append(funcs, initFunc{name: "timeFunction", order: timeFunction.GetOrder(), f: timeFunction.New})
 

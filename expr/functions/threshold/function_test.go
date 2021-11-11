@@ -1,4 +1,4 @@
-package compareWithThreshold
+package threshold
 
 import (
 	"math"
@@ -22,12 +22,12 @@ func init() {
 	}
 }
 
-func TestCompareWithThreshold(t *testing.T) {
+func TestThreshold_Tagged(t *testing.T) {
 	now32 := int32(time.Now().Unix())
 
 	tests := []th.EvalTestItem{
 		{
-			parser.NewExpr("compareWithThreshold",
+			parser.NewExpr("threshold",
 				"seriesByTag('name=series')",
 				"seriesByTag('name=series_threshold')",
 				10,
@@ -49,6 +49,47 @@ func TestCompareWithThreshold(t *testing.T) {
 			[]*types.MetricData{
 				types.MakeMetricData("series;type=chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
 				types.MakeMetricData("series;type=noThreshold_2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
+			},
+			nil,
+		},
+	}
+
+	for _, tt := range tests {
+		testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
+		t.Run(testName, func(t *testing.T) {
+			th.TestEvalExpr(t, &tt, true)
+		})
+	}
+
+}
+
+func TestThreshold_Untagged(t *testing.T) {
+	now32 := int32(time.Now().Unix())
+
+	tests := []th.EvalTestItem{
+		{
+			parser.NewExpr("threshold",
+				"series.*.*",
+				"__thresholds",
+				10,
+			),
+			map[parser.MetricRequest][]*types.MetricData{
+				{"series.*.*", 0, 1}: {
+					types.MakeMetricData("series.one.horse", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
+
+					// these two metrics don't have a threshold series and use the default value
+					types.MakeMetricData("series.no_threshold.1", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
+				},
+				{"__thresholds", 0, 1}: {
+					types.MakeMetricData("series.one.horse", []float64{7, 7, 7, 7, 7, 7}, 1, now32),
+					types.MakeMetricData("series.one.chicken", []float64{5, 5, 5, 5, 5, 5}, 1, now32),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
 			},
 			nil,
 		},
