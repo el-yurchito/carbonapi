@@ -35,11 +35,11 @@ func TestThreshold_Tagged(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"seriesByTag('name=series')", 0, 1}: {
 					types.MakeMetricData("series;type=horse", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
-					types.MakeMetricData("series;type=chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
+					types.MakeMetricData("series;type=chicken", []float64{1, math.NaN(), 6, 3, 7, math.NaN()}, 1, now32),
 
 					// these two metrics don't have a threshold series and use the default value
 					types.MakeMetricData("series;type=noThreshold_1", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
-					types.MakeMetricData("series;type=noThreshold_2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
+					types.MakeMetricData("series;type=noThreshold_2", []float64{1, math.NaN(), 11, 12, 4, math.NaN()}, 1, now32),
 				},
 				{"seriesByTag('name=series_threshold')", 0, 1}: {
 					types.MakeMetricData("series_threshold;type=horse", []float64{7, 7, 7, 7, 7, 7}, 1, now32),
@@ -47,8 +47,8 @@ func TestThreshold_Tagged(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series;type=chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
-				types.MakeMetricData("series;type=noThreshold_2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
+				types.MakeMetricData("series;type=chicken", []float64{math.NaN(), math.NaN(), 6, math.NaN(), 7, math.NaN()}, 1, now32),
+				types.MakeMetricData("series;type=noThreshold_2", []float64{math.NaN(), math.NaN(), 11, 12, math.NaN(), math.NaN()}, 1, now32),
 			},
 			nil,
 		},
@@ -76,11 +76,11 @@ func TestThreshold_Untagged(t *testing.T) {
 			map[parser.MetricRequest][]*types.MetricData{
 				{"series.*.*", 0, 1}: {
 					types.MakeMetricData("series.one.horse", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
-					types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 6, 3, 7, math.NaN()}, 1, now32),
 
 					// these two metrics don't have a threshold series and use the default value
 					types.MakeMetricData("series.no_threshold.1", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
-					types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 11, 12, 4, math.NaN()}, 1, now32),
 				},
 				{"__thresholds", 0, 1}: {
 					types.MakeMetricData("series.one.horse", []float64{7, 7, 7, 7, 7, 7}, 1, now32),
@@ -88,8 +88,8 @@ func TestThreshold_Untagged(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 3, 5, 4, math.NaN()}, 1, now32),
-				types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 3, 12, 4, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.chicken", []float64{math.NaN(), math.NaN(), 6, math.NaN(), 7, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.no_threshold.2", []float64{math.NaN(), math.NaN(), 11, 12, math.NaN(), math.NaN()}, 1, now32),
 			},
 			nil,
 		},
