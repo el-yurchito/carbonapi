@@ -25,6 +25,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/changed"
 	"github.com/go-graphite/carbonapi/expr/functions/consolidateBy"
 	"github.com/go-graphite/carbonapi/expr/functions/constantLine"
+	"github.com/go-graphite/carbonapi/expr/functions/count"
 	"github.com/go-graphite/carbonapi/expr/functions/countSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/cumulative"
 	"github.com/go-graphite/carbonapi/expr/functions/delay"
@@ -119,7 +120,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 104)
+	funcs := make([]initFunc, 0, 105)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -162,6 +163,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "consolidateBy", order: consolidateBy.GetOrder(), f: consolidateBy.New})
 
 	funcs = append(funcs, initFunc{name: "constantLine", order: constantLine.GetOrder(), f: constantLine.New})
+
+	funcs = append(funcs, initFunc{name: "count", order: count.GetOrder(), f: count.New})
 
 	funcs = append(funcs, initFunc{name: "countSeries", order: countSeries.GetOrder(), f: countSeries.New})
 
