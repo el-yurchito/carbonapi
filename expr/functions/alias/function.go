@@ -17,13 +17,8 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
-	res := make([]interfaces.FunctionMetadata, 0)
-	f := &alias{}
-	for _, n := range []string{"alias"} {
-		res = append(res, interfaces.FunctionMetadata{Name: n, F: f})
-	}
-	return res
+func New(_ string) []interfaces.FunctionMetadata {
+	return []interfaces.FunctionMetadata{{Name: "alias", F: &alias{}}}
 }
 
 func (f *alias) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {

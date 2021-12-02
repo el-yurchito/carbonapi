@@ -28,9 +28,8 @@ type expr struct {
 	argsNamed  map[string]*expr
 	argsString string
 
-	from       int32
-	until      int32
-	isAdjusted bool
+	from  int32
+	until int32
 }
 
 func (e *expr) IsName() bool {
@@ -144,26 +143,6 @@ func (e *expr) Metrics() []MetricRequest {
 		case "seriesByTag", "groupWithSql":
 			// pass seriesByTag and groupWithSql to backend as is
 			r = append(r, MetricRequest{Metric: e.ToString()})
-		case "slo", "sloErrorBudget":
-			if !e.isAdjusted { // avoid multiple boundaries overriding
-				e.isAdjusted = true
-
-				bucketSize, err := e.GetIntervalArg(1, 1)
-				if err != nil {
-					return nil
-				}
-
-				windowSize := e.until - e.from
-				delta := bucketSize - windowSize
-
-				// function will need more data than it was requested originally
-				// so metric requests' boundaries have to be moved
-				if delta > 0 {
-					for i := range r {
-						r[i].From -= delta
-					}
-				}
-			}
 		case "timeShift":
 			offs, err := e.GetIntervalArg(1, -1)
 			if err != nil {

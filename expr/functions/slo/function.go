@@ -17,7 +17,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	return []interfaces.FunctionMetadata{
 		{F: &slo{}, Name: "slo"},
 		{F: &slo{}, Name: "sloErrorBudget"},
@@ -119,12 +119,11 @@ func (f *slo) Description() map[string]types.FunctionDescription {
 	}
 }
 
-func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) (results []*types.MetricData, err error) {
 	var (
 		argsExtended, argsWindowed []*types.MetricData
 		bucketSize, windowSize     int32
 		delta                      int32
-		err                        error
 	)
 
 	// requested data points' window
@@ -169,7 +168,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		return nil, err
 	}
 
-	methodFoo, methodName, err := f.buildMethod(e, 2, value)
+	methodFoo, methodName, err := buildMethod(e, 2, value)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +187,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 	}
 
 	intervalStringValue := e.Args()[1].StringValue()
-	results := make([]*types.MetricData, 0, len(argsWindowed))
+	results = make([]*types.MetricData, 0, len(argsWindowed))
 
 	for i, argWnd := range argsWindowed {
 		var (
@@ -241,10 +240,10 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 		timeBucketEnds := timeCurrent + bucketSize
 
 		// process full buckets
-		for i, argValue := range argExt.Values {
+		for j, argValue := range argExt.Values {
 			qtyTotal++
 
-			if !argExt.IsAbsent[i] {
+			if !argExt.IsAbsent[j] {
 				qtyNotNull++
 				if methodFoo(argValue) {
 					qtyMatched++
@@ -257,7 +256,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 			}
 
 			if timeCurrent >= timeBucketEnds { // the bucket ends
-				newIsAbsent, newValue := f.buildDataPoint(qtyMatched, qtyNotNull)
+				newIsAbsent, newValue := buildDataPoint(qtyMatched, qtyNotNull)
 				if isErrorBudget && !newIsAbsent {
 					newValue = (newValue - objective) * float64(bucketSize)
 				}
@@ -276,7 +275,7 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 
 		// partial bucket might remain
 		if qtyTotal > 0 {
-			newIsAbsent, newValue := f.buildDataPoint(qtyMatched, qtyNotNull)
+			newIsAbsent, newValue := buildDataPoint(qtyMatched, qtyNotNull)
 			if isErrorBudget && !newIsAbsent {
 				newValue = (newValue - objective) * float64(timeCurrent-timeBucketStarts)
 			}
@@ -289,18 +288,14 @@ func (f *slo) Do(e parser.Expr, from, until int32, values map[parser.MetricReque
 	return results, nil
 }
 
-func (f *slo) buildDataPoint(bucketQtyMatched, bucketQtyNotNull int) (isAbsent bool, value float64) {
+func buildDataPoint(bucketQtyMatched, bucketQtyNotNull int) (isAbsent bool, value float64) {
 	if bucketQtyNotNull == 0 {
-		isAbsent = true
-		value = 0.0
-	} else {
-		isAbsent = false
-		value = float64(bucketQtyMatched) / float64(bucketQtyNotNull)
+		return true, 0
 	}
-	return
+	return false, float64(bucketQtyMatched) / float64(bucketQtyNotNull)
 }
 
-func (f *slo) buildMethod(e parser.Expr, argNumber int, value float64) (func(float64) bool, string, error) {
+func buildMethod(e parser.Expr, argNumber int, value float64) (func(float64) bool, string, error) {
 	var methodFoo func(float64) bool = nil
 
 	methodName, err := e.GetStringArg(argNumber)
@@ -335,6 +330,5 @@ func (f *slo) buildMethod(e parser.Expr, argNumber int, value float64) (func(flo
 	if methodFoo == nil {
 		return nil, methodName, fmt.Errorf("unknown method `%s`", methodName)
 	}
-
 	return methodFoo, methodName, nil
 }
