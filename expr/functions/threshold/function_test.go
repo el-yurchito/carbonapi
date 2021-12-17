@@ -103,3 +103,61 @@ func TestThreshold_Untagged(t *testing.T) {
 	}
 
 }
+
+func TestThreshold_MissingDataInThresholds(t *testing.T) {
+	now32 := int32(time.Now().Unix())
+
+	tests := []th.EvalTestItem{
+		{
+			parser.NewExpr("threshold",
+				"series.*.*",
+				"__thresholds",
+				10,
+			),
+			map[parser.MetricRequest][]*types.MetricData{
+				{"series.*.*", 0, 1}: {
+					types.MakeMetricData("series.one.small_gap", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.one.large_gap", []float64{
+						7, 7,
+						7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, // 12 points here
+						7,
+					}, 1, now32),
+					types.MakeMetricData("series.one.gap_in_front", []float64{7, 7, 7, 7, 7, 7}, 1, now32),
+				},
+				{"__thresholds", 0, 1}: {
+					types.MakeMetricData("series.one.small_gap", []float64{5, math.NaN(), math.NaN(), math.NaN(), 5, 5}, 1, now32),
+					types.MakeMetricData("series.one.large_gap", []float64{
+						5, 5,
+
+						math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
+						math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), // 12 points here
+
+						5,
+					}, 1, now32),
+					types.MakeMetricData("series.one.gap_in_front", []float64{math.NaN(), math.NaN(), 5, math.NaN(), 5, 5}, 1, now32),
+				},
+			},
+			[]*types.MetricData{
+				types.MakeMetricData("series.one.small_gap", []float64{11, math.NaN(), math.NaN(), 15, 14, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.large_gap", []float64{
+					7, 7,
+
+					7, 7, 7, 7, 7, 7, 7, 7, 7, 7, // these 10 points use threshold=5
+					math.NaN(), math.NaN(), // these two use the defaultThreshold of 10
+
+					7,
+				}, 1, now32),
+				types.MakeMetricData("series.one.gap_in_front", []float64{math.NaN(), math.NaN(), 7, 7, 7, 7}, 1, now32),
+			},
+			nil,
+		},
+	}
+
+	for _, tt := range tests {
+		testName := tt.E.Target() + "(" + tt.E.RawArgs() + ")"
+		t.Run(testName, func(t *testing.T) {
+			th.TestEvalExpr(t, &tt, true)
+		})
+	}
+
+}
