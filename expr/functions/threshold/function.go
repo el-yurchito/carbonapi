@@ -2,6 +2,7 @@ package threshold
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -33,7 +34,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		return nil, err
 	}
 
-	thresholds, err := helper.GetSeriesArg(e.Args()[1], from, until, values)
+	rawThresholds, err := helper.GetSeriesArg(e.Args()[1], from, until, values)
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +42,11 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 	defaultThreshold, err := e.GetFloatArg(2)
 	if err != nil {
 		return nil, err
+	}
+
+	thresholds := make([]*types.MetricData, len(rawThresholds))
+	for i, rawThreshold := range rawThresholds {
+		thresholds[i] = f.prepareThreshold(rawThreshold, defaultThreshold)
 	}
 
 	var results []*types.MetricData
@@ -96,6 +102,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			} else {
 				iThreshold := (int32(i) * a.StepTime) / threshold.StepTime
 				if threshold.IsAbsent[iThreshold] {
+					// TODO: this may need to be changed
 					r.Values[i] = 0
 					r.IsAbsent[i] = true
 					continue
@@ -119,6 +126,34 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 	}
 
 	return results, nil
+}
+
+// prepareThreshold acts as keepLastValue(10) | transformNull($defaultThreshold).
+func (f *threshold) prepareThreshold(series *types.MetricData, defaultValue float64) *types.MetricData {
+	const KeepLastValues = 10
+
+	r := *series
+	r.Values = make([]float64, len(series.Values))
+	r.IsAbsent = make([]bool, len(series.Values))
+
+	prev := math.NaN()
+	missing := 0
+	for i, v := range series.Values {
+		if series.IsAbsent[i] {
+			if (missing < KeepLastValues) && !math.IsNaN(prev) {
+				r.Values[i] = prev
+				missing++
+			} else {
+				r.Values[i] = defaultValue
+			}
+		} else {
+			prev = v
+			missing = 0
+			r.Values[i] = v
+		}
+	}
+
+	return &r
 }
 
 type tags map[string]string
@@ -150,13 +185,13 @@ func (f *threshold) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
 		"threshold": {
 			Description: "Compares a list of tagged metrics with a list of tagged threshold metrics.",
-			Function:    "threshold(seriesList, thresholdSeriesList, defaultThreshold)",
+			Function:    "threshold(metricSeriesList, thresholdSeriesList, defaultThreshold)",
 			Group:       "Filter Series",
 			Module:      "graphite.render.functions",
 			Name:        "threshold",
 			Params: []types.FunctionParam{
 				{
-					Name:     "seriesList",
+					Name:     "metricSeriesList",
 					Required: true,
 					Type:     types.SeriesList,
 				},
@@ -166,7 +201,7 @@ func (f *threshold) Description() map[string]types.FunctionDescription {
 					Type:     types.SeriesList,
 				},
 				{
-					Name:     "default",
+					Name:     "defaultThreshold",
 					Required: true,
 					Type:     types.Float,
 				},
