@@ -65,7 +65,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		if isTagged {
 			tags := a.Name[nameEndsAt:]
 			for _, th := range thresholds {
-				if strings.HasSuffix(th.Name, tags) && strings.IndexByte(strings.TrimSuffix(th.Name, tags), ';') == -1 {
+				if hasTheseTags(th.Name, tags) {
 					threshold = th
 					break
 				}
@@ -79,49 +79,31 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			}
 		}
 
-		r := *a
-		r.IsAbsent = make([]bool, len(a.Values))
-		r.Values = make([]float64, len(a.Values))
-		keepThisSeries := false
 		for i, v := range a.Values {
 			if a.IsAbsent[i] {
-				r.Values[i] = 0
-				r.IsAbsent[i] = true
 				continue
 			}
 
 			if threshold == nil {
 				if v >= defaultThreshold {
-					r.Values[i] = v
-					keepThisSeries = true
-				} else {
-					r.Values[i] = 0
-					r.IsAbsent[i] = true
+					results = append(results, a)
+					break
 				}
 
 			} else {
 				iThreshold := (int32(i) * a.StepTime) / threshold.StepTime
 				if threshold.IsAbsent[iThreshold] {
 					// TODO: this may need to be changed
-					r.Values[i] = 0
-					r.IsAbsent[i] = true
 					continue
 				}
 
 				if v >= threshold.Values[iThreshold] {
-					r.Values[i] = v
-					keepThisSeries = true
-				} else {
-					r.Values[i] = 0
-					r.IsAbsent[i] = true
+					results = append(results, a)
+					break
 				}
 
 			}
 
-		}
-
-		if keepThisSeries {
-			results = append(results, &r)
 		}
 	}
 
@@ -154,6 +136,10 @@ func (f *threshold) prepareThreshold(series *types.MetricData, defaultValue floa
 	}
 
 	return &r
+}
+
+func hasTheseTags(fullMetric string, tags string) bool {
+	return strings.HasSuffix(fullMetric, tags) && strings.IndexByte(strings.TrimSuffix(fullMetric, tags), ';') == -1
 }
 
 type tags map[string]string
