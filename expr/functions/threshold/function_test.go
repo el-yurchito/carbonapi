@@ -47,8 +47,8 @@ func TestThreshold_Tagged(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series;type=chicken", []float64{math.NaN(), math.NaN(), 6, math.NaN(), 7, math.NaN()}, 1, now32),
-				types.MakeMetricData("series;type=noThreshold_2", []float64{math.NaN(), math.NaN(), 11, 12, math.NaN(), math.NaN()}, 1, now32),
+				types.MakeMetricData("series;type=chicken", []float64{1, math.NaN(), 6, 3, 7, math.NaN()}, 1, now32),
+				types.MakeMetricData("series;type=noThreshold_2", []float64{1, math.NaN(), 11, 12, 4, math.NaN()}, 1, now32),
 			},
 			nil,
 		},
@@ -88,8 +88,8 @@ func TestThreshold_Untagged(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series.one.chicken", []float64{math.NaN(), math.NaN(), 6, math.NaN(), 7, math.NaN()}, 1, now32),
-				types.MakeMetricData("series.no_threshold.2", []float64{math.NaN(), math.NaN(), 11, 12, math.NaN(), math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 6, 3, 7, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 11, 12, 4, math.NaN()}, 1, now32),
 			},
 			nil,
 		},
@@ -138,16 +138,15 @@ func TestThreshold_MissingDataInThresholds(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series.one.small_gap", []float64{11, math.NaN(), math.NaN(), 15, 14, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.small_gap", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
 				types.MakeMetricData("series.one.large_gap", []float64{
 					7, 7,
 
-					7, 7, 7, 7, 7, 7, 7, 7, 7, 7, // these 10 points use threshold=5
-					math.NaN(), math.NaN(), // these two use the defaultThreshold of 10
+					7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, // 12 points
 
 					7,
 				}, 1, now32),
-				types.MakeMetricData("series.one.gap_in_front", []float64{math.NaN(), math.NaN(), 7, 7, 7, 7}, 1, now32),
+				types.MakeMetricData("series.one.gap_in_front", []float64{7, 7, 7, 7, 7, 7}, 1, now32),
 			},
 			nil,
 		},
