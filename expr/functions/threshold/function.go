@@ -65,7 +65,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		if isTagged {
 			tags := a.Name[nameEndsAt:]
 			for _, th := range thresholds {
-				if strings.HasSuffix(th.Name, tags) && strings.IndexByte(strings.TrimSuffix(th.Name, tags), ';') == -1 {
+				if hasTheseTags(th.Name, tags) {
 					threshold = th
 					break
 				}
@@ -136,6 +136,10 @@ func (f *threshold) prepareThreshold(series *types.MetricData, defaultValue floa
 	}
 
 	return &r
+}
+
+func hasTheseTags(fullMetric string, tags string) bool {
+	return strings.HasSuffix(fullMetric, tags) && strings.IndexByte(strings.TrimSuffix(fullMetric, tags), ';') == -1
 }
 
 type tags map[string]string
