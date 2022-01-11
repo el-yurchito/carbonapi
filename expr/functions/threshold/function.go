@@ -2,7 +2,6 @@ package threshold
 
 import (
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -112,25 +111,22 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 
 // prepareThreshold acts as keepLastValue(10) | transformNull($defaultThreshold).
 func (f *threshold) prepareThreshold(series *types.MetricData, defaultValue float64) *types.MetricData {
-	const KeepLastValues = 10
-
 	r := *series
 	r.Values = make([]float64, len(series.Values))
 	r.IsAbsent = make([]bool, len(series.Values))
 
-	prev := math.NaN()
-	missing := 0
+	fillValue := defaultValue
+	for i := len(series.Values) - 1; i >= 0; i-- {
+		if !series.IsAbsent[i] {
+			fillValue = series.Values[i]
+			break
+		}
+	}
+
 	for i, v := range series.Values {
 		if series.IsAbsent[i] {
-			if (missing < KeepLastValues) && !math.IsNaN(prev) {
-				r.Values[i] = prev
-				missing++
-			} else {
-				r.Values[i] = defaultValue
-			}
+			r.Values[i] = fillValue
 		} else {
-			prev = v
-			missing = 0
 			r.Values[i] = v
 		}
 	}

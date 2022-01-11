@@ -116,16 +116,30 @@ func TestThreshold_MissingDataInThresholds(t *testing.T) {
 			),
 			map[parser.MetricRequest][]*types.MetricData{
 				{"series.*.*", 0, 1}: {
-					types.MakeMetricData("series.one.small_gap", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.one.small_gap_return", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
+					types.MakeMetricData("series.one.small_gap_skip", []float64{
+						15, 15,
+						15, 15, 15, 15, 15, 15, 15, 15, 15, 15, // 10 points here
+						15,
+					}, 1, now32),
 					types.MakeMetricData("series.one.large_gap", []float64{
 						7, 7,
 						7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, // 12 points here
 						7,
 					}, 1, now32),
 					types.MakeMetricData("series.one.gap_in_front", []float64{7, 7, 7, 7, 7, 7}, 1, now32),
+					types.MakeMetricData("series.one.gap_in_front_2", []float64{15, 15, 15, 15, 15, 15}, 1, now32),
 				},
 				{"__thresholds", 0, 1}: {
-					types.MakeMetricData("series.one.small_gap", []float64{5, math.NaN(), math.NaN(), math.NaN(), 5, 5}, 1, now32),
+					types.MakeMetricData("series.one.small_gap_return", []float64{5, math.NaN(), math.NaN(), math.NaN(), 5, 5}, 1, now32),
+					types.MakeMetricData("series.one.small_gap_skip", []float64{
+						20, 20,
+
+						math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(),
+						math.NaN(), math.NaN(), math.NaN(), math.NaN(), math.NaN(), // 10 points here
+
+						20,
+					}, 1, now32),
 					types.MakeMetricData("series.one.large_gap", []float64{
 						5, 5,
 
@@ -135,10 +149,11 @@ func TestThreshold_MissingDataInThresholds(t *testing.T) {
 						5,
 					}, 1, now32),
 					types.MakeMetricData("series.one.gap_in_front", []float64{math.NaN(), math.NaN(), 5, math.NaN(), 5, 5}, 1, now32),
+					types.MakeMetricData("series.one.gap_in_front_2", []float64{math.NaN(), math.NaN(), 17, math.NaN(), 17, 17}, 1, now32),
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series.one.small_gap", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.small_gap_return", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
 				types.MakeMetricData("series.one.large_gap", []float64{
 					7, 7,
 
