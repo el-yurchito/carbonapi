@@ -108,6 +108,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/timeStack"
 	"github.com/go-graphite/carbonapi/expr/functions/transformNull"
 	"github.com/go-graphite/carbonapi/expr/functions/tukey"
+	"github.com/go-graphite/carbonapi/expr/functions/url"
 	"github.com/go-graphite/carbonapi/expr/functions/weightedAverageByFilteredCount"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/metadata"
@@ -120,7 +121,7 @@ type initFunc struct {
 }
 
 func New(configs map[string]string) {
-	funcs := make([]initFunc, 0, 105)
+	funcs := make([]initFunc, 0, 4096)
 
 	funcs = append(funcs, initFunc{name: "aboveSeries", order: aboveSeries.GetOrder(), f: aboveSeries.New})
 
@@ -329,6 +330,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "transformNull", order: transformNull.GetOrder(), f: transformNull.New})
 
 	funcs = append(funcs, initFunc{name: "tukey", order: tukey.GetOrder(), f: tukey.New})
+
+	funcs = append(funcs, initFunc{name: "url", order: url.GetOrder(), f: url.New})
 
 	funcs = append(funcs, initFunc{name: "weightedAverageByFilteredCount", order: weightedAverageByFilteredCount.GetOrder(), f: weightedAverageByFilteredCount.New})
 
