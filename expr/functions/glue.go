@@ -55,6 +55,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/interpolate"
 	"github.com/go-graphite/carbonapi/expr/functions/invert"
 	"github.com/go-graphite/carbonapi/expr/functions/isNotNull"
+	"github.com/go-graphite/carbonapi/expr/functions/join"
 	"github.com/go-graphite/carbonapi/expr/functions/keepLastValue"
 	"github.com/go-graphite/carbonapi/expr/functions/kolmogorovSmirnovTest2"
 	"github.com/go-graphite/carbonapi/expr/functions/legendValue"
@@ -224,6 +225,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "invert", order: invert.GetOrder(), f: invert.New})
 
 	funcs = append(funcs, initFunc{name: "isNotNull", order: isNotNull.GetOrder(), f: isNotNull.New})
+
+	funcs = append(funcs, initFunc{name: "join", order: join.GetOrder(), f: join.New})
 
 	funcs = append(funcs, initFunc{name: "keepLastValue", order: keepLastValue.GetOrder(), f: keepLastValue.New})
 
