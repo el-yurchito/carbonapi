@@ -836,7 +836,7 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 
 	statsdLimiter, err = NewStatsdLimiter(config.Statsd)
 	if err != nil {
-		logger.Error("Failed to initialize statsd", zap.Error(err))
+		panic(fmt.Errorf("failed to initialize statsd: %w", err))
 	}
 
 	if config.PidFile != "" {
