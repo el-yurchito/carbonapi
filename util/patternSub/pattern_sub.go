@@ -3,6 +3,8 @@ package patternSub
 import (
 	"fmt"
 	"strings"
+
+	"github.com/go-graphite/carbonapi/pkg/parser"
 )
 
 const (
@@ -282,10 +284,16 @@ func (pp *PatternProcessor) replacePrefixFunctionArg(pattern string) []Substitut
 // i.e. those ones which are not inside any function call
 func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []SubstituteInfo {
 	var (
-		matchedReplaceMap subMap
+		anomalyPrefix     string
 		matchedPrefix     string
+		matchedReplaceMap subMap
 		result            []SubstituteInfo
 	)
+
+	if strings.HasPrefix(pattern, parser.AnomalyPrefix) {
+		anomalyPrefix = parser.AnomalyPrefix
+		pattern = strings.TrimPrefix(pattern, parser.AnomalyPrefix)
+	}
 
 	// search for replacement group which has the same prefix the pattern does
 	for prefix, replaceMap := range pp.prefix {
@@ -338,6 +346,16 @@ func (pp *PatternProcessor) replacePrefixSimplePattern(pattern string) []Substit
 			}
 		}
 		result = append(result, *substituteInfo)
+	}
+
+	if anomalyPrefix != "" {
+		for i := range result {
+			ri := &result[i]
+			ri.MetricSrc = anomalyPrefix + ri.MetricSrc
+			ri.MetricDst = anomalyPrefix + ri.MetricDst
+			ri.prefixSrc = anomalyPrefix + ri.prefixSrc
+			ri.prefixDst = anomalyPrefix + ri.prefixDst
+		}
 	}
 
 	return result

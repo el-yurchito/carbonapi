@@ -14,7 +14,7 @@ import (
 
 // expression parser
 
-const anomalyPrefix = "resources.monitoring.anomaly_detector."
+const AnomalyPrefix = "resources.monitoring.anomaly_detector."
 
 type expr struct {
 	context  context.Context
@@ -208,7 +208,7 @@ func (e *expr) Metrics() []MetricRequest {
 		case "anomaly":
 			for _, v := range r {
 				r = append(r, MetricRequest{
-					Metric: anomalyPrefix + v.Metric,
+					Metric: AnomalyPrefix + v.Metric,
 					From:   v.From,
 					Until:  v.Until,
 				})

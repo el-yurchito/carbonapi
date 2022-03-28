@@ -11,8 +11,6 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 )
 
-const anomalyPrefix = "resources.monitoring.anomaly_detector."
-
 type anomaly struct {
 	interfaces.FunctionBase
 }
@@ -53,7 +51,7 @@ func (f *anomaly) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 	// extract anomaly metrics
 	anomalyMap := make(map[string]*types.MetricData)
 	for _, mr := range e.Args()[0].Metrics() {
-		metric := anomalyPrefix + mr.Metric
+		metric := parser.AnomalyPrefix + mr.Metric
 		for _, data := range values[parser.MetricRequest{Metric: metric, From: from, Until: until}] {
 			if offs > 0 {
 				offPoints := (data.StopTime - offs - data.StartTime) / data.StepTime
@@ -73,7 +71,7 @@ func (f *anomaly) Do(e parser.Expr, from, until int32, values map[parser.MetricR
 				}
 			}
 
-			name := strings.TrimPrefix(data.Name, anomalyPrefix)
+			name := strings.TrimPrefix(data.Name, parser.AnomalyPrefix)
 			data.Name = fmt.Sprintf("[anomaly] %s", name)
 			anomalyMap[name] = data
 		}
