@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/PAFomin-at-avito/zapwriter"
+	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
+
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
@@ -28,6 +32,8 @@ func New(configFile string) []interfaces.FunctionMetadata {
 }
 
 func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
+	sugaredLogger := zapwriter.Logger("functionDo").With(zap.String("function", "threshold")).Sugar()
+
 	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
 	if err != nil {
 		return nil, err
@@ -42,6 +48,16 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 	if err != nil {
 		return nil, err
 	}
+
+	callID := uuid.NewV4().String()
+	expressionString := e.ToString()
+	sugaredLogger.Infow(
+		"function called",
+		"callID", callID,
+		"expression", expressionString,
+		"from", from,
+		"until", until,
+	)
 
 	thresholds := make([]*types.MetricData, len(rawThresholds))
 	for i, rawThreshold := range rawThresholds {
@@ -78,6 +94,24 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			}
 		}
 
+		if threshold != nil {
+			sugaredLogger.Infow(
+				"found threshold for metric",
+				"callID", callID,
+				"metric", a.Name,
+				"threshold", threshold.Name,
+				"threshold.StartTime", threshold.StartTime,
+				"threshold.StopTime", threshold.StopTime,
+				"threshold.StepTime", threshold.StepTime,
+			)
+		} else {
+			sugaredLogger.Infow(
+				"no threshold found for metric",
+				"callID", callID,
+				"metric", a.Name,
+			)
+		}
+
 		for i, v := range a.Values {
 			if a.IsAbsent[i] {
 				continue
@@ -85,6 +119,12 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 
 			if threshold == nil {
 				if v >= defaultThreshold {
+					sugaredLogger.Infow(
+						"metric above default threshold, return it",
+						"callID", callID,
+						"metric", a.Name,
+						"point", v,
+					)
 					results = append(results, a)
 					break
 				}
@@ -97,6 +137,14 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 				}
 
 				if v >= threshold.Values[iThreshold] {
+					sugaredLogger.Infow(
+						"metric above custom threshold, return it",
+						"callID", callID,
+						"metric", a.Name,
+						"point", v,
+						"threshold", threshold.Name,
+						"thresholdPoint", threshold.Values[iThreshold],
+					)
 					results = append(results, a)
 					break
 				}
@@ -106,11 +154,20 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		}
 	}
 
+	sugaredLogger.Infow(
+		"function finished",
+		"callID", callID,
+		"expression", expressionString,
+		"from", from,
+		"until", until,
+	)
 	return results, nil
 }
 
 // prepareThreshold acts as keepLastValue(10) | transformNull($defaultThreshold).
 func (f *threshold) prepareThreshold(series *types.MetricData, defaultValue float64) *types.MetricData {
+	// sugaredLogger := zapwriter.Logger("functionDo").With(zap.String("function", "threshold")).Sugar()
+
 	r := *series
 	r.Values = make([]float64, len(series.Values))
 	r.IsAbsent = make([]bool, len(series.Values))
