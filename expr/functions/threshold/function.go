@@ -112,21 +112,32 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			)
 		}
 
+		r := *a
+		r.IsAbsent = make([]bool, len(a.Values))
+		r.Values = make([]float64, len(a.Values))
+		keepThisSeries := false
 		for i, v := range a.Values {
 			if a.IsAbsent[i] {
+				r.IsAbsent[i] = true
+				r.Values[i] = 0
 				continue
 			}
 
 			if threshold == nil {
 				if v >= defaultThreshold {
-					sugaredLogger.Infow(
-						"metric above default threshold, return it",
-						"callID", callID,
-						"metric", a.Name,
-						"point", v,
-					)
-					results = append(results, a)
-					break
+					if !keepThisSeries {
+						sugaredLogger.Infow(
+							"metric above default threshold, return it",
+							"callID", callID,
+							"metric", a.Name,
+							"point", v,
+						)
+					}
+
+					r.Values[i] = v
+					keepThisSeries = true
+				} else {
+					r.Values[i] = 0
 				}
 
 			} else {
@@ -137,20 +148,29 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 				}
 
 				if v >= threshold.Values[iThreshold] {
-					sugaredLogger.Infow(
-						"metric above custom threshold, return it",
-						"callID", callID,
-						"metric", a.Name,
-						"point", v,
-						"threshold", threshold.Name,
-						"thresholdPoint", threshold.Values[iThreshold],
-					)
-					results = append(results, a)
-					break
+					if !keepThisSeries {
+						sugaredLogger.Infow(
+							"metric above custom threshold, return it",
+							"callID", callID,
+							"metric", a.Name,
+							"point", v,
+							"threshold", threshold.Name,
+							"thresholdPoint", threshold.Values[iThreshold],
+						)
+					}
+
+					r.Values[i] = v
+					keepThisSeries = true
+				} else {
+					r.Values[i] = 0
 				}
 
 			}
 
+		}
+
+		if keepThisSeries {
+			results = append(results, &r)
 		}
 	}
 
