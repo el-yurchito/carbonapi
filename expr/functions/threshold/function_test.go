@@ -47,8 +47,8 @@ func TestThreshold_Tagged(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series;type=chicken", []float64{1, math.NaN(), 6, 3, 7, math.NaN()}, 1, now32),
-				types.MakeMetricData("series;type=noThreshold_2", []float64{1, math.NaN(), 11, 12, 4, math.NaN()}, 1, now32),
+				types.MakeMetricData("series;type=chicken", []float64{0, math.NaN(), 6, 0, 7, math.NaN()}, 1, now32),
+				types.MakeMetricData("series;type=noThreshold_2", []float64{0, math.NaN(), 11, 12, 0, math.NaN()}, 1, now32),
 			},
 			nil,
 		},
@@ -88,8 +88,8 @@ func TestThreshold_Untagged(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series.one.chicken", []float64{1, math.NaN(), 6, 3, 7, math.NaN()}, 1, now32),
-				types.MakeMetricData("series.no_threshold.2", []float64{1, math.NaN(), 11, 12, 4, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.chicken", []float64{0, math.NaN(), 6, 0, 7, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.no_threshold.2", []float64{0, math.NaN(), 11, 12, 0, math.NaN()}, 1, now32),
 			},
 			nil,
 		},
@@ -153,7 +153,7 @@ func TestThreshold_MissingDataInThresholds(t *testing.T) {
 				},
 			},
 			[]*types.MetricData{
-				types.MakeMetricData("series.one.small_gap_return", []float64{11, math.NaN(), 3, 15, 14, math.NaN()}, 1, now32),
+				types.MakeMetricData("series.one.small_gap_return", []float64{11, math.NaN(), 0, 15, 14, math.NaN()}, 1, now32),
 				types.MakeMetricData("series.one.large_gap", []float64{
 					7, 7,
 
