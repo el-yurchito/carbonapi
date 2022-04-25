@@ -4,6 +4,11 @@ RUN apt-get update
 RUN apt-get install -y make gcc git
 
 WORKDIR /go/src/github.com/go-graphite/carbonapi
+
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
 COPY . .
 
 RUN make test-nocairo
