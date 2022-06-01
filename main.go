@@ -246,11 +246,6 @@ func deferredAccessLogging(
 	} else {
 		logger.Info("request served", fieldsToLog...)
 	}
-
-	// send metrics as well
-	if ald.Handler == "render" {
-		deferredHandlerMetrics(ald.Handler, int(ald.HttpCode), req, reqStarted)
-	}
 }
 
 func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) {
@@ -283,30 +278,6 @@ func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) 
 			client.Timing("function-calls.time.interval"+tags, timeRangeMarks.Range)
 		}
 	}
-}
-
-func deferredHandlerMetrics(handlerName string, httpStatus int, req *http.Request, reqStarted time.Time) {
-	client := statsdLimiter.Get()
-	defer client.Release()
-
-	tags := fmt.Sprintf(
-		";hostname=%s;handler-name=%s;http-status=%d;header-x-source=%s",
-		hostname, handlerName, httpStatus,
-		req.Header.Get(reqHeaderSource),
-	)
-	for _, name := range [...]string{"X-Dashboard-Id", "X-Panel-Id", "X-Real-Ip"} {
-		if value := req.Header.Get(name); value != "" {
-			tags += fmt.Sprintf(
-				";header-%s=%s",
-				strings.ToLower(name), value,
-			)
-		}
-	}
-
-	client.Timing(
-		"handler-stats.response-time"+tags,
-		int64(time.Since(reqStarted)),
-	)
 }
 
 type treejson struct {
