@@ -2,6 +2,7 @@ package event
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
@@ -17,7 +18,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &event{}
 	functions := []string{"event"}
@@ -30,6 +31,9 @@ func New(configFile string) []interfaces.FunctionMetadata {
 // event(series)
 func (f *event) Do(e parser.Expr, from, until int32, values map[parser.MetricRequest][]*types.MetricData) ([]*types.MetricData, error) {
 	args, err := helper.GetSeriesArg(e.Args()[0], from, until, values)
+	if err == parser.ErrSeriesDoesNotExist {
+		err = nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +70,13 @@ func (f *event) Do(e parser.Expr, from, until int32, values map[parser.MetricReq
 		r.Name = fmt.Sprintf("event(%s)", arg.Name)
 		r.IsAbsent = make([]bool, len(arg.IsAbsent))
 		r.Values = make([]float64, len(arg.Values))
-		copy(r.Values, arg.Values)
+		for i, val := range arg.Values {
+			if math.IsNaN(val) {
+				r.Values[i] = 0
+			} else {
+				r.Values[i] = val
+			}
+		}
 
 		results = append(results, &r)
 
