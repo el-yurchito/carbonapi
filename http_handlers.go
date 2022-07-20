@@ -561,11 +561,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		apiMetrics.RenderCacheOverheadNS.Add(td)
 	}
 
-	gotErrors := false
-	if len(errors) > 0 {
-		gotErrors = true
-	}
-	accessLogDetails.HaveNonFatalErrors = gotErrors
+	accessLogDetails.HaveNonFatalErrors = len(errors) > 0
 }
 
 func findHandler(w http.ResponseWriter, r *http.Request) {

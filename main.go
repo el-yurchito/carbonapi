@@ -224,16 +224,37 @@ func deferredAccessLogging(
 	}
 	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
 
-	// copy request headers
+	// copy request headers to flat map
 	headers := make(map[string]string, len(req.Header))
 	for key := range req.Header {
 		if value := req.Header.Get(key); value != "" {
 			headers[key] = value
 		}
 	}
-	if text, err := json.Marshal(headers); err == nil {
-		fieldsToLog = append(fieldsToLog, zap.String("headers", string(text)))
+
+	// collect various source data
+	sources := map[string]string{"peer_ip": ald.PeerIp}
+	for _, header := range []string{
+		"User-Agent", "X-Source",
+		"X-Forwarded-For", "X-Real-Ip",
+		"X-Dashboard-Id", "X-Panel-Id",
+		"X-Bot", "X-Office",
+	} {
+		if val, ok := headers[header]; ok {
+			sources[header] = val
+		}
 	}
+	if _, ok := sources["X-Source"]; ok {
+		sources["auto_grafana"] = "false"
+	} else {
+		sources["auto_grafana"] = "true"
+	}
+
+	fieldsToLog = append(
+		fieldsToLog,
+		zap.Any("headers", headers),
+		zap.Any("sources", sources),
+	)
 
 	logger := zapwriter.Logger("access")
 	if logAsError {
