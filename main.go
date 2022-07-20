@@ -151,10 +151,6 @@ func buildParseErrorString(target, e string, err error) string {
 	return msg
 }
 
-const (
-	reqHeaderSource = "X-Source"
-)
-
 func deferredAccessLogging(
 	ald *carbonapipb.AccessLogDetails,
 	stacks []*timer.FunctionCallStack,
@@ -228,16 +224,15 @@ func deferredAccessLogging(
 	}
 	fieldsToLog = append(fieldsToLog, zap.Any("data", *ald))
 
-	// some grafana-related headers
-	headers := make(map[string]string, 8)
-	headers[reqHeaderSource] = req.Header.Get(reqHeaderSource)
-	for _, name := range [...]string{"X-Dashboard-Id", "X-Forwarded-For", "X-Panel-Id", "X-Real-Ip"} {
-		if value := req.Header.Get(name); value != "" {
-			headers[name] = value
+	// copy request headers
+	headers := make(map[string]string, len(req.Header))
+	for key := range req.Header {
+		if value := req.Header.Get(key); value != "" {
+			headers[key] = value
 		}
 	}
 	if text, err := json.Marshal(headers); err == nil {
-		fieldsToLog = append(fieldsToLog, zap.String("some_headers", string(text)))
+		fieldsToLog = append(fieldsToLog, zap.String("headers", string(text)))
 	}
 
 	logger := zapwriter.Logger("access")
