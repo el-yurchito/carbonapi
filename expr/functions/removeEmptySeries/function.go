@@ -5,6 +5,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
+	"math"
 )
 
 type removeEmptySeries struct {
@@ -15,7 +16,7 @@ func GetOrder() interfaces.Order {
 	return interfaces.Any
 }
 
-func New(configFile string) []interfaces.FunctionMetadata {
+func New(_ string) []interfaces.FunctionMetadata {
 	res := make([]interfaces.FunctionMetadata, 0)
 	f := &removeEmptySeries{}
 	functions := []string{"removeEmptySeries", "removeZeroSeries"}
@@ -32,18 +33,28 @@ func (f *removeEmptySeries) Do(e parser.Expr, from, until int32, values map[pars
 		return nil, err
 	}
 
-	// TODO: implement xFilesFactor
+	factor, err := e.GetFloatArgDefault(1, 0.0)
+	if err != nil {
+		return nil, err
+	}
 
-	var results []*types.MetricData
-
-	for _, a := range args {
-		for i, v := range a.IsAbsent {
-			if !v {
-				if e.Target() == "removeEmptySeries" || (a.Values[i] != 0) {
-					results = append(results, a)
-					break
+	results := make([]*types.MetricData, 0, len(args))
+	for _, arg := range args {
+		notNull := 0
+		for i, v := range arg.Values {
+			if !math.IsNaN(v) && !arg.IsAbsent[i] {
+				switch e.Target() {
+				case "removeEmptySeries":
+					notNull++
+				case "removeZeroSeries":
+					if v != 0 {
+						notNull++
+					}
 				}
 			}
+		}
+		if notNull != 0 && float64(notNull)/float64(len(arg.Values)) >= factor {
+			results = append(results, arg)
 		}
 	}
 	return results, nil
