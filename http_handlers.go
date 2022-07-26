@@ -12,6 +12,7 @@ import (
 	"github.com/PAFomin-at-avito/zapwriter"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/go-graphite/carbonzipper/intervalset"
+	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	pickle "github.com/lomik/og-rek"
 	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
@@ -424,23 +425,38 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 
 				// propagate upstream error, in case it has occurred
 				for i := range errors {
-					if err, ok := errors[i].(upstreamError); ok {
-						msg := err.Error()
+					if err, ok := errors[i].(realZipper.UpstreamResponse); ok {
 						status := err.HttpStatus()
+						upstream := err.Upstream()
+						body := string(err.Body())
+						message := fmt.Sprintf(
+							"upstream %s, status %d; body:%s",
+							upstream, status, body,
+						)
 
 						if format == jsonFormat {
 							w.WriteHeader(status)
 
-							response := struct {
-								Msg string `json:"upstream_error"`
-							}{Msg: msg}
-							text, _ := json.Marshal(response)
+							type respDto struct {
+								Upstream   string `json:"upstream"`
+								HttpStatus int    `json:"http_status"`
+								Body       string `json:"body"`
+								Message    string `json:"message"`
+							}
+							resp := respDto{
+								Upstream:   upstream,
+								HttpStatus: status,
+								Body:       body,
+								Message:    message,
+							}
+
+							text, _ := json.Marshal(resp)
 							writeResponse(w, text, format, jsonp)
 						} else {
-							http.Error(w, msg, status)
+							http.Error(w, message, status)
 						}
 
-						accessLogDetails.Reason = msg
+						accessLogDetails.Reason = errors[i].Error()
 						accessLogDetails.HttpCode = int32(status)
 						logAsError = true
 

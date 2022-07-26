@@ -57,4 +57,4 @@ require (
 	gopkg.in/yaml.v2 v2.1.1 // indirect
 )
 
-replace github.com/go-graphite/carbonzipper => github.com/el-yurchito/carbonzipper v0.0.0-20210914170001-6e0cc90f4cf2
+replace github.com/go-graphite/carbonzipper => github.com/el-yurchito/carbonzipper v0.0.0-20220726090409-d4fddeac7e4b
