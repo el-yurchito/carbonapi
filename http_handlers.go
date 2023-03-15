@@ -422,6 +422,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 					"render error occurred while fetching data",
 					zap.Any("errors", errors),
 				)
+				apiMetrics.RenderErrors.Add(int64(len(errors)))
 
 				// propagate upstream error, in case it has occurred
 				for i := range errors {
