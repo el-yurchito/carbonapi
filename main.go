@@ -48,6 +48,7 @@ var apiMetrics = struct {
 	Requests              *expvar.Int
 	RenderRequests        *expvar.Int
 	RenderErrors          *expvar.Int
+	RenderUpstreamErrors  *expvar.Int
 	RequestCacheHits      *expvar.Int
 	RequestCacheMisses    *expvar.Int
 	RenderCacheOverheadNS *expvar.Int
@@ -66,6 +67,7 @@ var apiMetrics = struct {
 	// TODO: request_cache -> render_cache
 	RenderRequests:        expvar.NewInt("render_requests"),
 	RenderErrors:          expvar.NewInt("render_errors"),
+	RenderUpstreamErrors:  expvar.NewInt("render_upstream_errors"),
 	RequestCacheHits:      expvar.NewInt("request_cache_hits"),
 	RequestCacheMisses:    expvar.NewInt("request_cache_misses"),
 	RenderCacheOverheadNS: expvar.NewInt("render_cache_overhead_ns"),
@@ -782,6 +784,7 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 
 		graphite.Register(fmt.Sprintf("%s.render_requests", pattern), apiMetrics.RenderRequests)
 		graphite.Register(fmt.Sprintf("%s.render_errors", pattern), apiMetrics.RenderErrors)
+		graphite.Register(fmt.Sprintf("%s.render_upstream_errors", pattern), apiMetrics.RenderUpstreamErrors)
 
 		if apiMetrics.MemcacheTimeouts != nil {
 			graphite.Register(fmt.Sprintf("%s.memcache_timeouts", pattern), apiMetrics.MemcacheTimeouts)

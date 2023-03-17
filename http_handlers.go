@@ -424,6 +424,14 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 				)
 				apiMetrics.RenderErrors.Add(int64(len(errors)))
 
+				for i := range errors {
+					if _, ok := errors[i].(realZipper.UpstreamResponse); ok {
+						// NotFound status check is not required here. Zipper checks
+						// such status and sets err to nil.
+						apiMetrics.RenderUpstreamErrors.Add(1)
+					}
+				}
+
 				// propagate upstream error, in case it has occurred
 				for i := range errors {
 					if err, ok := errors[i].(realZipper.UpstreamResponse); ok {
