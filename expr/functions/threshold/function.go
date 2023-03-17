@@ -51,7 +51,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 
 	callID := uuid.NewV4().String()
 	expressionString := e.ToString()
-	sugaredLogger.Infow(
+	sugaredLogger.Debugw(
 		"function called",
 		"callID", callID,
 		"expression", expressionString,
@@ -95,7 +95,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		}
 
 		if threshold != nil {
-			sugaredLogger.Infow(
+			sugaredLogger.Debugw(
 				"found threshold for metric",
 				"callID", callID,
 				"metric", a.Name,
@@ -105,7 +105,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 				"threshold.StepTime", threshold.StepTime,
 			)
 		} else {
-			sugaredLogger.Infow(
+			sugaredLogger.Debugw(
 				"no threshold found for metric",
 				"callID", callID,
 				"metric", a.Name,
@@ -126,7 +126,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 			if threshold == nil {
 				if v >= defaultThreshold {
 					if !keepThisSeries {
-						sugaredLogger.Infow(
+						sugaredLogger.Debugw(
 							"metric above default threshold, return it",
 							"callID", callID,
 							"metric", a.Name,
@@ -149,7 +149,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 
 				if v >= threshold.Values[iThreshold] {
 					if !keepThisSeries {
-						sugaredLogger.Infow(
+						sugaredLogger.Debugw(
 							"metric above custom threshold, return it",
 							"callID", callID,
 							"metric", a.Name,
@@ -174,7 +174,7 @@ func (f *threshold) Do(e parser.Expr, from, until int32, values map[parser.Metri
 		}
 	}
 
-	sugaredLogger.Infow(
+	sugaredLogger.Debugw(
 		"function finished",
 		"callID", callID,
 		"expression", expressionString,
