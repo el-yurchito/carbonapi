@@ -242,7 +242,7 @@ func deferredAccessLogging(
 		"User-Agent", "X-Source",
 		"X-Forwarded-For", "X-Real-Ip",
 		"X-Dashboard-Id", "X-Panel-Id",
-		"X-Bot", "X-Office",
+		"X-Bot", "X-Office", "X-Trigger-Id",
 	} {
 		if val, ok := headers[header]; ok {
 			sources[header] = val
