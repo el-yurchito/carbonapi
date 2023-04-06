@@ -41,6 +41,7 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/go-graphite/carbonapi/tagdb"
 	"github.com/go-graphite/carbonapi/util"
+	"github.com/go-graphite/carbonapi/util/dnsmanager"
 	"github.com/go-graphite/carbonapi/util/patternSub"
 )
 
@@ -252,6 +253,12 @@ func deferredAccessLogging(
 		sources["auto_grafana"] = "false"
 	} else {
 		sources["auto_grafana"] = "true"
+	}
+
+	dm := dnsmanager.Get()
+	sources["peer_domain_name"] = dm.GetDomainNameByIP(ald.PeerIp)
+	if xRealIP, ok := sources["X-Real-Ip"]; ok {
+		sources["requester_domain_name"] = dm.GetDomainNameByIP(xRealIP)
 	}
 
 	fieldsToLog = append(
