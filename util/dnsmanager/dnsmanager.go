@@ -1,19 +1,22 @@
 package dnsmanager
 
 import (
+	"context"
 	"sync"
+	"time"
 
-	"github.com/go-graphite/carbonzipper/cache"
+	"github.com/rs/dnscache"
 )
 
 type DNSManager struct {
-	dnsCache cache.BytesCache
+	r *dnscache.Resolver
 }
 
 const (
-	cacheMaxSizeBytes       uint64 = 100 * 1024 * 1024 // 100 MB
-	recordExpirationSeconds int32  = 3600              // 1 hour
-	unknownRecordSign       string = "unknown"         // In case when of unsuccessful lookup
+	unknownRecordSign string = "unknown"
+
+	resolveTimeout time.Duration = 10 * time.Second
+	refreshTimeout time.Duration = 3600 * time.Second
 )
 
 var (
@@ -24,21 +27,28 @@ var (
 func Get() *DNSManager {
 	once.Do(func() {
 		dm = &DNSManager{
-			dnsCache: cache.NewExpireCache(cacheMaxSizeBytes),
+			r: &dnscache.Resolver{
+				Timeout: resolveTimeout,
+			},
 		}
+		go func() {
+			for {
+				time.Sleep(refreshTimeout)
+				dm.r.RefreshWithOptions(dnscache.ResolverRefreshOptions{
+					ClearUnused:      true,
+					PersistOnFailure: true,
+				})
+			}
+		}()
 	})
 	return dm
 }
 
 func (dm *DNSManager) GetDomainNameByIP(ip string) string {
-	cachedRecord, cacheErr := dm.dnsCache.Get(ip)
-	if cacheErr != nil {
-		name := getDomainNameByIP(ip)
-		if name != unknownRecordSign {
-			dm.dnsCache.Set(ip, []byte(name), recordExpirationSeconds)
-		}
-		return name
+	cachedRecord, cacheErr := dm.r.LookupAddr(context.Background(), ip)
+	if cacheErr != nil || len(cachedRecord) == 0 {
+		return unknownRecordSign
 	} else {
-		return string(cachedRecord)
+		return cachedRecord[0]
 	}
 }
