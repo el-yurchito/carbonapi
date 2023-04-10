@@ -8,8 +8,8 @@ var DNSMetrics = struct {
 	LookupAddrErrors   *expvar.Int
 	CacheMisses        *expvar.Int
 }{
-	LookupAddrAttempts: expvar.NewInt("lookup_addr_attempts"),
-	LookupAddrSuccess:  expvar.NewInt("lookup_addr_success"),
-	LookupAddrErrors:   expvar.NewInt("lookup_addr_errors"),
-	CacheMisses:        expvar.NewInt("cache_misses"),
+	LookupAddrAttempts: expvar.NewInt("dns_lookup_addr_attempts"),
+	LookupAddrSuccess:  expvar.NewInt("dns_lookup_addr_success"),
+	LookupAddrErrors:   expvar.NewInt("dns_lookup_addr_errors"),
+	CacheMisses:        expvar.NewInt("dns_cache_misses"),
 }
