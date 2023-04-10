@@ -28,7 +28,8 @@ func Get() *DNSManager {
 	once.Do(func() {
 		dm = &DNSManager{
 			r: &dnscache.Resolver{
-				Timeout: resolveTimeout,
+				Timeout:     resolveTimeout,
+				OnCacheMiss: func() { DNSMetrics.CacheMisses.Add(1) },
 			},
 		}
 		go func() {
@@ -45,10 +46,13 @@ func Get() *DNSManager {
 }
 
 func (dm *DNSManager) GetDomainNameByIP(ip string) string {
+	DNSMetrics.LookupAddrAttempts.Add(1)
 	cachedRecord, cacheErr := dm.r.LookupAddr(context.Background(), ip)
 	if cacheErr != nil || len(cachedRecord) == 0 {
+		DNSMetrics.LookupAddrErrors.Add(1)
 		return unknownRecordSign
 	} else {
+		DNSMetrics.LookupAddrSuccess.Add(1)
 		return cachedRecord[0]
 	}
 }

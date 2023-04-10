@@ -825,6 +825,11 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 		graphite.Register(fmt.Sprintf("%s.zipper.search_cache_hits", pattern), zipperMetrics.SearchCacheHits)
 		graphite.Register(fmt.Sprintf("%s.zipper.search_cache_misses", pattern), zipperMetrics.SearchCacheMisses)
 
+		graphite.Register(fmt.Sprintf("%s.dns.cache_misses", pattern), dnsmanager.DNSMetrics.CacheMisses)
+		graphite.Register(fmt.Sprintf("%s.dns.lookup_addr_attempts", pattern), dnsmanager.DNSMetrics.LookupAddrAttempts)
+		graphite.Register(fmt.Sprintf("%s.dns.lookup_addr_success", pattern), dnsmanager.DNSMetrics.LookupAddrSuccess)
+		graphite.Register(fmt.Sprintf("%s.dns.lookup_addr_errors", pattern), dnsmanager.DNSMetrics.LookupAddrErrors)
+
 		go mstats.Start(config.Graphite.Interval)
 
 		graphite.Register(fmt.Sprintf("%s.alloc", pattern), &mstats.Alloc)
