@@ -41,6 +41,7 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/go-graphite/carbonapi/tagdb"
 	"github.com/go-graphite/carbonapi/util"
+	"github.com/go-graphite/carbonapi/util/dnsmanager"
 	"github.com/go-graphite/carbonapi/util/patternSub"
 )
 
@@ -242,7 +243,7 @@ func deferredAccessLogging(
 		"User-Agent", "X-Source",
 		"X-Forwarded-For", "X-Real-Ip",
 		"X-Dashboard-Id", "X-Panel-Id",
-		"X-Bot", "X-Office",
+		"X-Bot", "X-Office", "X-Trigger-Id",
 	} {
 		if val, ok := headers[header]; ok {
 			sources[header] = val
@@ -252,6 +253,12 @@ func deferredAccessLogging(
 		sources["auto_grafana"] = "false"
 	} else {
 		sources["auto_grafana"] = "true"
+	}
+
+	dm := dnsmanager.Get()
+	sources["peer_domain_name"] = dm.GetDomainNameByIP(ald.PeerIp)
+	if xRealIP, ok := sources["X-Real-Ip"]; ok {
+		sources["requester_domain_name"] = dm.GetDomainNameByIP(xRealIP)
 	}
 
 	fieldsToLog = append(
@@ -817,6 +824,11 @@ func setUpConfig(logger *zap.Logger, zipper CarbonZipper) {
 
 		graphite.Register(fmt.Sprintf("%s.zipper.search_cache_hits", pattern), zipperMetrics.SearchCacheHits)
 		graphite.Register(fmt.Sprintf("%s.zipper.search_cache_misses", pattern), zipperMetrics.SearchCacheMisses)
+
+		graphite.Register(fmt.Sprintf("%s.dns.cache_misses", pattern), dnsmanager.DNSMetrics.CacheMisses)
+		graphite.Register(fmt.Sprintf("%s.dns.lookup_addr_attempts", pattern), dnsmanager.DNSMetrics.LookupAddrAttempts)
+		graphite.Register(fmt.Sprintf("%s.dns.lookup_addr_success", pattern), dnsmanager.DNSMetrics.LookupAddrSuccess)
+		graphite.Register(fmt.Sprintf("%s.dns.lookup_addr_errors", pattern), dnsmanager.DNSMetrics.LookupAddrErrors)
 
 		go mstats.Start(config.Graphite.Interval)
 

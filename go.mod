@@ -41,6 +41,7 @@ require (
 	github.com/mjibson/go-dsp v0.0.0-20170104183934-49dba8372707
 	github.com/pelletier/go-toml v1.1.0 // indirect
 	github.com/peterbourgon/g2g v0.0.0-20161124161852-0c2bab2b173d
+	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/afero v1.0.2 // indirect
 	github.com/spf13/cast v1.2.0 // indirect
@@ -51,6 +52,7 @@ require (
 	github.com/tebeka/strftime v0.1.5
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f
 	go.uber.org/zap v1.7.1
+	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 // indirect
 	golang.org/x/text v0.3.0 // indirect
 	gopkg.in/alexcesaro/statsd.v2 v2.0.0

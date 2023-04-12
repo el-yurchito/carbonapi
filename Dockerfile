@@ -1,4 +1,4 @@
-FROM registry.k.avito.ru/avito/golang:1.13 as builder
+FROM registry.k.avito.ru/avito/golang:1.15 as builder
 
 RUN apt-get update
 RUN apt-get install -y make gcc git
