@@ -435,7 +435,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 				// propagate upstream error, in case it has occurred
 				for i := range errors {
 					if err, ok := errors[i].(realZipper.UpstreamResponse); ok {
-						status := err.HttpStatus()
+						status := util.TransformInadequateStatusCode(err.HttpStatus())
 						upstream := err.Upstream()
 						body := string(err.Body())
 						message := fmt.Sprintf(

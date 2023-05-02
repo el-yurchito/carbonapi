@@ -48,3 +48,10 @@ func MarshalCtx(ctx context.Context, response *http.Request) *http.Request {
 
 	return response
 }
+
+func TransformInadequateStatusCode(statusCode int) int {
+	if statusCode < 100 || statusCode > 999 {
+		return http.StatusInternalServerError
+	}
+	return statusCode
+}
