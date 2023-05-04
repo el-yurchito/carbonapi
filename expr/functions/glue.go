@@ -86,6 +86,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/reduce"
 	"github.com/go-graphite/carbonapi/expr/functions/removeBelowSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/removeEmptySeries"
+	"github.com/go-graphite/carbonapi/expr/functions/removeSeriesByPattern"
 	"github.com/go-graphite/carbonapi/expr/functions/round"
 	"github.com/go-graphite/carbonapi/expr/functions/scale"
 	"github.com/go-graphite/carbonapi/expr/functions/scaleToSeconds"
@@ -287,6 +288,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "removeBelowSeries", order: removeBelowSeries.GetOrder(), f: removeBelowSeries.New})
 
 	funcs = append(funcs, initFunc{name: "removeEmptySeries", order: removeEmptySeries.GetOrder(), f: removeEmptySeries.New})
+
+	funcs = append(funcs, initFunc{name: "removeSeriesByPattern", order: removeSeriesByPattern.GetOrder(), f: removeSeriesByPattern.New})
 
 	funcs = append(funcs, initFunc{name: "round", order: round.GetOrder(), f: round.New})
 
