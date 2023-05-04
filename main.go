@@ -266,6 +266,10 @@ func deferredAccessLogging(
 		zap.Any("headers", headers),
 		zap.Any("sources", sources),
 	)
+	sourcesString, err := json.Marshal(sources)
+	if err == nil {
+		fieldsToLog = append(fieldsToLog, zap.String("some_headers", string(sourcesString)))
+	}
 
 	logger := zapwriter.Logger("access")
 	if logAsError {
