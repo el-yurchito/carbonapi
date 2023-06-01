@@ -147,6 +147,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		deferredFunctionCallMetrics(functionCallStacks)
 		deferredAccessLogging(&accessLogDetails, functionCallStacks, r, t0, logAsError)
+		deferredRenderMetrics(t0)
 	}()
 
 	apiMetrics.Requests.Add(1)

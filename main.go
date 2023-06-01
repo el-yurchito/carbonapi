@@ -311,6 +311,18 @@ func deferredFunctionCallMetrics(functionCallStacks []*timer.FunctionCallStack) 
 	}
 }
 
+func deferredRenderMetrics(startTime time.Time) {
+	client := statsdLimiter.Get()
+	defer client.Release()
+
+	tags := fmt.Sprintf(
+		";hostname=%s",
+		hostname,
+	)
+
+	client.Timing("render.timing_ms"+tags, time.Since(startTime).Milliseconds())
+}
+
 type treejson struct {
 	AllowChildren int            `json:"allowChildren"`
 	Expandable    int            `json:"expandable"`
