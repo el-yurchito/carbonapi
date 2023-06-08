@@ -53,5 +53,9 @@ func TransformInadequateStatusCode(statusCode int) int {
 	if statusCode < 100 || statusCode > 999 {
 		return http.StatusInternalServerError
 	}
+	if statusCode == 0 {
+		// did not receive a proper HTML response
+		return http.StatusInternalServerError
+	}
 	return statusCode
 }
