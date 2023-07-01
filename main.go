@@ -160,6 +160,7 @@ func deferredAccessLogging(
 	ald *carbonapipb.AccessLogDetails,
 	stacks []*timer.FunctionCallStack,
 	req *http.Request,
+	serverStats *realZipper.ServerResponseStat,
 	reqStarted time.Time,
 	logAsError bool,
 ) {
@@ -270,6 +271,9 @@ func deferredAccessLogging(
 	if err == nil {
 		fieldsToLog = append(fieldsToLog, zap.String("some_headers", string(sourcesString)))
 	}
+
+	fieldsToLog = append(fieldsToLog, zap.Any("query_ids", serverStats.QueryIDs))
+	fieldsToLog = append(fieldsToLog, zap.Any("server_stat", serverStats.Stat))
 
 	logger := zapwriter.Logger("access")
 	if logAsError {

@@ -6,6 +6,14 @@ endif
 VERSION ?= $(shell git describe --abbrev=4 --dirty --always --tags)
 
 GO ?= go
+GOPRIVATE   =
+GOPROXY     = https://goproxy.msk.avito.ru|https://proxy.golang.org,direct
+GONOSUMDB   = go.avito.ru
+
+
+export GOPRIVATE   := $(GOPRIVATE)
+export GOPROXY     := $(GOPROXY)
+export GONOSUMDB   := $(GONOSUMDB)
 
 carbonapi:
 	$(GO) build -ldflags '-X main.BuildVersion=$(VERSION)'

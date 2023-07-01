@@ -17,8 +17,6 @@ github.com/dgryski/go-onlinestats v0.0.0-20170612111826-1c7d19468768 h1:Xzl7CSuS
 github.com/dgryski/go-onlinestats v0.0.0-20170612111826-1c7d19468768/go.mod h1:alfmlCqcg4uw9jaoIU1nOp9RFdJLMuu8P07BCEgpgoo=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4 h1:qk/FSDDxo05wdJH28W+p5yivv7LuLYLRXPPD8KQCtZs=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
-github.com/el-yurchito/carbonzipper v0.0.0-20220726090409-d4fddeac7e4b h1:3uezGYbmbmR0YUt8J6YsO7a98PoL1FhWlMcTOvWUTTs=
-github.com/el-yurchito/carbonzipper v0.0.0-20220726090409-d4fddeac7e4b/go.mod h1:SfiEGekyyER/so07sQjS/xxjdSEVl1UEkEKV3XQXPSM=
 github.com/evmar/gocairo v0.0.0-20160222165215-ddd30f837497 h1:DIQ8EvZ8OjuPNfcV4NgsyBeZho7WsTD0JEkDM5napMI=
 github.com/evmar/gocairo v0.0.0-20160222165215-ddd30f837497/go.mod h1:YXKUYPSqs+jDG8mvexHN2uTik4PKwg2B0WK9itQ0VrE=
 github.com/facebookgo/atomicfile v0.0.0-20151019160806-2de1f203e7d5 h1:BBso6MBKW8ncyZLv37o+KNyy0HrrHgfnOaGQC2qvN+A=
@@ -112,6 +110,8 @@ github.com/tebeka/strftime v0.1.5 h1:1NQKN1NiQgkqd/2moD6ySP/5CoZQsKa1d3ZhJ44Jpmg
 github.com/tebeka/strftime v0.1.5/go.mod h1:29/OidkoWHdEKZqzyDLUyC+LmgDgdHo4WAFCDT7D/Ig=
 github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f h1:9DDCDwOyEy/gId+IEMrFHLuQ5R/WV0KNxWLler8X2OY=
 github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f/go.mod h1:8sdOQnirw1PrcnTJYkmW1iOHtUmblMmGdUOHyWYycLI=
+go.avito.ru/do/carbonzipper v0.0.0-20230712142937-0a75a93c1d00 h1:rocylYOA6uuuQxMghdTVMMMq0nX1GJQIwKyaZkKIcUM=
+go.avito.ru/do/carbonzipper v0.0.0-20230712142937-0a75a93c1d00/go.mod h1:QlCL+/nS02+u7KxJ1Pa5trxUqcBQjgF7EzYXD1DNis0=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/multierr v1.6.0 h1:y6IPFStTAIT5Ytl7/XYmHvzXQ7S3g/IeZW9hyZ5thw4=

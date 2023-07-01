@@ -39,11 +39,11 @@ func (z mockCarbonZipper) Info(ctx context.Context, metric string) (map[string]p
 	return response, nil
 }
 
-func (z mockCarbonZipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, error) {
+func (z mockCarbonZipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, *realZipper.ServerResponseStat, error) {
 	var result []*types.MetricData
 	multiFetchResponse := getMultiFetchResponse()
 	result = append(result, &types.MetricData{FetchResponse: *multiFetchResponse.Metrics[0]})
-	return result, nil
+	return result, nil, nil
 }
 
 func getGlobResponse() pb.GlobResponse {

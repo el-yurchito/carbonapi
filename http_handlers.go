@@ -122,9 +122,10 @@ type renderRequest struct {
 }
 
 type renderResponse struct {
-	data    []*types.MetricData
-	error   error
-	request renderRequest
+	data        []*types.MetricData
+	serverStats *realZipper.ServerResponseStat
+	error       error
+	request     renderRequest
 }
 
 func renderHandler(w http.ResponseWriter, r *http.Request) {
@@ -143,10 +144,10 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 		functionCallStacks []*timer.FunctionCallStack
 		logAsError         bool
 	)
-
+	serverStats := realZipper.NewServerResponseStat()
 	defer func() {
 		deferredFunctionCallMetrics(functionCallStacks)
-		deferredAccessLogging(&accessLogDetails, functionCallStacks, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, functionCallStacks, r, serverStats, t0, logAsError)
 		deferredRenderMetrics(t0)
 	}()
 
@@ -381,11 +382,12 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 				go func(request renderRequest) {
 					defer config.limiter.Leave()
 
-					r, err := config.zipper.Render(ctx, request.metric, request.from, request.until)
+					r, serverStats, err := config.zipper.Render(ctx, request.metric, request.from, request.until)
 					renderResponseChan <- renderResponse{
-						data:    r,
-						error:   err,
-						request: request,
+						data:        r,
+						serverStats: serverStats,
+						error:       err,
+						request:     request,
 					}
 				}(request)
 			}
@@ -411,7 +413,7 @@ func renderHandler(w http.ResponseWriter, r *http.Request) {
 							)
 						}
 					}
-
+					serverStats.Merge(response.serverStats)
 					metricValues[mfetch] = append(metricValues[mfetch], newMetricData...)
 				} else {
 					errors = append(errors, response.error)
@@ -605,7 +607,7 @@ func findHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(&accessLogDetails, nil, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, nil, r, nil, t0, logAsError)
 	}()
 
 	if query == "" {
@@ -781,7 +783,7 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(&accessLogDetails, nil, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, nil, r, nil, t0, logAsError)
 	}()
 
 	var (
@@ -831,14 +833,14 @@ func infoHandler(w http.ResponseWriter, r *http.Request) {
 
 func lbcheckHandler(w http.ResponseWriter, r *http.Request) {
 	ald := carbonapipb.AccessLogDetails{Handler: "lbcheck"}
-	defer deferredAccessLogging(&ald, nil, r, time.Now(), false)
+	defer deferredAccessLogging(&ald, nil, r, nil, time.Now(), false)
 
 	_, _ = w.Write([]byte("Ok\n"))
 }
 
 func versionHandler(w http.ResponseWriter, r *http.Request) {
 	ald := carbonapipb.AccessLogDetails{Handler: "version"}
-	defer deferredAccessLogging(&ald, nil, r, time.Now(), false)
+	defer deferredAccessLogging(&ald, nil, r, nil, time.Now(), false)
 
 	if config.GraphiteWeb09Compatibility {
 		_, _ = w.Write([]byte("0.9.15\n"))
@@ -863,7 +865,7 @@ func functionsHandler(w http.ResponseWriter, r *http.Request) {
 	accessLogDetails := carbonapipb.AccessLogDetails{Handler: "functions"}
 	logAsError := false
 	defer func() {
-		deferredAccessLogging(&accessLogDetails, nil, r, t0, logAsError)
+		deferredAccessLogging(&accessLogDetails, nil, r, nil, t0, logAsError)
 	}()
 
 	apiMetrics.Requests.Add(1)
