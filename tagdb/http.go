@@ -10,11 +10,12 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	"go.uber.org/zap"
 
 	"github.com/go-graphite/carbonapi/util"
 	"github.com/go-graphite/carbonapi/util/patternSub"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 type Http struct {

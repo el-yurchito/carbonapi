@@ -12,7 +12,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/go-graphite/carbonzipper/limiter"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -21,6 +20,8 @@ import (
 	"github.com/go-graphite/carbonapi/expr/metadata"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 type graphiteWeb struct {

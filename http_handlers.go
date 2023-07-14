@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	"github.com/go-graphite/carbonzipper/intervalset"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
@@ -27,6 +26,8 @@ import (
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"github.com/go-graphite/carbonapi/util"
 	"github.com/go-graphite/carbonapi/util/patternSub"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 const (

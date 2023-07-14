@@ -18,7 +18,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/facebookgo/pidfile"
 	"github.com/go-graphite/carbonzipper/cache"
@@ -43,6 +42,8 @@ import (
 	"github.com/go-graphite/carbonapi/util"
 	"github.com/go-graphite/carbonapi/util/dnsmanager"
 	"github.com/go-graphite/carbonapi/util/patternSub"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 var apiMetrics = struct {

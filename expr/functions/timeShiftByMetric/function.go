@@ -6,12 +6,13 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/go-graphite/carbonapi/expr/helper"
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
 	"go.uber.org/zap"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 type offsetByVersion map[string]int32

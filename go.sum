@@ -112,6 +112,10 @@ github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f h1:9DDCDwOyEy
 github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f/go.mod h1:8sdOQnirw1PrcnTJYkmW1iOHtUmblMmGdUOHyWYycLI=
 go.avito.ru/do/carbonzipper v0.0.0-20230712142937-0a75a93c1d00 h1:rocylYOA6uuuQxMghdTVMMMq0nX1GJQIwKyaZkKIcUM=
 go.avito.ru/do/carbonzipper v0.0.0-20230712142937-0a75a93c1d00/go.mod h1:QlCL+/nS02+u7KxJ1Pa5trxUqcBQjgF7EzYXD1DNis0=
+go.avito.ru/do/zapwriter v0.0.0-20230714142407-7c6fae4fecaa h1:VnuUPagIaoam1tQN+55jyD5hWCqoC+1zuakpoNWNav8=
+go.avito.ru/do/zapwriter v0.0.0-20230714142407-7c6fae4fecaa/go.mod h1:UYYjV5VvK4RfcW3TxJ7xkukc8SeJrun2xwQjtpP3uNI=
+go.avito.ru/do/zapwriter v0.0.0-20230714143039-fe00ea3fcabf h1:6mXR5/IQTpdNsOhd9QNPrUMsaWgGaNzFfTJGvkl05fA=
+go.avito.ru/do/zapwriter v0.0.0-20230714143039-fe00ea3fcabf/go.mod h1:UYYjV5VvK4RfcW3TxJ7xkukc8SeJrun2xwQjtpP3uNI=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/multierr v1.6.0 h1:y6IPFStTAIT5Ytl7/XYmHvzXQ7S3g/IeZW9hyZ5thw4=
