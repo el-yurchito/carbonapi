@@ -275,7 +275,7 @@ func deferredAccessLogging(
 
 	fieldsToLog = append(fieldsToLog, zap.Any("query_ids", serverStats.QueryIDs))
 
-	serverStatsStr, err := json.Marshal(serverStats)
+	serverStatsStr, err := json.Marshal(serverStats.Stat)
 	if err == nil {
 		fieldsToLog = append(fieldsToLog, zap.String("server_stat", string(serverStatsStr)))
 	}
