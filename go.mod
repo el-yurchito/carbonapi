@@ -50,7 +50,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tebeka/strftime v0.1.5
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f
-	go.avito.ru/do/zapwriter v0.0.0-20230714143039-fe00ea3fcabf // indirect
+	go.avito.ru/do/zapwriter v0.0.0-20230717131833-dbb2ddee4747 // indirect
 	go.uber.org/zap v1.7.1
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 // indirect
