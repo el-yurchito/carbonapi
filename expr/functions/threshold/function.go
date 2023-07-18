@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 
@@ -12,6 +11,8 @@ import (
 	"github.com/go-graphite/carbonapi/expr/interfaces"
 	"github.com/go-graphite/carbonapi/expr/types"
 	"github.com/go-graphite/carbonapi/pkg/parser"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 type threshold struct {

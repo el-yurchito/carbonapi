@@ -5,7 +5,6 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/JaderDias/movingmedian v0.0.0-20170611140316-de8c410559fa
-	github.com/PAFomin-at-avito/zapwriter v0.0.0-20210906122802-230580a05953
 	github.com/aclements/go-moremath v0.0.0-20170210193428-033754ab1fee // indirect
 	github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d // indirect
 	github.com/davecgh/go-spew v1.1.1
@@ -51,6 +50,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tebeka/strftime v0.1.5
 	github.com/wangjohn/quickselect v0.0.0-20161129230411-ed8402a42d5f
+	go.avito.ru/do/zapwriter v0.0.0-20230718075540-9777ae45b451 // indirect
 	go.uber.org/zap v1.7.1
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.0.0-20180224232135-f6cff0780e54 // indirect
@@ -59,4 +59,4 @@ require (
 	gopkg.in/yaml.v2 v2.1.1 // indirect
 )
 
-replace github.com/go-graphite/carbonzipper => github.com/el-yurchito/carbonzipper v0.0.0-20220726090409-d4fddeac7e4b
+replace github.com/go-graphite/carbonzipper => go.avito.ru/do/carbonzipper v0.0.0-20230712142937-0a75a93c1d00

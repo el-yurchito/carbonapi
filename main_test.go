@@ -7,13 +7,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	pb "github.com/go-graphite/carbonzipper/carbonzipperpb3"
 	realZipper "github.com/go-graphite/carbonzipper/zipper"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 
 	"github.com/go-graphite/carbonapi/expr/types"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 type mockCarbonZipper struct {
@@ -39,11 +40,11 @@ func (z mockCarbonZipper) Info(ctx context.Context, metric string) (map[string]p
 	return response, nil
 }
 
-func (z mockCarbonZipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, error) {
+func (z mockCarbonZipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, *realZipper.ServerResponseStat, error) {
 	var result []*types.MetricData
 	multiFetchResponse := getMultiFetchResponse()
 	result = append(result, &types.MetricData{FetchResponse: *multiFetchResponse.Metrics[0]})
-	return result, nil
+	return result, nil, nil
 }
 
 func getGlobResponse() pb.GlobResponse {

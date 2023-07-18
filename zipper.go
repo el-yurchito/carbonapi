@@ -26,7 +26,7 @@ type zipper struct {
 type CarbonZipper interface {
 	Find(ctx context.Context, metric string) (pb.GlobResponse, error)
 	Info(ctx context.Context, metric string) (map[string]pb.InfoResponse, error)
-	Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, error)
+	Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, *realZipper.ServerResponseStat, error)
 }
 
 func newZipper(sender func(*realZipper.Stats), config *realZipper.Config, ignoreClientTimeout bool, logger *zap.Logger) *zipper {
@@ -77,7 +77,7 @@ func (z zipper) Info(ctx context.Context, metric string) (map[string]pb.InfoResp
 	return resp, nil
 }
 
-func (z zipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, error) {
+func (z zipper) Render(ctx context.Context, metric string, from, until int32) ([]*types.MetricData, *realZipper.ServerResponseStat, error) {
 	var (
 		newCtx = ctx
 		result []*types.MetricData
@@ -87,22 +87,22 @@ func (z zipper) Render(ctx context.Context, metric string, from, until int32) ([
 		newCtx = util.SetUUID(context.Background(), util.GetUUID(ctx))
 	}
 
-	resp, stats, err := z.z.Render(newCtx, z.logger, metric, from, until)
+	resp, stats, serverStats, err := z.z.Render(newCtx, z.logger, metric, from, until)
 	if err != nil {
-		return result, err
+		return result, serverStats, err
 	}
 	z.statsSender(stats)
 
 	metricsQty := len(resp.Metrics)
 	if metricsQty == 0 {
-		return result, errors.New("no metrics")
+		return result, serverStats, errors.New("no metrics")
 	}
 
 	for i := 0; i < metricsQty; i++ {
 		result = append(result, &types.MetricData{FetchResponse: *types.CastFetchResponse(resp.Metrics[i])})
 	}
 
-	return result, nil
+	return result, serverStats, nil
 }
 
 type upstreamError interface {

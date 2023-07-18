@@ -18,7 +18,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/PAFomin-at-avito/zapwriter"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/facebookgo/pidfile"
 	"github.com/go-graphite/carbonzipper/cache"
@@ -43,6 +42,8 @@ import (
 	"github.com/go-graphite/carbonapi/util"
 	"github.com/go-graphite/carbonapi/util/dnsmanager"
 	"github.com/go-graphite/carbonapi/util/patternSub"
+
+	"go.avito.ru/do/zapwriter"
 )
 
 var apiMetrics = struct {
@@ -160,6 +161,7 @@ func deferredAccessLogging(
 	ald *carbonapipb.AccessLogDetails,
 	stacks []*timer.FunctionCallStack,
 	req *http.Request,
+	serverStats *realZipper.ServerResponseStat,
 	reqStarted time.Time,
 	logAsError bool,
 ) {
@@ -269,6 +271,16 @@ func deferredAccessLogging(
 	sourcesString, err := json.Marshal(sources)
 	if err == nil {
 		fieldsToLog = append(fieldsToLog, zap.String("some_headers", string(sourcesString)))
+	}
+
+	queryIDsString, err := json.Marshal(serverStats.QueryIDs)
+	if err == nil {
+		fieldsToLog = append(fieldsToLog, zap.String("query_ids", string(queryIDsString)))
+	}
+
+	serverStatsStr, err := json.Marshal(serverStats.Stat)
+	if err == nil {
+		fieldsToLog = append(fieldsToLog, zap.String("server_stat", string(serverStatsStr)))
 	}
 
 	logger := zapwriter.Logger("access")
