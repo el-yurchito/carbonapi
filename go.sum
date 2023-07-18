@@ -118,6 +118,8 @@ go.avito.ru/do/zapwriter v0.0.0-20230714143039-fe00ea3fcabf h1:6mXR5/IQTpdNsOhd9
 go.avito.ru/do/zapwriter v0.0.0-20230714143039-fe00ea3fcabf/go.mod h1:UYYjV5VvK4RfcW3TxJ7xkukc8SeJrun2xwQjtpP3uNI=
 go.avito.ru/do/zapwriter v0.0.0-20230717131833-dbb2ddee4747 h1:eKGuXgEDUGvx9pCEW4TfB3Rxowq6l8YNDYTnrmVdFHQ=
 go.avito.ru/do/zapwriter v0.0.0-20230717131833-dbb2ddee4747/go.mod h1:UYYjV5VvK4RfcW3TxJ7xkukc8SeJrun2xwQjtpP3uNI=
+go.avito.ru/do/zapwriter v0.0.0-20230718075540-9777ae45b451 h1:J9QEeYa7CDO7l19x+Cc8Qe83TtQw22Iv2amJFQzyyK4=
+go.avito.ru/do/zapwriter v0.0.0-20230718075540-9777ae45b451/go.mod h1:UYYjV5VvK4RfcW3TxJ7xkukc8SeJrun2xwQjtpP3uNI=
 go.uber.org/atomic v1.7.0 h1:ADUqmZGgLDDfbSL9ZmPxKTybcoEYHgpYfELNoN+7hsw=
 go.uber.org/atomic v1.7.0/go.mod h1:fEN4uk6kAWBTFdckzkM89CLk9XfWZrxpCo0nPH17wJc=
 go.uber.org/multierr v1.6.0 h1:y6IPFStTAIT5Ytl7/XYmHvzXQ7S3g/IeZW9hyZ5thw4=
