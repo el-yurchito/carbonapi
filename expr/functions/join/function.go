@@ -28,17 +28,24 @@ func New(_ string) []interfaces.FunctionMetadata {
 func (f *join) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
 		"join": {
-			Description: `Performs set operations on 'seriesA' and 'seriesB'. Following options are available:
- * AND - returns those metrics from 'seriesA' which are presented in 'seriesB';
- * OR  - returns all metrics from 'seriesA' and also those metrics from 'seriesB' which aren't presented in 'seriesA';
- * XOR - returns only those metrics which are presented in either 'seriesA' or 'seriesB', but not in both;
- * SUB - returns those metrics from 'seriesA' which aren't presented in 'seriesB';
+			Description: `Performs set operations on "seriesA" and "seriesB". Following options are available:
+ * AND - returns those metrics from "seriesA" which are presented in "seriesB";
+ * OR  - returns all metrics from "seriesA" and also those metrics from "seriesB" which aren't presented in "seriesA";
+ * XOR - returns only those metrics which are presented in either "seriesA" or "seriesB", but not in both;
+ * SUB - returns those metrics from "seriesA" which aren't presented in "seriesB";
+
+It's possible to match only picked nodes from "seriesA" and "seriesB" metric names, not full names.
+"nodesA" and "nodesB" - format strings for "seriesA" and "seriesB" respectively. Correct values:
+ * empty string (default): full metric name will be used for matching
+ * zero-based indexes or python-like negative indexes joined by dots without spaces, e.g., "1", "0.2.-1" etc.
 
 Example:
 
 .. code-block:: none
 
-  &target=join(some.data.series.aaa, some.other.series.bbb, 'AND')`,
+  &target=join(some.data.series.aaa, some.other.series.bbb, 'AND')
+  &target=join(some.data.series.aaa, some.other.series.bbb, 'AND', '', '-1.-2')
+`,
 			Function: "join(seriesA, seriesB)",
 			Group:    "Transform",
 			Module:   "graphite.render.functions",
