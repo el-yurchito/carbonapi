@@ -2,6 +2,7 @@ package join
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-graphite/carbonapi/expr/helper"
@@ -27,17 +28,24 @@ func New(_ string) []interfaces.FunctionMetadata {
 func (f *join) Description() map[string]types.FunctionDescription {
 	return map[string]types.FunctionDescription{
 		"join": {
-			Description: `Performs set operations on 'seriesA' and 'seriesB'. Following options are available:
- * AND - returns those metrics from 'seriesA' which are presented in 'seriesB';
- * OR  - returns all metrics from 'seriesA' and also those metrics from 'seriesB' which aren't presented in 'seriesA';
- * XOR - returns only those metrics which are presented in either 'seriesA' or 'seriesB', but not in both;
- * SUB - returns those metrics from 'seriesA' which aren't presented in 'seriesB';
+			Description: `Performs set operations on "seriesA" and "seriesB". Following options are available:
+ * AND - returns those metrics from "seriesA" which are presented in "seriesB";
+ * OR  - returns all metrics from "seriesA" and also those metrics from "seriesB" which aren't presented in "seriesA";
+ * XOR - returns only those metrics which are presented in either "seriesA" or "seriesB", but not in both;
+ * SUB - returns those metrics from "seriesA" which aren't presented in "seriesB";
+
+It's possible to match only picked nodes from "seriesA" and "seriesB" metric names, not full names.
+"nodesA" and "nodesB" - format strings for "seriesA" and "seriesB" respectively. Correct values:
+ * empty string (default): full metric name will be used for matching
+ * zero-based indexes or python-like negative indexes joined by dots without spaces, e.g., "1", "0.2.-1" etc.
 
 Example:
 
 .. code-block:: none
 
-  &target=join(some.data.series.aaa, some.other.series.bbb, 'AND')`,
+  &target=join(some.data.series.aaa, some.other.series.bbb, 'AND')
+  &target=join(some.data.series.aaa, some.other.series.bbb, 'AND', '', '-1.-2')
+`,
 			Function: "join(seriesA, seriesB)",
 			Group:    "Transform",
 			Module:   "graphite.render.functions",
@@ -59,6 +67,18 @@ Example:
 					Type:     types.String,
 					Default:  types.NewSuggestion(and),
 					Options:  []string{and, or, xor, sub},
+				},
+				{
+					Name:     "nodesA",
+					Required: false,
+					Type:     types.String,
+					Default:  types.NewSuggestion(""),
+				},
+				{
+					Name:     "nodesB",
+					Required: false,
+					Type:     types.String,
+					Default:  types.NewSuggestion(""),
 				},
 			},
 		},
@@ -87,86 +107,175 @@ func (f *join) Do(e parser.Expr, from, until int32, values map[parser.MetricRequ
 	}
 	joinType = strings.ToUpper(joinType)
 
-	if joinType == and {
-		return doAnd(seriesA, seriesB), nil
+	nodesA, err := e.GetStringNamedOrPosArgDefault("nodesA", 3, "")
+	if err != nil {
+		return nil, err
 	}
-	if joinType == or {
-		return doOr(seriesA, seriesB), nil
+	nodesB, err := e.GetStringNamedOrPosArgDefault("nodesB", 4, "")
+	if err != nil {
+		return nil, err
 	}
-	if joinType == xor {
-		return doXor(seriesA, seriesB), nil
+
+	transformerA, err := parseTransformerArg(nodesA)
+	if err != nil {
+		return nil, err
 	}
-	if joinType == sub {
-		return doSub(seriesA, seriesB), nil
+	transformerB, err := parseTransformerArg(nodesB)
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("unknown join type: %s", joinType)
+
+	switch joinType {
+	case and:
+		return doAnd(seriesA, seriesB, transformerA, transformerB), nil
+	case or:
+		return doOr(seriesA, seriesB, transformerA, transformerB), nil
+	case xor:
+		return doXor(seriesA, seriesB, transformerA, transformerB), nil
+	case sub:
+		return doSub(seriesA, seriesB, transformerA, transformerB), nil
+	default:
+		return nil, fmt.Errorf("unknown join type: %s", joinType)
+	}
 }
 
-func doAnd(seriesA []*types.MetricData, seriesB []*types.MetricData) (results []*types.MetricData) {
+func doAnd(
+	seriesA, seriesB []*types.MetricData,
+	transformerA, transformerB metricNameTransformer,
+) (results []*types.MetricData) {
 	metricsB := make(map[string]bool, len(seriesB))
 	for _, md := range seriesB {
-		metricsB[md.Name] = true
+		metricsB[transformerB.transform(md.Name)] = true
 	}
 
 	results = make([]*types.MetricData, 0, len(seriesA))
 	for _, md := range seriesA {
-		if metricsB[md.Name] {
+		if metricsB[transformerA.transform(md.Name)] {
 			results = append(results, md)
 		}
 	}
 	return results
 }
 
-func doOr(seriesA []*types.MetricData, seriesB []*types.MetricData) (results []*types.MetricData) {
+func doOr(
+	seriesA, seriesB []*types.MetricData,
+	transformerA, transformerB metricNameTransformer,
+) (results []*types.MetricData) {
 	metricsA := make(map[string]bool, len(seriesA))
 	for _, md := range seriesA {
-		metricsA[md.Name] = true
+		metricsA[transformerA.transform(md.Name)] = true
 	}
 
 	results = seriesA
 	for _, md := range seriesB {
-		if !metricsA[md.Name] {
+		if !metricsA[transformerB.transform(md.Name)] {
 			results = append(results, md)
 		}
 	}
 	return results
 }
 
-func doXor(seriesA []*types.MetricData, seriesB []*types.MetricData) (results []*types.MetricData) {
+func doXor(
+	seriesA, seriesB []*types.MetricData,
+	transformerA, transformerB metricNameTransformer,
+) (results []*types.MetricData) {
 	metricsA := make(map[string]bool, len(seriesA))
 	for _, md := range seriesA {
-		metricsA[md.Name] = true
+		metricsA[transformerA.transform(md.Name)] = true
 	}
 	metricsB := make(map[string]bool, len(seriesB))
 	for _, md := range seriesB {
-		metricsB[md.Name] = true
+		metricsB[transformerB.transform(md.Name)] = true
 	}
 
 	results = make([]*types.MetricData, 0, len(seriesA)+len(seriesB))
 	for _, md := range seriesA {
-		if !metricsB[md.Name] {
+		if !metricsB[transformerA.transform(md.Name)] {
 			results = append(results, md)
 		}
 	}
 	for _, md := range seriesB {
-		if !metricsA[md.Name] {
+		if !metricsA[transformerB.transform(md.Name)] {
 			results = append(results, md)
 		}
 	}
 	return results
 }
 
-func doSub(seriesA []*types.MetricData, seriesB []*types.MetricData) (results []*types.MetricData) {
+func doSub(
+	seriesA, seriesB []*types.MetricData,
+	transformerA, transformerB metricNameTransformer,
+) (results []*types.MetricData) {
 	metricsB := make(map[string]bool, len(seriesB))
 	for _, md := range seriesB {
-		metricsB[md.Name] = true
+		metricsB[transformerB.transform(md.Name)] = true
 	}
 
 	results = make([]*types.MetricData, 0, len(seriesA))
 	for _, md := range seriesA {
-		if !metricsB[md.Name] {
+		if !metricsB[transformerA.transform(md.Name)] {
 			results = append(results, md)
 		}
 	}
 	return results
+}
+
+const sep = "."
+
+type metricNameTransformer interface {
+	transform(string) string
+}
+
+type noop struct{}
+
+func (t noop) transform(name string) string {
+	return name
+}
+
+type nodeNumbers []int
+
+func (t nodeNumbers) transform(name string) string {
+	result := strings.Builder{}
+	parts := strings.Split(name, sep)
+	partsQty := len(parts)
+	nodesQty := len(t)
+
+	for i, nodeNumber := range t {
+		var part string
+		if nodeNumber >= 0 && nodeNumber < partsQty {
+			part = parts[nodeNumber]
+		}
+		if nodeNumber < 0 && nodeNumber >= -partsQty {
+			part = parts[partsQty+nodeNumber]
+		}
+
+		result.WriteString(part)
+		if i < nodesQty-1 {
+			result.WriteString(sep)
+		}
+	}
+
+	return result.String()
+}
+
+func parseNodesList(val string) (numbers nodeNumbers, err error) {
+	parts := strings.Split(val, sep)
+	numbers = make(nodeNumbers, 0, len(parts))
+
+	for _, part := range parts {
+		number, err := strconv.Atoi(part)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse node numbers list '%s': %w", val, err)
+		}
+		numbers = append(numbers, number)
+	}
+
+	return numbers, nil
+}
+
+func parseTransformerArg(val string) (transformer metricNameTransformer, err error) {
+	if val == "" {
+		return noop{}, nil
+	}
+	return parseNodesList(val)
 }
