@@ -42,6 +42,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/group"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByNode"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByTags"
+	"github.com/go-graphite/carbonapi/expr/functions/groupLeftTagged"
 	"github.com/go-graphite/carbonapi/expr/functions/groupWithSql"
 	"github.com/go-graphite/carbonapi/expr/functions/heatMap"
 	"github.com/go-graphite/carbonapi/expr/functions/highest"
@@ -87,6 +88,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/removeBelowSeries"
 	"github.com/go-graphite/carbonapi/expr/functions/removeEmptySeries"
 	"github.com/go-graphite/carbonapi/expr/functions/removeSeriesByPattern"
+	"github.com/go-graphite/carbonapi/expr/functions/renameTags"
 	"github.com/go-graphite/carbonapi/expr/functions/round"
 	"github.com/go-graphite/carbonapi/expr/functions/scale"
 	"github.com/go-graphite/carbonapi/expr/functions/scaleToSeconds"
@@ -201,6 +203,8 @@ func New(configs map[string]string) {
 
 	funcs = append(funcs, initFunc{name: "groupByTags", order: groupByTags.GetOrder(), f: groupByTags.New})
 
+	funcs = append(funcs, initFunc{name: "groupLeftTagged", order: groupLeftTagged.GetOrder(), f: groupLeftTagged.New})
+
 	funcs = append(funcs, initFunc{name: "groupWithSql", order: groupWithSql.GetOrder(), f: groupWithSql.New})
 
 	funcs = append(funcs, initFunc{name: "heatMap", order: heatMap.GetOrder(), f: heatMap.New})
@@ -290,6 +294,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "removeEmptySeries", order: removeEmptySeries.GetOrder(), f: removeEmptySeries.New})
 
 	funcs = append(funcs, initFunc{name: "removeSeriesByPattern", order: removeSeriesByPattern.GetOrder(), f: removeSeriesByPattern.New})
+
+	funcs = append(funcs, initFunc{name: "renameTags", order: renameTags.GetOrder(), f: renameTags.New})
 
 	funcs = append(funcs, initFunc{name: "round", order: round.GetOrder(), f: round.New})
 
