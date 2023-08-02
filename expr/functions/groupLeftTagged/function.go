@@ -16,40 +16,44 @@ func GetOrder() interfaces.Order {
 }
 
 func New(_ string) []interfaces.FunctionMetadata {
+	fn := &groupLeftTagged{}
 	return []interfaces.FunctionMetadata{
-		{F: &groupLeftTagged{}, Name: "groupLeftTagged"},
+		{F: fn, Name: "groupLeftByTags"},
+		{F: fn, Name: "groupLeftTagged"},
 	}
 }
 
 func (f *groupLeftTagged) Description() map[string]types.FunctionDescription {
-	return map[string]types.FunctionDescription{
-		"groupLeftTagged": {
-			Description: `Performs operation similar to "group_left" in prometheus. Used on tagged metrics only.
+	fd := types.FunctionDescription{
+		Description: `Performs operation similar to "group_left" in prometheus. Used on tagged metrics only.
 Each series from "seriesList1" is matched with each series from "seriesList2" based on values of specified tags.
 Matched series from the first list receives all tags from series from the second list.
 `,
-			Function: "groupLeftTagged(seriesList1, seriesList2, 'tag1', 'tag2', ...)",
-			Group:    "Transform",
-			Module:   "graphite.render.functions",
-			Name:     "groupLeftTagged",
-			Params: []types.FunctionParam{
-				{
-					Name:     "seriesList1",
-					Required: true,
-					Type:     types.SeriesList,
-				},
-				{
-					Name:     "seriesList2",
-					Required: true,
-					Type:     types.SeriesList,
-				},
-				{
-					Multiple: true,
-					Name:     "tags",
-					Type:     types.Tag,
-				},
+		Function: "groupLeftByTags(seriesList1, seriesList2, 'tag1', 'tag2', ...)",
+		Group:    "Transform",
+		Module:   "graphite.render.functions",
+		Name:     "groupLeftByTags",
+		Params: []types.FunctionParam{
+			{
+				Name:     "seriesList1",
+				Required: true,
+				Type:     types.SeriesList,
+			},
+			{
+				Name:     "seriesList2",
+				Required: true,
+				Type:     types.SeriesList,
+			},
+			{
+				Multiple: true,
+				Name:     "tags",
+				Type:     types.Tag,
 			},
 		},
+	}
+	return map[string]types.FunctionDescription{
+		"groupLeftTagged": fd,
+		"groupLeftByTags": fd,
 	}
 }
 
