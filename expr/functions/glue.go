@@ -42,6 +42,7 @@ import (
 	"github.com/go-graphite/carbonapi/expr/functions/group"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByNode"
 	"github.com/go-graphite/carbonapi/expr/functions/groupByTags"
+	"github.com/go-graphite/carbonapi/expr/functions/groupLeftByNodes"
 	"github.com/go-graphite/carbonapi/expr/functions/groupLeftTagged"
 	"github.com/go-graphite/carbonapi/expr/functions/groupWithSql"
 	"github.com/go-graphite/carbonapi/expr/functions/heatMap"
@@ -202,6 +203,8 @@ func New(configs map[string]string) {
 	funcs = append(funcs, initFunc{name: "groupByNode", order: groupByNode.GetOrder(), f: groupByNode.New})
 
 	funcs = append(funcs, initFunc{name: "groupByTags", order: groupByTags.GetOrder(), f: groupByTags.New})
+
+	funcs = append(funcs, initFunc{name: "groupLeftByNodes", order: groupLeftByNodes.GetOrder(), f: groupLeftByNodes.New})
 
 	funcs = append(funcs, initFunc{name: "groupLeftTagged", order: groupLeftTagged.GetOrder(), f: groupLeftTagged.New})
 

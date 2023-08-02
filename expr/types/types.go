@@ -35,21 +35,22 @@ type MetricData struct {
 
 // MakeMetricData creates new metrics data with given metric timeseries
 func MakeMetricData(name string, values []float64, step, start int32) *MetricData {
-
 	absent := make([]bool, len(values))
+	valuesCopy := make([]float64, len(values))
 
 	for i, v := range values {
 		if math.IsNaN(v) {
-			values[i] = 0
 			absent[i] = true
+			valuesCopy[i] = 0
+		} else {
+			valuesCopy[i] = v
 		}
 	}
 
 	stop := start + int32(len(values))*step
-
 	return &MetricData{FetchResponse: FetchResponse{
 		Name:      name,
-		Values:    values,
+		Values:    valuesCopy,
 		StartTime: start,
 		StepTime:  step,
 		StopTime:  stop,
